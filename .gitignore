@@ -1,0 +1,55 @@
+# macOS
+.DS_Store
+
+# Xcode
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# JavaScript
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+# Cloudflare
+.wrangler/
+.dev.vars
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.mobileprovision
+
+# Sentry
+.sentryclirc
+
+# Recordings and generated editorial data
+*.aac
+*.caf
+*.flac
+*.m4a
+*.mp3
+*.wav
+recordings/
+transcripts/
+
+# Logs and temporary files
+*.log
+tmp/
+.temp/

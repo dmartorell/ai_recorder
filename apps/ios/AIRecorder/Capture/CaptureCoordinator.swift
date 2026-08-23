@@ -87,7 +87,7 @@ final class CaptureCoordinator {
     }
 
     func start() async {
-        guard phase == .idle else { return }
+        guard canBeginCapture else { return }
         if !(await permissionProvider()) {
             await requestPermission()
             guard await permissionProvider() else {
@@ -151,6 +151,15 @@ final class CaptureCoordinator {
             item.localState = .needsRecovery
             try? repository.save()
             phase = .needsRecovery(item.id, error.localizedDescription)
+        }
+    }
+
+    private var canBeginCapture: Bool {
+        switch phase {
+        case .idle, .available, .needsRecovery, .failed:
+            true
+        case .preparing, .recording, .finalizing:
+            false
         }
     }
 

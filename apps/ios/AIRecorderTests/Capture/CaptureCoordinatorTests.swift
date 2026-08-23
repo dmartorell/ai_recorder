@@ -35,6 +35,25 @@ final class CaptureCoordinatorTests: XCTestCase {
         XCTAssertNotNil(item.endedAt)
     }
 
+    func testCanStartAnotherCaptureAfterFinalizing() async throws {
+        let fixture = try Fixture()
+        let recorder = FakeRecorder()
+        let coordinator = CaptureCoordinator(
+            repository: fixture.repository,
+            recorder: recorder,
+            inspector: FixedInspector(),
+            permissionProvider: { true }
+        )
+
+        await coordinator.start()
+        await coordinator.finalize()
+        await coordinator.start()
+
+        XCTAssertEqual(coordinator.phase, .recording)
+        XCTAssertEqual(try fixture.repository.context.fetch(FetchDescriptor<AudioItem>()).count, 2)
+        XCTAssertEqual(recorder.startCount, 2)
+    }
+
     func testEmptyStartFailureRemovesOnlyEmptyAudio() async throws {
         let fixture = try Fixture()
         let coordinator = CaptureCoordinator(
@@ -89,6 +108,7 @@ final class CaptureCoordinatorTests: XCTestCase {
         let error: Error?
         let writesBytesBeforeFailing: Bool
         private(set) var didStart = false
+        private(set) var startCount = 0
         private var outputURL: URL?
 
         init(error: Error? = nil, writesBytesBeforeFailing: Bool = false) {
@@ -98,6 +118,7 @@ final class CaptureCoordinatorTests: XCTestCase {
 
         func start(outputURL: URL) async throws {
             didStart = true
+            startCount += 1
             self.outputURL = outputURL
             if writesBytesBeforeFailing { try Data("partial".utf8).write(to: outputURL) }
             if let error { throw error }

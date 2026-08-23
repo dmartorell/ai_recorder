@@ -4,7 +4,7 @@ An offline-first iPhone interview recorder for journalists. Completed recordings
 
 ## Status
 
-Design approved. Application code has not been scaffolded yet.
+Design approved. The native iPhone project currently contains the physical-device proof for recoverable local Capture. Product implementation proceeds through the tickets linked from the approved specification.
 
 Read:
 
@@ -21,6 +21,19 @@ Read:
 - Transcription: Speechmatics Batch
 - Analysis: Claude API
 - Monitoring: Sentry
+
+## iPhone proof project
+
+Build and test the current iOS project with:
+
+```bash
+xcodebuild test \
+  -project apps/ios/AIRecorder.xcodeproj \
+  -scheme AIRecorder \
+  -destination 'platform=iOS Simulator,name=iPhone 15,OS=26.2'
+```
+
+Physical-device Capture validation requires automatic signing with the configured personal development team.
 
 ## Using Pi
 

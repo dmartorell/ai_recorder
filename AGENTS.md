@@ -11,6 +11,16 @@ Read these documents before planning or implementing product work:
 
 Do not expand the MVP beyond the approved design.
 
+## Agent skills
+
+### Issue tracker
+
+Issues and specs are tracked in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+This is a single-context repository with `CONTEXT.md` and system-wide ADRs under `docs/adr/`. See `docs/agents/domain.md`.
+
 ## Product invariants
 
 - Recording is offline-first. Network availability must never be required to record.
@@ -52,6 +62,7 @@ Load the relevant skill before working in its domain:
 - Postgres schema, SQL, indexes, or RLS: `.agents/skills/supabase-postgres-best-practices/SKILL.md`
 - Cloudflare Workers, R2, or Queues: `.agents/skills/cloudflare/SKILL.md`
 - Wrangler configuration or commands: `.agents/skills/wrangler/SKILL.md`
+- Domain terminology, `CONTEXT.md`, or ADRs: `.agents/skills/domain-modeling/SKILL.md`
 
 For SwiftUI tasks, follow the skill's instruction to read `references/latest-apis.md` first, then read the references relevant to the task. Resolve relative paths from each skill directory. The Vercel React skill also contains Next.js guidance; ignore Next.js-specific rules because this project uses a Vite SPA.
 

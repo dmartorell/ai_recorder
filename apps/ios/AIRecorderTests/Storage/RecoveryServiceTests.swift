@@ -21,6 +21,26 @@ final class RecoveryServiceTests: XCTestCase {
         XCTAssertEqual(item.durationMilliseconds, 7_500)
     }
 
+    func testRecoveredAudioRemovesMarkersBeyondVerifiedDuration() async throws {
+        let fixture = try Fixture()
+        let item = AudioItem(fileName: "source.m4a")
+        item.localState = .capturing
+        let validMarker = Marker(positionMilliseconds: 7_000, audio: item)
+        let invalidMarker = Marker(positionMilliseconds: 7_501, audio: item)
+        item.markers = [validMarker, invalidMarker]
+        fixture.context.insert(item)
+        fixture.context.insert(validMarker)
+        fixture.context.insert(invalidMarker)
+        try fixture.context.save()
+        try fixture.files.prepare(for: item.id)
+        try Data("partial audio".utf8).write(to: fixture.files.url(for: item.id))
+
+        await RecoveryService(context: fixture.context, files: fixture.files, inspector: FixedInspector()).recoverInterruptedItems()
+
+        XCTAssertEqual(item.markers.map(\.positionMilliseconds), [7_000])
+        XCTAssertEqual(try fixture.context.fetch(FetchDescriptor<Marker>()).count, 1)
+    }
+
     func testUnplayableNonemptyAudioBecomesNeedsRecovery() async throws {
         let fixture = try Fixture()
         let item = AudioItem(fileName: "source.m4a")

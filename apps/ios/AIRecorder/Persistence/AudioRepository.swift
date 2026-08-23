@@ -21,6 +21,19 @@ final class AudioRepository {
 
     func save() throws { try context.save() }
 
+    func record(_ event: CaptureEvent, for item: AudioItem) throws {
+        let record = CaptureEventRecord(
+            kind: event.kind,
+            startedAt: event.date,
+            audioPositionMilliseconds: event.audioPositionMilliseconds,
+            inputName: event.inputName,
+            audio: item
+        )
+        context.insert(record)
+        item.events.append(record)
+        try context.save()
+    }
+
     func markFinalizing(_ item: AudioItem) throws {
         guard item.localState == .capturing else { throw CaptureItemError.invalidState }
         item.localState = .finalizing

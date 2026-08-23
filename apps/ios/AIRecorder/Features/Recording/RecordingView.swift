@@ -21,6 +21,14 @@ struct RecordingView: View {
 
             Text(coordinator.inputName)
                 .foregroundStyle(.secondary)
+                .accessibilityLabel("Active input")
+
+            if coordinator.isInterrupted {
+                Label("Audio interrupted. Waiting for a safe resume.", systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                    .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.updatesFrequently)
+            }
 
             Button {
                 coordinator.addMarker()
@@ -29,7 +37,8 @@ struct RecordingView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .accessibilityHint("Marks the current audio time")
+            .accessibilityHint(coordinator.isInterrupted ? "Unavailable while audio is interrupted" : "Marks the current audio time")
+            .disabled(coordinator.isInterrupted)
             .sensoryFeedback(.selection, trigger: coordinator.markerConfirmation)
 
             if showingMarkerConfirmation {

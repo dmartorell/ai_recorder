@@ -33,10 +33,23 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
     }
 
     private let queue = DispatchQueue(label: "com.danielmartorell.AIRecorder.capture-proof")
+    private let eventStream: AsyncStream<CaptureRecorderEvent>
+    private var eventContinuation: AsyncStream<CaptureRecorderEvent>.Continuation?
+    private var notificationTokens: [NSObjectProtocol] = []
     private var captureSession: AVCaptureSession?
     private var writer: AVAssetWriter?
     private var writerInput: AVAssetWriterInput?
     private var sessionStarted = false
+    private var nextPresentationTime = CMTime.zero
+
+    override init() {
+        var continuation: AsyncStream<CaptureRecorderEvent>.Continuation?
+        eventStream = AsyncStream { continuation = $0 }
+        eventContinuation = continuation
+        super.init()
+    }
+
+    var events: AsyncStream<CaptureRecorderEvent> { eventStream }
 
     func start(outputURL: URL) async throws {
         try await withCheckedThrowingContinuation { continuation in
@@ -122,12 +135,15 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         writer = assetWriter
         writerInput = assetWriterInput
         sessionStarted = false
+        nextPresentationTime = .zero
+        installNotificationObservers()
         session.startRunning()
     }
 
     private func finishOnQueue(continuation: CheckedContinuation<Void, Error>) {
         captureSession?.stopRunning()
         captureSession = nil
+        removeNotificationObservers()
 
         guard sessionStarted, let writer, let writerInput else {
             self.writer?.cancelWriting()
@@ -173,10 +189,41 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         writer = nil
         writerInput = nil
         sessionStarted = false
+        nextPresentationTime = .zero
     }
 
     private func deactivateAudioSession() {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+
+    private func installNotificationObservers() {
+        let center = NotificationCenter.default
+        notificationTokens = [
+            center.addObserver(forName: AVAudioSession.interruptionNotification, object: AVAudioSession.sharedInstance(), queue: nil) { [weak self] notification in
+                self?.queue.async {
+                    guard let self else { return }
+                    if let date = CaptureNotificationMapper.interruptionBeganDate(notification) {
+                        self.eventContinuation?.yield(.interruptionBegan(date))
+                    } else if let ended = CaptureNotificationMapper.interruptionEnded(notification) {
+                        if ended.shouldResume { self.captureSession?.startRunning() }
+                        self.eventContinuation?.yield(.interruptionEnded(ended.date, shouldResume: ended.shouldResume))
+                    }
+                }
+            },
+            center.addObserver(forName: AVAudioSession.routeChangeNotification, object: AVAudioSession.sharedInstance(), queue: nil) { [weak self] notification in
+                self?.queue.async {
+                    guard let self,
+                          let name = CaptureNotificationMapper.routeInputName(notification) else { return }
+                    self.eventContinuation?.yield(.routeChanged(.now, inputName: name))
+                }
+            }
+        ]
+    }
+
+    private func removeNotificationObservers() {
+        let center = NotificationCenter.default
+        notificationTokens.forEach(center.removeObserver)
+        notificationTokens.removeAll()
     }
 }
 
@@ -195,13 +242,30 @@ extension FragmentedM4ARecorder: AVCaptureAudioDataOutputSampleBufferDelegate {
         }
 
         if !sessionStarted {
-            let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
-            writer.startSession(atSourceTime: presentationTime)
+            writer.startSession(atSourceTime: .zero)
             sessionStarted = true
         }
 
-        if writerInput.isReadyForMoreMediaData {
-            writerInput.append(sampleBuffer)
-        }
+        guard writerInput.isReadyForMoreMediaData else { return }
+        let duration = CMSampleBufferGetDuration(sampleBuffer)
+        let sampleDuration = duration.isValid && duration > .zero
+            ? duration
+            : CMTime(value: 1, timescale: 48_000)
+        var timing = CMSampleTimingInfo(
+            duration: sampleDuration,
+            presentationTimeStamp: nextPresentationTime,
+            decodeTimeStamp: .invalid
+        )
+        var retimedBuffer: CMSampleBuffer?
+        guard CMSampleBufferCreateCopyWithNewTiming(
+            allocator: kCFAllocatorDefault,
+            sampleBuffer: sampleBuffer,
+            sampleTimingEntryCount: 1,
+            sampleTimingArray: &timing,
+            sampleBufferOut: &retimedBuffer
+        ) == noErr,
+        let retimedBuffer else { return }
+        writerInput.append(retimedBuffer)
+        nextPresentationTime = nextPresentationTime + sampleDuration
     }
 }

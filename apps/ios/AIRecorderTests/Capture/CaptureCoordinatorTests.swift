@@ -70,6 +70,43 @@ final class CaptureCoordinatorTests: XCTestCase {
         if case .failed = coordinator.phase { } else { XCTFail("Expected failed phase") }
     }
 
+    func testInterruptionPausesTimelineAndBlocksMarkersUntilSafeResume() async throws {
+        let fixture = try Fixture()
+        let recorder = FakeRecorder()
+        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), permissionProvider: { true })
+
+        await coordinator.start()
+        try await Task.sleep(for: .milliseconds(150))
+        let beforeInterruption = coordinator.currentAudioPositionMilliseconds
+        let interruptionDate = Date(timeIntervalSince1970: 100)
+        recorder.send(.interruptionBegan(interruptionDate))
+        try await Task.sleep(for: .milliseconds(50))
+
+        XCTAssertEqual(coordinator.phase, .interrupted(startedAt: interruptionDate))
+        XCTAssertLessThanOrEqual(abs(coordinator.currentAudioPositionMilliseconds - beforeInterruption), 100)
+        coordinator.addMarker()
+        XCTAssertEqual(coordinator.markerCount, 0)
+
+        recorder.send(.interruptionEnded(.init(timeIntervalSince1970: 101), shouldResume: true))
+        try await Task.sleep(for: .milliseconds(50))
+        XCTAssertEqual(coordinator.phase, .recording)
+        XCTAssertEqual(Set(coordinator.currentItem?.events.map(\.kind) ?? []), [.interruptionBegan, .interruptionEnded])
+    }
+
+    func testRouteChangePersistsResultingInputName() async throws {
+        let fixture = try Fixture()
+        let recorder = FakeRecorder()
+        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), permissionProvider: { true })
+
+        await coordinator.start()
+        recorder.send(.routeChanged(.now, inputName: "USB Microphone"))
+        try await Task.sleep(for: .milliseconds(50))
+
+        XCTAssertEqual(coordinator.inputName, "USB Microphone")
+        XCTAssertEqual(coordinator.currentItem?.events.first?.inputName, "USB Microphone")
+        XCTAssertEqual(coordinator.currentItem?.events.first?.kind, .routeChanged)
+    }
+
     func testNonemptyStartFailurePreservesAudioAsNeedsRecovery() async throws {
         let fixture = try Fixture()
         let recorder = FakeRecorder(error: TestError.failed, writesBytesBeforeFailing: true)
@@ -105,6 +142,8 @@ final class CaptureCoordinatorTests: XCTestCase {
 
     @MainActor
     private final class FakeRecorder: CaptureRecorder {
+        let events: AsyncStream<CaptureRecorderEvent>
+        private let eventContinuation: AsyncStream<CaptureRecorderEvent>.Continuation
         let error: Error?
         let writesBytesBeforeFailing: Bool
         private(set) var didStart = false
@@ -112,6 +151,9 @@ final class CaptureCoordinatorTests: XCTestCase {
         private var outputURL: URL?
 
         init(error: Error? = nil, writesBytesBeforeFailing: Bool = false) {
+            var continuation: AsyncStream<CaptureRecorderEvent>.Continuation?
+            self.events = AsyncStream { continuation = $0 }
+            self.eventContinuation = continuation!
             self.error = error
             self.writesBytesBeforeFailing = writesBytesBeforeFailing
         }
@@ -125,6 +167,10 @@ final class CaptureCoordinatorTests: XCTestCase {
         }
 
         func finish() async throws { }
+
+        func send(_ event: CaptureRecorderEvent) {
+            eventContinuation.yield(event)
+        }
     }
 
     private struct FixedInspector: AudioInspector {

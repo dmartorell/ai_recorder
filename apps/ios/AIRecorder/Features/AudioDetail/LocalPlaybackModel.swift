@@ -48,7 +48,9 @@ final class LocalPlaybackModel {
     }
 
     func togglePlayback() {
-        if isPlaying {
+        // Use the player's state as the source of truth. AVPlayer can pause
+        // because of an interruption without the model receiving a view update.
+        if player.isPlaying {
             player.pause()
             isPlaying = false
         } else {

@@ -85,7 +85,7 @@ Supabase Postgres
 ### Technology choices
 
 - iPhone: Swift, SwiftUI, AVFoundation, SwiftData, background `URLSession`.
-- Web: Next.js and TypeScript.
+- Web: React, TypeScript, Vite, React Router, TanStack Query, and the Cloudflare Vite plugin.
 - Identity and structured data: Supabase Auth and Postgres.
 - Audio storage: Cloudflare R2.
 - API and orchestration: Cloudflare Workers and Queues.
@@ -163,7 +163,7 @@ The app considers cloud audio backed up only after the backend verifies the comp
 
 ## Web application
 
-The web app is an editorial workspace. Recording in the browser is outside the MVP.
+The web app is an authenticated React single-page application and editorial workspace. Recording in the browser is outside the MVP. It does not require SEO, server-side rendering, React Server Components, or Server Actions. Vite and the Cloudflare Vite plugin provide a direct deployment path to Cloudflare Workers without a framework adapter.
 
 ### Library
 

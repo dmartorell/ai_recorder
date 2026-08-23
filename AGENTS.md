@@ -2,7 +2,7 @@
 
 ## Project
 
-This repository contains a new, independent journalist interview recorder. It is not part of Rescue.
+This repository contains a new, independent journalist interview recorder.
 
 Read these documents before planning or implementing product work:
 
@@ -29,7 +29,7 @@ Do not expand the MVP beyond the approved design.
 ## Intended architecture
 
 - iOS 17+ native app using Swift, SwiftUI, AVFoundation, SwiftData, and background `URLSession` uploads.
-- Next.js and TypeScript responsive web app.
+- React and TypeScript responsive SPA using Vite, React Router, TanStack Query, and the Cloudflare Vite plugin.
 - Supabase Auth and Postgres for identity and structured data.
 - Cloudflare R2 for private audio objects.
 - Cloudflare Workers and Queues for orchestration.
@@ -38,6 +38,22 @@ Do not expand the MVP beyond the approved design.
 - Sentry for app and backend error monitoring.
 
 Treat this architecture as a design target. Follow the implementation plan for sequencing and exact dependencies.
+
+## Project skills
+
+Load the relevant skill before working in its domain:
+
+- Swift, SwiftUI, or iOS: `.agents/skills/swiftui-expert-skill/SKILL.md`
+- React performance: `.agents/skills/vercel-react-best-practices/SKILL.md`
+- React component APIs: `.agents/skills/vercel-composition-patterns/SKILL.md`
+- Web accessibility and UX review: `.agents/skills/web-design-guidelines/SKILL.md`
+- React Router SPA routing: `.agents/skills/react-router-declarative-mode/SKILL.md`
+- Supabase: `.agents/skills/supabase/SKILL.md`
+- Postgres schema, SQL, indexes, or RLS: `.agents/skills/supabase-postgres-best-practices/SKILL.md`
+- Cloudflare Workers, R2, or Queues: `.agents/skills/cloudflare/SKILL.md`
+- Wrangler configuration or commands: `.agents/skills/wrangler/SKILL.md`
+
+For SwiftUI tasks, follow the skill's instruction to read `references/latest-apis.md` first, then read the references relevant to the task. Resolve relative paths from each skill directory. The Vercel React skill also contains Next.js guidance; ignore Next.js-specific rules because this project uses a Vite SPA.
 
 ## Engineering rules
 
@@ -68,7 +84,7 @@ Pi automatically loads this `AGENTS.md`. No custom system prompt is needed.
 From the repository root:
 
 ```bash
-pi
+pix
 ```
 
 Use `/login` for provider authentication and `/model` to select the OpenAI model. Run `/reload` after changing agent files. Project prompt templates are under `.pi/prompts/` and load only after the project is trusted.

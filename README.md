@@ -14,7 +14,7 @@ Read:
 ## Planned stack
 
 - iOS 17+: Swift, SwiftUI, AVFoundation, SwiftData
-- Web: Next.js, TypeScript
+- Web: React, TypeScript, Vite, React Router, TanStack Query
 - Data: Supabase Auth and Postgres
 - Audio: Cloudflare R2
 - Orchestration: Cloudflare Workers and Queues
@@ -28,7 +28,7 @@ Start Pi from this repository so it loads `AGENTS.md`:
 
 ```bash
 cd /Volumes/T7_SAMSUNG/ai_recorder
-pi
+pix
 ```
 
 Inside Pi, use `/login` to authenticate and `/model` to select the OpenAI model. Run `/reload` after changing agent instructions or prompt templates.

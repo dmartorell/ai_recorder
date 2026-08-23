@@ -72,10 +72,17 @@ struct AudioDetailView: View {
     }
 
     private func seek(to milliseconds: Int) {
-        let time = CMTime(seconds: Double(milliseconds) / 1_000, preferredTimescale: 1_000)
-        if player == nil { player = AVPlayer(url: files.url(for: item.id)) }
-        player?.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
-        playbackError = nil
+        do {
+            try preparePlayerForPlayback()
+            let time = CMTime(seconds: Double(milliseconds) / 1_000, preferredTimescale: 1_000)
+            player?.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
+            player?.play()
+            playbackError = nil
+            isPlaying = true
+        } catch {
+            playbackError = "Playback failed: \(error.localizedDescription)"
+            isPlaying = false
+        }
     }
 
     private func togglePlayback() {
@@ -86,10 +93,7 @@ struct AudioDetailView: View {
         }
 
         do {
-            let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playback, mode: .spokenAudio)
-            try audioSession.setActive(true)
-            if player == nil { player = AVPlayer(url: files.url(for: item.id)) }
+            try preparePlayerForPlayback()
             player?.play()
             playbackError = nil
             isPlaying = true
@@ -97,6 +101,13 @@ struct AudioDetailView: View {
             playbackError = "Playback failed: \(error.localizedDescription)"
             isPlaying = false
         }
+    }
+
+    private func preparePlayerForPlayback() throws {
+        let audioSession = AVAudioSession.sharedInstance()
+        try audioSession.setCategory(.playback, mode: .spokenAudio)
+        try audioSession.setActive(true)
+        if player == nil { player = AVPlayer(url: files.url(for: item.id)) }
     }
 
     private func deleteAudio() {

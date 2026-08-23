@@ -29,10 +29,19 @@ final class RecoveryService {
 
             do {
                 let summary = try await inspector.inspect(url)
-                item.durationMilliseconds = Int((summary.duration * 1_000).rounded())
+                let durationMilliseconds = Int((summary.duration * 1_000).rounded())
+                item.durationMilliseconds = durationMilliseconds
                 item.endedAt = .now
                 item.endedUnexpectedly = true
                 item.localState = .recovered
+
+                let invalidMarkers = item.markers.filter {
+                    $0.positionMilliseconds > durationMilliseconds
+                }
+                for marker in invalidMarkers {
+                    context.delete(marker)
+                }
+                item.markers.removeAll { $0.positionMilliseconds > durationMilliseconds }
             } catch {
                 item.localState = .needsRecovery
             }

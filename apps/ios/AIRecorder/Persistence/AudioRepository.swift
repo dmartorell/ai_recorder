@@ -21,6 +21,39 @@ final class AudioRepository {
 
     func save() throws { try context.save() }
 
+    func markFinalizing(_ item: AudioItem) throws {
+        guard item.localState == .capturing else { throw CaptureItemError.invalidState }
+        item.localState = .finalizing
+        try context.save()
+    }
+
+    func markAvailable(_ item: AudioItem, durationMilliseconds: Int, endedAt: Date = .now) throws {
+        guard item.localState == .finalizing else { throw CaptureItemError.invalidState }
+        item.durationMilliseconds = max(0, durationMilliseconds)
+        item.endedAt = endedAt
+        item.localState = .available
+        try context.save()
+    }
+
+    func markRecovered(_ item: AudioItem, durationMilliseconds: Int, endedAt: Date = .now) throws {
+        guard item.localState == .capturing || item.localState == .finalizing else {
+            throw CaptureItemError.invalidState
+        }
+        item.durationMilliseconds = max(0, durationMilliseconds)
+        item.endedAt = endedAt
+        item.endedUnexpectedly = true
+        item.localState = .recovered
+        try context.save()
+    }
+
+    func markNeedsRecovery(_ item: AudioItem) throws {
+        guard item.localState == .capturing || item.localState == .finalizing else {
+            throw CaptureItemError.invalidState
+        }
+        item.localState = .needsRecovery
+        try context.save()
+    }
+
     @discardableResult
     func addMarker(to item: AudioItem, positionMilliseconds: Int) throws -> Marker {
         guard item.localState == .capturing else { throw CaptureItemError.invalidState }

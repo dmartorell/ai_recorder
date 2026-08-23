@@ -12,6 +12,7 @@
 		1E35747E79B51CE62D1352FA /* LocalPlaybackModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE5993A1C97D5BB42DF4F4F /* LocalPlaybackModelTests.swift */; };
 		26676C86AA276D478C601726 /* LocalAudioState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D7A2D5D2F9D9F78D4016BB /* LocalAudioState.swift */; };
 		28BF01FF3D5D080EBF8226DA /* AppConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4039331EB02D2E501D862C2B /* AppConfigurationTests.swift */; };
+		2E4261062C4CB9D85FB6F7BF /* CaptureEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E166091B28B4EB5215860B /* CaptureEventTests.swift */; };
 		307AD4080336091019CEDB3B /* CaptureProofStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DC23E53EFE91E55691AABA /* CaptureProofStoreTests.swift */; };
 		38EC2416D23D7569068403B9 /* AudioRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B6BFF14B1117851CF75ED5 /* AudioRepositoryTests.swift */; };
 		3D7452EBADD686A951B8D92D /* RecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8581E5457AE37CF03D6B0510 /* RecordingView.swift */; };
@@ -62,6 +63,7 @@
 		0B61D82D5D8C020F96DC18EE /* AudioVerifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioVerifierTests.swift; sourceTree = "<group>"; };
 		0E4F651A5678E4835FF78069 /* RecoveryServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryServiceTests.swift; sourceTree = "<group>"; };
 		0E8BAAE67271C4AB9F318746 /* CaptureCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureCoordinatorTests.swift; sourceTree = "<group>"; };
+		12E166091B28B4EB5215860B /* CaptureEventTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureEventTests.swift; sourceTree = "<group>"; };
 		16AC6197143A2BD62F02A269 /* CaptureProofView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureProofView.swift; sourceTree = "<group>"; };
 		1D5458AA565B0F5C2ECED526 /* AIRecorderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIRecorderApp.swift; sourceTree = "<group>"; };
 		201520DEE3192BEEB73A664F /* Marker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Marker.swift; sourceTree = "<group>"; };
@@ -122,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				0E8BAAE67271C4AB9F318746 /* CaptureCoordinatorTests.swift */,
+				12E166091B28B4EB5215860B /* CaptureEventTests.swift */,
 			);
 			path = Capture;
 			sourceTree = "<group>";
@@ -412,6 +415,7 @@
 				38EC2416D23D7569068403B9 /* AudioRepositoryTests.swift in Sources */,
 				51C66B708B47A9281643E92C /* AudioVerifierTests.swift in Sources */,
 				F6F71F2275F772BE932F2DF7 /* CaptureCoordinatorTests.swift in Sources */,
+				2E4261062C4CB9D85FB6F7BF /* CaptureEventTests.swift in Sources */,
 				307AD4080336091019CEDB3B /* CaptureProofStoreTests.swift in Sources */,
 				1E35747E79B51CE62D1352FA /* LocalPlaybackModelTests.swift in Sources */,
 				A5EDC2F7911518DE03A5CCAF /* MarkerTests.swift in Sources */,

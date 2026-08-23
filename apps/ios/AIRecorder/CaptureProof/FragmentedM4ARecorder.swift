@@ -216,6 +216,21 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
                           let name = CaptureNotificationMapper.routeInputName(notification) else { return }
                     self.eventContinuation?.yield(.routeChanged(.now, inputName: name))
                 }
+            },
+            center.addObserver(forName: AVCaptureSession.wasInterruptedNotification, object: captureSession, queue: nil) { [weak self] notification in
+                self?.queue.async {
+                    guard let self,
+                          let date = CaptureNotificationMapper.captureInterruptionBeganDate(notification) else { return }
+                    self.eventContinuation?.yield(.interruptionBegan(date))
+                }
+            },
+            center.addObserver(forName: AVCaptureSession.interruptionEndedNotification, object: captureSession, queue: nil) { [weak self] notification in
+                self?.queue.async {
+                    guard let self,
+                          let ended = CaptureNotificationMapper.captureInterruptionEnded(notification) else { return }
+                    self.captureSession?.startRunning()
+                    self.eventContinuation?.yield(.interruptionEnded(ended.date, shouldResume: ended.shouldResume))
+                }
             }
         ]
     }

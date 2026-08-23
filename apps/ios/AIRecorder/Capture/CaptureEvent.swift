@@ -1,4 +1,5 @@
 import AVFAudio
+import AVFoundation
 import Foundation
 
 enum CaptureRecorderEvent: Equatable, Sendable {
@@ -22,6 +23,16 @@ struct CaptureEvent: Equatable, Sendable {
 }
 
 enum CaptureNotificationMapper {
+    static func captureInterruptionBeganDate(_ notification: Notification, now: Date = .now) -> Date? {
+        notification.name == AVCaptureSession.wasInterruptedNotification ? now : nil
+    }
+
+    static func captureInterruptionEnded(_ notification: Notification, now: Date = .now) -> (date: Date, shouldResume: Bool)? {
+        notification.name == AVCaptureSession.interruptionEndedNotification
+            ? (date: now, shouldResume: true)
+            : nil
+    }
+
     static func interruptionBeganDate(_ notification: Notification, now: Date = .now) -> Date? {
         guard let type = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
               AVAudioSession.InterruptionType(rawValue: type) == .began else { return nil }

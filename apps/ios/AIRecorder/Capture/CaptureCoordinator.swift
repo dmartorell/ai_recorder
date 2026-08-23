@@ -187,8 +187,8 @@ final class CaptureCoordinator {
             phase = .interrupted(startedAt: date)
             try? repository.record(CaptureEvent(kind: .interruptionBegan, date: date, audioPositionMilliseconds: currentAudioPositionMilliseconds, inputName: nil, shouldResume: false), for: item)
         case let .interruptionEnded(date, shouldResume):
-            try? repository.record(CaptureEvent(kind: .interruptionEnded, date: date, audioPositionMilliseconds: currentAudioPositionMilliseconds, inputName: nil, shouldResume: shouldResume), for: item)
             guard case .interrupted = phase else { return }
+            try? repository.record(CaptureEvent(kind: .interruptionEnded, date: date, audioPositionMilliseconds: currentAudioPositionMilliseconds, inputName: nil, shouldResume: shouldResume), for: item)
             if shouldResume {
                 phase = .recording
                 recordingStartedAt = date

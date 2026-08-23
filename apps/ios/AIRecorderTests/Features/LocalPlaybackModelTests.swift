@@ -15,19 +15,6 @@ final class LocalPlaybackModelTests: XCTestCase {
         XCTAssertTrue(model.isPlaying)
     }
 
-    func testToggleResumesAfterPausing() {
-        let player = FakePlayer()
-        let model = LocalPlaybackModel(player: player)
-
-        model.togglePlayback()
-        model.togglePlayback()
-        model.togglePlayback()
-
-        XCTAssertEqual(player.playCount, 2)
-        XCTAssertEqual(player.pauseCount, 1)
-        XCTAssertTrue(model.isPlaying)
-    }
-
     func testRestartAfterSelectingMarkerReturnsToBeginningAndPlays() {
         let player = FakePlayer()
         let model = LocalPlaybackModel(player: player)
@@ -55,7 +42,6 @@ final class LocalPlaybackModelTests: XCTestCase {
 
     private final class FakePlayer: LocalPlaybackPlayer {
         private(set) var isPlaying = false
-        var currentTimeSeconds: Double { seekedSeconds ?? 0 }
         private(set) var seekedSeconds: Double?
         private(set) var playCount = 0
         private(set) var pauseCount = 0

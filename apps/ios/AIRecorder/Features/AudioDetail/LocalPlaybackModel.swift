@@ -4,7 +4,6 @@ import Observation
 @MainActor
 protocol LocalPlaybackPlayer: AnyObject {
     var isPlaying: Bool { get }
-    var currentTimeSeconds: Double { get }
     func play()
     func pause()
     func seek(to seconds: Double)
@@ -20,18 +19,8 @@ final class AVPlayerPlaybackPlayer: LocalPlaybackPlayer {
     }
 
     var isPlaying: Bool { player.rate > 0 }
-    var currentTimeSeconds: Double { max(0, player.currentTime().seconds) }
 
-    func play() {
-        // Seeking first also wakes an AVPlayerItem that has not loaded its
-        // local fragmented-M4A track yet.
-        player.seek(
-            to: CMTime(seconds: currentTimeSeconds, preferredTimescale: 1_000),
-            toleranceBefore: .zero,
-            toleranceAfter: .zero
-        )
-        player.playImmediately(atRate: 1)
-    }
+    func play() { player.play() }
     func pause() { player.pause() }
     func seek(to seconds: Double) {
         player.seek(

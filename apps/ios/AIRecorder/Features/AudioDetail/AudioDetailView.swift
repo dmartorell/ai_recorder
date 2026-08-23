@@ -7,12 +7,19 @@ struct AudioDetailView: View {
     let files: AudioFileStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    @State private var player: AVPlayer?
-    @State private var isPlaying = false
+    @State private var playback: LocalPlaybackModel
     @State private var showingDelete = false
     @State private var playbackError: String?
     @State private var deleteError: String?
     @State private var didDelete = false
+
+    init(item: AudioItem, files: AudioFileStore) {
+        self.item = item
+        self.files = files
+        _playback = State(initialValue: LocalPlaybackModel(
+            player: AVPlayerPlaybackPlayer(url: files.url(for: item.id))
+        ))
+    }
 
     var body: some View {
         Form {
@@ -23,15 +30,27 @@ struct AudioDetailView: View {
                 LabeledContent("State", value: item.localState == .needsRecovery ? "Needs recovery" : "Only on this iPhone")
             }
             Section("Playback") {
-                Button(isPlaying ? "Pause" : "Play", systemImage: isPlaying ? "pause.fill" : "play.fill") { togglePlayback() }
+                HStack {
+                    Button {
+                        playback.restartPlayback()
+                    } label: {
+                        Image(systemName: "backward.end.fill")
+                    }
+                    .accessibilityLabel("Reiniciar reproducción")
+                    .accessibilityHint("Starts playback from the beginning")
+
+                    Button(playback.isPlaying ? "Pause" : "Play", systemImage: playback.isPlaying ? "pause.fill" : "play.fill") {
+                        playback.togglePlayback()
+                    }
                     .accessibilityHint("Plays the local Original Audio")
+                }
                 if let playbackError { Text(playbackError).foregroundStyle(.red) }
             }
             if !item.markers.isEmpty {
                 Section("Markers") {
                     ForEach(item.markers.sorted { $0.positionMilliseconds < $1.positionMilliseconds }) { marker in
                         Button {
-                            seek(to: marker.positionMilliseconds)
+                            playback.seek(to: Double(marker.positionMilliseconds) / 1_000)
                         } label: {
                             Label(markerTime(marker.positionMilliseconds), systemImage: "bookmark.fill")
                         }
@@ -46,18 +65,29 @@ struct AudioDetailView: View {
             if let deleteError { Text(deleteError).foregroundStyle(.red) }
         }
         .navigationTitle("Audio")
+        .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { notification in
+            if playback.isCurrentItem(notification.object as Any) {
+                playback.handlePlaybackEnded()
+            }
+        }
         .confirmationDialog("Delete permanently?", isPresented: $showingDelete) {
             Button("Delete permanently", role: .destructive) { deleteAudio() }
             Button("Cancel", role: .cancel) { }
         } message: { Text("No cloud copy exists. This local Original Audio cannot be recovered.") }
-        .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { notification in
-            guard let endedItem = notification.object as? AVPlayerItem,
-                  endedItem === player?.currentItem else { return }
-            isPlaying = false
-            player?.seek(to: .zero)
-        }
         .onDisappear {
-            stopPlayback(deactivateSession: !didDelete)
+            if !didDelete {
+                playback.handlePlaybackEnded()
+                try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            }
+        }
+        .task {
+            do {
+                let audioSession = AVAudioSession.sharedInstance()
+                try audioSession.setCategory(.playback, mode: .spokenAudio)
+                try audioSession.setActive(true)
+            } catch {
+                playbackError = "Playback failed: \(error.localizedDescription)"
+            }
         }
     }
 
@@ -71,48 +101,8 @@ struct AudioDetailView: View {
         return String(format: "%02d:%02d", seconds / 60, seconds % 60)
     }
 
-    private func seek(to milliseconds: Int) {
-        do {
-            try preparePlayerForPlayback()
-            let time = CMTime(seconds: Double(milliseconds) / 1_000, preferredTimescale: 1_000)
-            player?.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
-            player?.play()
-            playbackError = nil
-            isPlaying = true
-        } catch {
-            playbackError = "Playback failed: \(error.localizedDescription)"
-            isPlaying = false
-        }
-    }
-
-    private func togglePlayback() {
-        if isPlaying {
-            player?.pause()
-            isPlaying = false
-            return
-        }
-
-        do {
-            try preparePlayerForPlayback()
-            player?.play()
-            playbackError = nil
-            isPlaying = true
-        } catch {
-            playbackError = "Playback failed: \(error.localizedDescription)"
-            isPlaying = false
-        }
-    }
-
-    private func preparePlayerForPlayback() throws {
-        let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.playback, mode: .spokenAudio)
-        try audioSession.setActive(true)
-        if player == nil { player = AVPlayer(url: files.url(for: item.id)) }
-    }
-
     private func deleteAudio() {
         do {
-            stopPlayback(deactivateSession: true)
             didDelete = true
             try files.delete(item.id)
             modelContext.delete(item)
@@ -120,15 +110,6 @@ struct AudioDetailView: View {
             dismiss()
         } catch {
             deleteError = error.localizedDescription
-        }
-    }
-
-    private func stopPlayback(deactivateSession: Bool) {
-        player?.pause()
-        player = nil
-        isPlaying = false
-        if deactivateSession {
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         }
     }
 }

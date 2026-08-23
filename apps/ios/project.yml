@@ -38,7 +38,7 @@ targets:
   AIRecorderTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [AIRecorderTests/CaptureProof, AIRecorderTests/Capture, AIRecorderTests/Storage, AIRecorderTests/Persistence]
+    sources: [AIRecorderTests/CaptureProof, AIRecorderTests/Capture, AIRecorderTests/Storage, AIRecorderTests/Persistence, AIRecorderTests/Features]
     info:
       path: AIRecorderTests/Info.plist
       properties:

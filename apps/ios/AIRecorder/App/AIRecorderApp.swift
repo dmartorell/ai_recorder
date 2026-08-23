@@ -29,6 +29,7 @@ struct AIRecorderApp: App {
             RootView(coordinator: coordinator, recoveryService: recoveryService)
                 .sheet(isPresented: Binding(get: { coordinator.phase == .recording || coordinator.phase == .finalizing }, set: { _ in })) {
                     NavigationStack { RecordingView(coordinator: coordinator) }
+                        .presentationDetents([.large])
                 }
         }
         .modelContainer(modelContainer)

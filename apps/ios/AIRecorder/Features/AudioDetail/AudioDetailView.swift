@@ -30,26 +30,27 @@ struct AudioDetailView: View {
                 LabeledContent("State", value: item.localState == .needsRecovery ? "Needs recovery" : "Only on this iPhone")
             }
             Section("Playback") {
-                HStack(spacing: 16) {
+                HStack {
+                    Button(action: { playback.togglePlayback() }) {
+                        Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
+                            .font(.title2)
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityLabel(playback.isPlaying ? "Pausar reproducción" : "Reproducir")
+                    .accessibilityHint("Plays the local Original Audio")
+
+                    Spacer()
+
                     Button(action: { playback.restartPlayback() }) {
                         Image(systemName: "backward.end.fill")
-                            .frame(minWidth: 44, minHeight: 44)
+                            .font(.title2)
+                            .frame(width: 44, height: 44)
                     }
                     .buttonStyle(.bordered)
                     .accessibilityLabel("Reiniciar reproducción")
                     .accessibilityHint("Starts playback from the beginning")
-
-                    Button(action: { playback.togglePlayback() }) {
-                        Label(
-                            playback.isPlaying ? "Pause" : "Play",
-                            systemImage: playback.isPlaying ? "pause.fill" : "play.fill"
-                        )
-                        .frame(minHeight: 44)
-                    }
-                    .buttonStyle(.bordered)
-                    .accessibilityHint("Plays the local Original Audio")
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
                 if let playbackError { Text(playbackError).foregroundStyle(.red) }
             }
             if !item.markers.isEmpty {

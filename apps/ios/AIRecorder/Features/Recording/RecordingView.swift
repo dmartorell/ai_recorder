@@ -42,7 +42,9 @@ struct RecordingView: View {
             Button("Finalize", role: .destructive) { showingFinalize = true }
                 .buttonStyle(.bordered)
         }
-        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal)
+        .background(Color(uiColor: .systemBackground).ignoresSafeArea())
         .navigationTitle("Capture")
         .onChange(of: coordinator.markerConfirmation) {
             showingMarkerConfirmation = true

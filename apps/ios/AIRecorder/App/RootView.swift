@@ -30,6 +30,8 @@ struct RootView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(uiColor: .systemBackground).ignoresSafeArea())
             .navigationTitle("Audio")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -37,8 +39,14 @@ struct RootView: View {
                         .accessibilityHint("Capture starts immediately after permission is granted")
                 }
             }
-            .sheet(isPresented: $showingPreparation) { PreparationView(coordinator: coordinator) }
-            .sheet(item: $selectedItem) { AudioDetailView(item: $0, files: coordinator.files) }
+            .sheet(isPresented: $showingPreparation) {
+                PreparationView(coordinator: coordinator)
+                    .presentationDetents([.large])
+            }
+            .sheet(item: $selectedItem) {
+                AudioDetailView(item: $0, files: coordinator.files)
+                    .presentationDetents([.large])
+            }
             .task { await recoveryService.recoverInterruptedItems() }
             .navigationDestination(for: UUID.self) { id in
                 if let item = items.first(where: { $0.id == id }) { AudioDetailView(item: item, files: coordinator.files) }

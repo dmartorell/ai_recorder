@@ -19,6 +19,9 @@ final class CaptureCoordinatorTests: XCTestCase {
 
         XCTAssertEqual(coordinator.phase, .recording)
         XCTAssertNotNil(coordinator.currentItem)
+        coordinator.addMarker()
+        XCTAssertEqual(coordinator.currentItem?.markers.count, 1)
+        XCTAssertEqual(coordinator.markerCount, 1)
         XCTAssertTrue(recorder.didStart)
         XCTAssertEqual(try fixture.repository.context.fetch(FetchDescriptor<AudioItem>()).count, 1)
 
@@ -27,6 +30,7 @@ final class CaptureCoordinatorTests: XCTestCase {
         guard let item = coordinator.currentItem else { return XCTFail("Missing Audio") }
         XCTAssertEqual(coordinator.phase, .available(item.id))
         XCTAssertEqual(item.localState, .available)
+        XCTAssertEqual(try fixture.repository.context.fetch(FetchDescriptor<AudioItem>()).first?.localState, .available)
         XCTAssertEqual(item.durationMilliseconds, 12_340)
         XCTAssertNotNil(item.endedAt)
     }
@@ -72,7 +76,7 @@ final class CaptureCoordinatorTests: XCTestCase {
         let files: AudioFileStore
 
         init() throws {
-            container = try ModelContainer(for: AudioItem.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            container = try ModelContainer(for: AudioItem.self, Marker.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
             files = AudioFileStore(rootDirectory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
             repository = AudioRepository(context: container.mainContext, files: files)
         }

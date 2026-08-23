@@ -49,6 +49,12 @@ final class CaptureCoordinator {
     private(set) var phase: Phase = .idle
     private(set) var currentItem: AudioItem?
     private(set) var errorMessage: String?
+    private(set) var currentAudioPositionMilliseconds = 0
+    private(set) var markerCount = 0
+    private(set) var markerConfirmation = 0
+
+    private var recordingStartedAt: Date?
+    private var positionTask: Task<Void, Never>?
 
     private let repository: AudioRepository
     private let recorder: any CaptureRecorder
@@ -95,6 +101,10 @@ final class CaptureCoordinator {
             currentItem = item
             try await recorder.start(outputURL: repository.files.url(for: item.id))
             phase = .recording
+            recordingStartedAt = .now
+            currentAudioPositionMilliseconds = 0
+            markerCount = item.markers.count
+            startPositionUpdates()
         } catch {
             if let item = currentItem {
                 let values = try? repository.files.url(for: item.id).resourceValues(forKeys: [.fileSizeKey])
@@ -111,14 +121,28 @@ final class CaptureCoordinator {
         }
     }
 
+    func addMarker() {
+        guard phase == .recording, let item = currentItem else { return }
+        do {
+            _ = try repository.addMarker(to: item, positionMilliseconds: currentAudioPositionMilliseconds)
+            markerCount = item.markers.count
+            markerConfirmation += 1
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func finalize() async {
         guard phase == .recording, let item = currentItem else { return }
+        positionTask?.cancel()
+        positionTask = nil
         phase = .finalizing
         item.localState = .finalizing
         do {
             try await recorder.finish()
             let summary = try await inspector.inspect(repository.files.url(for: item.id))
             item.durationMilliseconds = Int((summary.duration * 1_000).rounded())
+            currentAudioPositionMilliseconds = item.durationMilliseconds
             item.endedAt = .now
             item.localState = .available
             try repository.save()
@@ -127,6 +151,17 @@ final class CaptureCoordinator {
             item.localState = .needsRecovery
             try? repository.save()
             phase = .needsRecovery(item.id, error.localizedDescription)
+        }
+    }
+
+    private func startPositionUpdates() {
+        positionTask?.cancel()
+        positionTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(100))
+                guard !Task.isCancelled, let self, let startedAt = self.recordingStartedAt else { continue }
+                self.currentAudioPositionMilliseconds = max(0, Int(Date.now.timeIntervalSince(startedAt) * 1_000))
+            }
         }
     }
 }

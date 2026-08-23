@@ -55,7 +55,7 @@ final class RecoveryServiceTests: XCTestCase {
         let files: AudioFileStore
 
         init() throws {
-            container = try ModelContainer(for: AudioItem.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            container = try ModelContainer(for: AudioItem.self, Marker.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
             context = container.mainContext
             files = AudioFileStore(rootDirectory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
         }

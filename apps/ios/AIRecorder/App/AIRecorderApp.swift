@@ -12,7 +12,7 @@ struct AIRecorderApp: App {
         let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
         do {
             let configuration = ModelConfiguration(isStoredInMemoryOnly: isUITesting)
-            let container = try ModelContainer(for: AudioItem.self, configurations: configuration)
+            let container = try ModelContainer(for: AudioItem.self, Marker.self, configurations: configuration)
             modelContainer = container
             let files = try AudioFileStore.applicationStore()
             let recorder: any CaptureRecorder = isUITesting ? UITestCaptureRecorder() : FragmentedM4ARecorder()
@@ -27,7 +27,7 @@ struct AIRecorderApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(coordinator: coordinator, recoveryService: recoveryService)
-                .sheet(isPresented: Binding(get: { coordinator.phase == .recording }, set: { _ in })) {
+                .sheet(isPresented: Binding(get: { coordinator.phase == .recording || coordinator.phase == .finalizing }, set: { _ in })) {
                     NavigationStack { RecordingView(coordinator: coordinator) }
                 }
         }

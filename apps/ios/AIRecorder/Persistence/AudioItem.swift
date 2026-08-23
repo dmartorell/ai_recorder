@@ -15,6 +15,7 @@ final class AudioItem {
     var localStateRawValue: String
     var endedUnexpectedly: Bool
     var hasVerifiedCloudAudio: Bool
+    @Relationship(deleteRule: .cascade, inverse: \Marker.audio) var markers: [Marker]
 
     init(id: UUID = UUID(), startedAt: Date = .now, fileName: String) {
         self.id = id
@@ -25,6 +26,7 @@ final class AudioItem {
         self.localStateRawValue = LocalAudioState.capturing.rawValue
         self.endedUnexpectedly = false
         self.hasVerifiedCloudAudio = false
+        self.markers = []
     }
 
     var localState: LocalAudioState {

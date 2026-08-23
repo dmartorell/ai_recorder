@@ -27,6 +27,9 @@ final class LocalRecordingFlowUITests: XCTestCase {
         app.buttons["Record now"].tap()
 
         XCTAssertTrue(app.navigationBars["Capture"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Add marker"].exists)
+        app.buttons["Add marker"].tap()
+        XCTAssertTrue(app.staticTexts["Marker added"].waitForExistence(timeout: 5))
         app.buttons["Finalize"].tap()
         let confirmation = app.buttons.matching(identifier: "Finalize").element(boundBy: 1)
         XCTAssertTrue(confirmation.waitForExistence(timeout: 5))

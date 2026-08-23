@@ -1,32 +1,36 @@
 import SwiftUI
+import SwiftData
+import AVFAudio
 
 @main
 struct AIRecorderApp: App {
-    private let model: CaptureProofModel?
-    private let startupError: String?
+    let modelContainer: ModelContainer
+    @State private var coordinator: CaptureCoordinator
+    let recoveryService: RecoveryService
 
     init() {
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
         do {
-            let store = try CaptureProofStore.applicationStore()
-            model = CaptureProofModel(store: store)
-            startupError = nil
+            let configuration = ModelConfiguration(isStoredInMemoryOnly: isUITesting)
+            let container = try ModelContainer(for: AudioItem.self, configurations: configuration)
+            modelContainer = container
+            let files = try AudioFileStore.applicationStore()
+            let recorder: any CaptureRecorder = isUITesting ? UITestCaptureRecorder() : FragmentedM4ARecorder()
+            let inspector: any AudioInspector = isUITesting ? UITestAudioInspector() : OriginalAudioInspector()
+            _coordinator = State(initialValue: CaptureCoordinator(repository: AudioRepository(context: container.mainContext, files: files), recorder: recorder, inspector: inspector, permissionProvider: { isUITesting || AVAudioApplication.shared.recordPermission == .granted }))
+            recoveryService = RecoveryService(context: container.mainContext, files: files, inspector: inspector)
         } catch {
-            model = nil
-            startupError = error.localizedDescription
+            fatalError("Unable to initialize local storage: \(error)")
         }
     }
 
     var body: some Scene {
         WindowGroup {
-            if let model {
-                CaptureProofView(model: model)
-            } else {
-                ContentUnavailableView(
-                    "Capture Proof Unavailable",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(startupError ?? "Unknown startup error")
-                )
-            }
+            RootView(coordinator: coordinator, recoveryService: recoveryService)
+                .sheet(isPresented: Binding(get: { coordinator.phase == .recording }, set: { _ in })) {
+                    NavigationStack { RecordingView(coordinator: coordinator) }
+                }
         }
+        .modelContainer(modelContainer)
     }
 }

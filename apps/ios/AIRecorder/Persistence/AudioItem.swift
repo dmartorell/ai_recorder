@@ -1,0 +1,43 @@
+import Foundation
+import SwiftData
+
+enum CaptureItemError: Error { case invalidState }
+
+@Model
+final class AudioItem {
+    @Attribute(.unique) var id: UUID
+    var startedAt: Date
+    var endedAt: Date?
+    var customTitle: String?
+    var context: String
+    var fileName: String
+    var durationMilliseconds: Int
+    var localStateRawValue: String
+    var endedUnexpectedly: Bool
+    var hasVerifiedCloudAudio: Bool
+
+    init(id: UUID = UUID(), startedAt: Date = .now, fileName: String) {
+        self.id = id
+        self.startedAt = startedAt
+        self.fileName = fileName
+        self.context = ""
+        self.durationMilliseconds = 0
+        self.localStateRawValue = LocalAudioState.capturing.rawValue
+        self.endedUnexpectedly = false
+        self.hasVerifiedCloudAudio = false
+    }
+
+    var localState: LocalAudioState {
+        get { LocalAudioState(rawValue: localStateRawValue) ?? .needsRecovery }
+        set { localStateRawValue = newValue.rawValue }
+    }
+
+    func displayTitle(locale: Locale = .current, timeZone: TimeZone = .current) -> String {
+        if let customTitle, !customTitle.isEmpty { return customTitle }
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.timeZone = timeZone
+        formatter.dateFormat = locale.identifier.hasPrefix("es") ? "d MMM yyyy, HH:mm 'h'" : "MMM d, yyyy, h:mm a"
+        return "Audio - \(formatter.string(from: startedAt))"
+    }
+}

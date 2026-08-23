@@ -20,7 +20,9 @@ final class AVPlayerPlaybackPlayer: LocalPlaybackPlayer {
 
     var isPlaying: Bool { player.rate > 0 }
 
-    func play() { player.play() }
+    func play() {
+        player.playImmediately(atRate: 1)
+    }
     func pause() { player.pause() }
     func seek(to seconds: Double) {
         player.seek(
@@ -48,9 +50,7 @@ final class LocalPlaybackModel {
     }
 
     func togglePlayback() {
-        // Use the player's state as the source of truth. AVPlayer can pause
-        // because of an interruption without the model receiving a view update.
-        if player.isPlaying {
+        if isPlaying {
             player.pause()
             isPlaying = false
         } else {

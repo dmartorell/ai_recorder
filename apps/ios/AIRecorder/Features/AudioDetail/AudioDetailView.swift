@@ -32,7 +32,7 @@ struct AudioDetailView: View {
             Section("Playback") {
                 HStack {
                     Button {
-                        playback.restartPlayback()
+                        startPlaybackFromBeginning()
                     } label: {
                         Image(systemName: "backward.end.fill")
                     }
@@ -40,7 +40,7 @@ struct AudioDetailView: View {
                     .accessibilityHint("Starts playback from the beginning")
 
                     Button(playback.isPlaying ? "Pause" : "Play", systemImage: playback.isPlaying ? "pause.fill" : "play.fill") {
-                        playback.togglePlayback()
+                        togglePlayback()
                     }
                     .accessibilityHint("Plays the local Original Audio")
                 }
@@ -50,7 +50,7 @@ struct AudioDetailView: View {
                 Section("Markers") {
                     ForEach(item.markers.sorted { $0.positionMilliseconds < $1.positionMilliseconds }) { marker in
                         Button {
-                            playback.seek(to: Double(marker.positionMilliseconds) / 1_000)
+                            seekToMarker(marker.positionMilliseconds)
                         } label: {
                             Label(markerTime(marker.positionMilliseconds), systemImage: "bookmark.fill")
                         }
@@ -99,6 +99,42 @@ struct AudioDetailView: View {
     private func markerTime(_ milliseconds: Int) -> String {
         let seconds = milliseconds / 1_000
         return String(format: "%02d:%02d", seconds / 60, seconds % 60)
+    }
+
+    private func togglePlayback() {
+        do {
+            try activatePlaybackSession()
+            playback.togglePlayback()
+            playbackError = nil
+        } catch {
+            playbackError = "Playback failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func startPlaybackFromBeginning() {
+        do {
+            try activatePlaybackSession()
+            playback.restartPlayback()
+            playbackError = nil
+        } catch {
+            playbackError = "Playback failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func seekToMarker(_ milliseconds: Int) {
+        do {
+            try activatePlaybackSession()
+            playback.seek(to: Double(milliseconds) / 1_000)
+            playbackError = nil
+        } catch {
+            playbackError = "Playback failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func activatePlaybackSession() throws {
+        let audioSession = AVAudioSession.sharedInstance()
+        try audioSession.setCategory(.playback, mode: .spokenAudio)
+        try audioSession.setActive(true)
     }
 
     private func deleteAudio() {

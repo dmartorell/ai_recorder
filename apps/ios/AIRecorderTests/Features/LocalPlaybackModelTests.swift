@@ -55,6 +55,7 @@ final class LocalPlaybackModelTests: XCTestCase {
 
     private final class FakePlayer: LocalPlaybackPlayer {
         private(set) var isPlaying = false
+        var currentTimeSeconds: Double { seekedSeconds ?? 0 }
         private(set) var seekedSeconds: Double?
         private(set) var playCount = 0
         private(set) var pauseCount = 0

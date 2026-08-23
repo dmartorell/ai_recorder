@@ -1,0 +1,55 @@
+name: AIRecorder
+options:
+  bundleIdPrefix: com.danielmartorell
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: 6.0
+    IPHONEOS_DEPLOYMENT_TARGET: 17.0
+targets:
+  AIRecorder:
+    type: application
+    platform: iOS
+    sources: [AIRecorder]
+    info:
+      path: AIRecorder/App/Info.plist
+      properties:
+        NSMicrophoneUsageDescription: AI Recorder needs microphone access to record audio offline.
+        UIBackgroundModes: [audio]
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.danielmartorell.AIRecorder
+      DEVELOPMENT_TEAM: 89ZFGW6H88
+      GENERATE_INFOPLIST_FILE: NO
+    scheme:
+      testTargets: [AIRecorderTests, AIRecorderUITests]
+  AIRecorderUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [AIRecorderTests/UI]
+    dependencies: [target: AIRecorder]
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.danielmartorell.AIRecorderUITests
+      GENERATE_INFOPLIST_FILE: YES
+      TEST_TARGET_NAME: AIRecorder
+      CODE_SIGNING_ALLOWED: NO
+      CODE_SIGNING_REQUIRED: NO
+  AIRecorderTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [AIRecorderTests/CaptureProof, AIRecorderTests/Capture, AIRecorderTests/Storage]
+    info:
+      path: AIRecorderTests/Info.plist
+      properties:
+        NSMicrophoneUsageDescription: AI Recorder needs microphone access to record audio offline.
+        UIBackgroundModes: [audio]
+    dependencies: [target: AIRecorder]
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.danielmartorell.AIRecorderTests
+      GENERATE_INFOPLIST_FILE: NO
+      TEST_HOST: "$(BUILT_PRODUCTS_DIR)/AIRecorder.app/AIRecorder"
+      BUNDLE_LOADER: "$(TEST_HOST)"
+      CODE_SIGNING_ALLOWED: NO
+      CODE_SIGNING_REQUIRED: NO
+      SWIFT_EMIT_LOC_STRINGS: NO

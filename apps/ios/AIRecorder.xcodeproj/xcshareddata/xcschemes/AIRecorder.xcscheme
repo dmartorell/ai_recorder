@@ -50,6 +50,17 @@
                ReferencedContainer = "container:AIRecorder.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "DB2EB0DCAA6C1CA736C252F8"
+               BuildableName = "AIRecorderUITests.xctest"
+               BlueprintName = "AIRecorderUITests"
+               ReferencedContainer = "container:AIRecorder.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

@@ -19,6 +19,9 @@ final class CaptureCoordinatorTests: XCTestCase {
 
         XCTAssertEqual(coordinator.phase, .recording)
         XCTAssertNotNil(coordinator.currentItem)
+        coordinator.addMarker()
+        XCTAssertEqual(coordinator.currentItem?.markers.count, 1)
+        XCTAssertEqual(coordinator.markerCount, 1)
         XCTAssertTrue(recorder.didStart)
         XCTAssertEqual(try fixture.repository.context.fetch(FetchDescriptor<AudioItem>()).count, 1)
 
@@ -27,8 +30,28 @@ final class CaptureCoordinatorTests: XCTestCase {
         guard let item = coordinator.currentItem else { return XCTFail("Missing Audio") }
         XCTAssertEqual(coordinator.phase, .available(item.id))
         XCTAssertEqual(item.localState, .available)
+        XCTAssertEqual(try fixture.repository.context.fetch(FetchDescriptor<AudioItem>()).first?.localState, .available)
         XCTAssertEqual(item.durationMilliseconds, 12_340)
         XCTAssertNotNil(item.endedAt)
+    }
+
+    func testCanStartAnotherCaptureAfterFinalizing() async throws {
+        let fixture = try Fixture()
+        let recorder = FakeRecorder()
+        let coordinator = CaptureCoordinator(
+            repository: fixture.repository,
+            recorder: recorder,
+            inspector: FixedInspector(),
+            permissionProvider: { true }
+        )
+
+        await coordinator.start()
+        await coordinator.finalize()
+        await coordinator.start()
+
+        XCTAssertEqual(coordinator.phase, .recording)
+        XCTAssertEqual(try fixture.repository.context.fetch(FetchDescriptor<AudioItem>()).count, 2)
+        XCTAssertEqual(recorder.startCount, 2)
     }
 
     func testEmptyStartFailureRemovesOnlyEmptyAudio() async throws {
@@ -72,7 +95,7 @@ final class CaptureCoordinatorTests: XCTestCase {
         let files: AudioFileStore
 
         init() throws {
-            container = try ModelContainer(for: AudioItem.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            container = try ModelContainer(for: AudioItem.self, Marker.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
             files = AudioFileStore(rootDirectory: FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString))
             repository = AudioRepository(context: container.mainContext, files: files)
         }
@@ -85,6 +108,7 @@ final class CaptureCoordinatorTests: XCTestCase {
         let error: Error?
         let writesBytesBeforeFailing: Bool
         private(set) var didStart = false
+        private(set) var startCount = 0
         private var outputURL: URL?
 
         init(error: Error? = nil, writesBytesBeforeFailing: Bool = false) {
@@ -94,6 +118,7 @@ final class CaptureCoordinatorTests: XCTestCase {
 
         func start(outputURL: URL) async throws {
             didStart = true
+            startCount += 1
             self.outputURL = outputURL
             if writesBytesBeforeFailing { try Data("partial".utf8).write(to: outputURL) }
             if let error { throw error }

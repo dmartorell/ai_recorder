@@ -27,6 +27,19 @@ struct AudioDetailView: View {
                     .accessibilityHint("Plays the local Original Audio")
                 if let playbackError { Text(playbackError).foregroundStyle(.red) }
             }
+            if !item.markers.isEmpty {
+                Section("Markers") {
+                    ForEach(item.markers.sorted { $0.positionMilliseconds < $1.positionMilliseconds }) { marker in
+                        Button {
+                            seek(to: marker.positionMilliseconds)
+                        } label: {
+                            Label(markerTime(marker.positionMilliseconds), systemImage: "bookmark.fill")
+                        }
+                        .accessibilityLabel("Marker at \(markerTime(marker.positionMilliseconds))")
+                        .accessibilityHint("Seeks playback to this marker")
+                    }
+                }
+            }
             Section {
                 Button("Delete permanently", role: .destructive) { showingDelete = true }
             }
@@ -51,6 +64,18 @@ struct AudioDetailView: View {
     private var duration: String {
         let seconds = item.durationMilliseconds / 1000
         return String(format: "%02d:%02d", seconds / 60, seconds % 60)
+    }
+
+    private func markerTime(_ milliseconds: Int) -> String {
+        let seconds = milliseconds / 1_000
+        return String(format: "%02d:%02d", seconds / 60, seconds % 60)
+    }
+
+    private func seek(to milliseconds: Int) {
+        let time = CMTime(seconds: Double(milliseconds) / 1_000, preferredTimescale: 1_000)
+        if player == nil { player = AVPlayer(url: files.url(for: item.id)) }
+        player?.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
+        playbackError = nil
     }
 
     private func togglePlayback() {

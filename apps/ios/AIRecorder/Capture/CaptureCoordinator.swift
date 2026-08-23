@@ -1,9 +1,10 @@
+import AVFAudio
 import Foundation
 import Observation
-import AVFAudio
 
 @MainActor
 protocol CaptureRecorder: AnyObject {
+    var events: AsyncStream<CaptureRecorderEvent> { get }
     func start(outputURL: URL) async throws
     func finish() async throws
 }
@@ -17,6 +18,7 @@ extension OriginalAudioInspector: AudioInspector {}
 
 @MainActor
 final class UITestCaptureRecorder: CaptureRecorder {
+    let events: AsyncStream<CaptureRecorderEvent> = AsyncStream { $0.finish() }
     private var outputURL: URL?
 
     func start(outputURL: URL) async throws {
@@ -40,6 +42,7 @@ final class CaptureCoordinator {
         case idle
         case preparing
         case recording
+        case interrupted(startedAt: Date)
         case finalizing
         case available(UUID)
         case needsRecovery(UUID, String)
@@ -52,9 +55,12 @@ final class CaptureCoordinator {
     private(set) var currentAudioPositionMilliseconds = 0
     private(set) var markerCount = 0
     private(set) var markerConfirmation = 0
+    private(set) var activeInputName = "No input"
 
     private var recordingStartedAt: Date?
+    private var positionBaseMilliseconds = 0
     private var positionTask: Task<Void, Never>?
+    private var eventTask: Task<Void, Never>?
 
     private let repository: AudioRepository
     private let recorder: any CaptureRecorder
@@ -73,11 +79,16 @@ final class CaptureCoordinator {
         self.recorder = recorder
         self.inspector = inspector
         self.permissionProvider = permissionProvider
+        activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? "No input"
     }
 
     var files: AudioFileStore { repository.files }
     var microphonePermission: AVAudioApplication.recordPermission { AVAudioApplication.shared.recordPermission }
-    var inputName: String { AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? "No input" }
+    var inputName: String { activeInputName }
+    var isInterrupted: Bool {
+        if case .interrupted = phase { return true }
+        return false
+    }
 
     func requestPermission() async {
         guard microphonePermission == .undetermined else { return }
@@ -102,9 +113,12 @@ final class CaptureCoordinator {
             try await recorder.start(outputURL: repository.files.url(for: item.id))
             phase = .recording
             recordingStartedAt = .now
+            positionBaseMilliseconds = 0
             currentAudioPositionMilliseconds = 0
             markerCount = item.markers.count
+            activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? "No input"
             startPositionUpdates()
+            startEventConsumption()
         } catch {
             if let item = currentItem {
                 let values = try? repository.files.url(for: item.id).resourceValues(forKeys: [.fileSizeKey])
@@ -134,8 +148,7 @@ final class CaptureCoordinator {
 
     func finalize() async {
         guard phase == .recording, let item = currentItem else { return }
-        positionTask?.cancel()
-        positionTask = nil
+        stopLiveUpdates()
         phase = .finalizing
         item.localState = .finalizing
         do {
@@ -154,23 +167,67 @@ final class CaptureCoordinator {
         }
     }
 
+    private func startEventConsumption() {
+        eventTask?.cancel()
+        eventTask = Task { [weak self, events = recorder.events] in
+            for await event in events {
+                guard !Task.isCancelled, let self else { return }
+                self.handle(event)
+            }
+        }
+    }
+
+    private func handle(_ event: CaptureRecorderEvent) {
+        guard let item = currentItem else { return }
+        switch event {
+        case let .interruptionBegan(date):
+            guard phase == .recording else { return }
+            positionBaseMilliseconds = currentAudioPositionMilliseconds
+            stopPositionUpdates()
+            phase = .interrupted(startedAt: date)
+            try? repository.record(CaptureEvent(kind: .interruptionBegan, date: date, audioPositionMilliseconds: currentAudioPositionMilliseconds, inputName: nil, shouldResume: false), for: item)
+        case let .interruptionEnded(date, shouldResume):
+            guard case .interrupted = phase else { return }
+            try? repository.record(CaptureEvent(kind: .interruptionEnded, date: date, audioPositionMilliseconds: currentAudioPositionMilliseconds, inputName: nil, shouldResume: shouldResume), for: item)
+            if shouldResume {
+                phase = .recording
+                recordingStartedAt = date
+                startPositionUpdates()
+            } else {
+                errorMessage = "Recording was interrupted and cannot resume automatically."
+            }
+        case let .routeChanged(date, inputName):
+            activeInputName = inputName
+            try? repository.record(CaptureEvent(kind: .routeChanged, date: date, audioPositionMilliseconds: currentAudioPositionMilliseconds, inputName: inputName, shouldResume: false), for: item)
+        }
+    }
+
     private var canBeginCapture: Bool {
         switch phase {
-        case .idle, .available, .needsRecovery, .failed:
-            true
-        case .preparing, .recording, .finalizing:
-            false
+        case .idle, .available, .needsRecovery, .failed: true
+        case .preparing, .recording, .interrupted, .finalizing: false
         }
     }
 
     private func startPositionUpdates() {
-        positionTask?.cancel()
+        stopPositionUpdates()
         positionTask = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(100))
                 guard !Task.isCancelled, let self, let startedAt = self.recordingStartedAt else { continue }
-                self.currentAudioPositionMilliseconds = max(0, Int(Date.now.timeIntervalSince(startedAt) * 1_000))
+                self.currentAudioPositionMilliseconds = self.positionBaseMilliseconds + max(0, Int(Date.now.timeIntervalSince(startedAt) * 1_000))
             }
         }
+    }
+
+    private func stopPositionUpdates() {
+        positionTask?.cancel()
+        positionTask = nil
+    }
+
+    private func stopLiveUpdates() {
+        stopPositionUpdates()
+        eventTask?.cancel()
+        eventTask = nil
     }
 }

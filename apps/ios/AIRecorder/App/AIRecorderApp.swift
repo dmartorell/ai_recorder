@@ -12,7 +12,7 @@ struct AIRecorderApp: App {
         let isUITesting = ProcessInfo.processInfo.arguments.contains("-ui-testing")
         do {
             let configuration = ModelConfiguration(isStoredInMemoryOnly: isUITesting)
-            let container = try ModelContainer(for: AudioItem.self, Marker.self, configurations: configuration)
+            let container = try ModelContainer(for: AudioItem.self, Marker.self, CaptureEventRecord.self, configurations: configuration)
             modelContainer = container
             let files = try AudioFileStore.applicationStore()
             let recorder: any CaptureRecorder = isUITesting ? UITestCaptureRecorder() : FragmentedM4ARecorder()

@@ -43,6 +43,10 @@ struct PreparationView: View {
             .navigationTitle("Prepare")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
             .onAppear { coordinator.refreshResources() }
+            .onDisappear { coordinator.releasePreparationAudioSession() }
+            .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)) { _ in
+                coordinator.refreshInputRoute()
+            }
             .onOpenURL { _ in }
         }
         .onChange(of: showingSettings) { _, newValue in

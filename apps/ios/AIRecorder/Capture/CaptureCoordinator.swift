@@ -119,8 +119,21 @@ final class CaptureCoordinator {
     }
 
     func refreshResources() {
+        refreshInputRoute()
         storageAssessment = storageMonitor.refresh()
         isLowBatteryWarning = batteryMonitor.refresh()
+    }
+
+    func refreshInputRoute() {
+        let audioSession = AVAudioSession.sharedInstance()
+        try? audioSession.setCategory(.record, mode: .default, options: [.allowBluetoothHFP])
+        try? audioSession.setActive(true)
+        activeInputName = Self.currentInputName()
+    }
+
+    func releasePreparationAudioSession() {
+        guard phase != .recording, phase != .finalizing else { return }
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     func requestPermission() async {

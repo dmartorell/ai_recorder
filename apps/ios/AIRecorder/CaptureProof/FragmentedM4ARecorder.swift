@@ -182,7 +182,11 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         stopRequested = false
         nextPresentationTime = .zero
         installNotificationObservers()
-        session.startRunning()
+        // startRunning can block while iOS negotiates a Bluetooth route. Queue it
+        // after configuration so the UI can enter Recording immediately.
+        queue.async {
+            session.startRunning()
+        }
     }
 
     private func finishOnQueue(continuation: CheckedContinuation<Void, Error>) {

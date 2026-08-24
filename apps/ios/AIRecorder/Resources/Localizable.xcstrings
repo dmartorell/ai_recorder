@@ -1413,6 +1413,39 @@
         }
       },
       "comment": "Destructive confirmation. Placeholder is the Audio title."
+    },
+    "Delete permanently": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete permanently"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar permanentemente"
+          }
+        }
+      },
+      "comment": "Final destructive action after warning that no verified cloud copy exists."
+    },
+    "Could not delete local Audio": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not delete local Recording"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo eliminar el audio local"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

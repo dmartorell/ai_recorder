@@ -41,7 +41,7 @@ final class LocalRecordingFlowUITests: XCTestCase {
 
     func testMetadataAndTwoStepDeletionKeepAudioUntilFinalConfirmation() {
         let app = XCUIApplication()
-        app.launchArguments = ["-ui-testing", "-local-audio-fixture"]
+        app.launchArguments = ["-ui-testing", "-local-audio-fixture", "-app-language", "en"]
         app.launch()
 
         let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Recording -'")).firstMatch
@@ -78,6 +78,32 @@ final class LocalRecordingFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars["Recording"].waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Local source"].exists)
+    }
+
+    func testLibrarySwipeDeletionRequiresBothConfirmations() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-local-audio-fixture", "-app-language", "en"]
+        app.launch()
+
+        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Recording -'")).firstMatch
+        XCTAssertTrue(audioRow.waitForExistence(timeout: 5))
+        audioRow.swipeLeft()
+
+        let deleteButton = app.buttons.matching(
+            NSPredicate(format: "label BEGINSWITH[c] 'Delete Recording -'")
+        ).firstMatch
+        XCTAssertTrue(deleteButton.waitForExistence(timeout: 5))
+        deleteButton.tap()
+        XCTAssertTrue(app.alerts["Delete local Recording?"].waitForExistence(timeout: 5))
+
+        app.alerts["Delete local Recording?"].buttons["Delete"].tap()
+        let permanentDeletionAlert = app.alerts.matching(
+            NSPredicate(format: "label CONTAINS[c] 'permanently'")
+        ).firstMatch
+        XCTAssertTrue(permanentDeletionAlert.waitForExistence(timeout: 5))
+        permanentDeletionAlert.buttons["Delete permanently"].tap()
+
+        XCTAssertFalse(audioRow.waitForExistence(timeout: 2))
     }
 
     func testSpanishCaptureFlowUsesLocalizedControls() {

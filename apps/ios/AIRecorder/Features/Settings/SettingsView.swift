@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var settings: SettingsModel
+    let onConfigureCloudBackup: () -> Void
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -17,6 +18,11 @@ struct SettingsView: View {
                     Text("Language")
                 } footer: {
                     Text("Generated titles and interface text update immediately. Your titles stay unchanged.")
+                }
+
+                Section("Cloud backup") {
+                    Button("Configure cloud backup", action: onConfigureCloudBackup)
+                        .accessibilityHint("Sign in with an email magic link without affecting local Audio")
                 }
             }
             .navigationTitle("Settings")

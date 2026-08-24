@@ -22,4 +22,30 @@ final class AppConfigurationTests: XCTestCase {
 
         XCTAssertTrue(backgroundModes?.contains("audio") == true)
     }
+
+    func testAppDeclaresLaunchScreenConfiguration() {
+        let launchScreen = appBundle.object(forInfoDictionaryKey: "UILaunchScreen") as? [String: Any]
+
+        XCTAssertNotNil(launchScreen)
+    }
+
+    func testAppRequiresFullScreen() {
+        let requiresFullScreen = appBundle.object(forInfoDictionaryKey: "UIRequiresFullScreen") as? Bool
+
+        XCTAssertEqual(requiresFullScreen, true)
+    }
+
+    func testAppDeclaresEverySupportedInterfaceOrientation() {
+        let orientations = appBundle.object(forInfoDictionaryKey: "UISupportedInterfaceOrientations") as? [String]
+
+        XCTAssertEqual(
+            Set(orientations ?? []),
+            [
+                "UIInterfaceOrientationPortrait",
+                "UIInterfaceOrientationPortraitUpsideDown",
+                "UIInterfaceOrientationLandscapeLeft",
+                "UIInterfaceOrientationLandscapeRight"
+            ]
+        )
+    }
 }

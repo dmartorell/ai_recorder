@@ -5,22 +5,26 @@ struct RootView: View {
     let coordinator: CaptureCoordinator
     let recoveryService: RecoveryService
     let settings: SettingsModel
+    let cloudIdentity: CloudIdentityCoordinator
     @Environment(\.locale) private var locale
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \AudioItem.startedAt, order: .reverse) private var items: [AudioItem]
     @State private var selection: AudioSelectionModel
     @State private var showingPreparation = false
     @State private var showingSettings = false
+    @State private var showingCloudIdentity = false
+    @State private var shouldShowCloudIdentityAfterSettingsDismissal = false
     @State private var selectedItem: AudioItem?
     @State private var itemPendingDeletion: AudioItem?
     @State private var showingUnbackedDeletionWarning = false
     @State private var showingPermanentDeletion = false
     @State private var deletionError: String?
 
-    init(coordinator: CaptureCoordinator, recoveryService: RecoveryService, settings: SettingsModel) {
+    init(coordinator: CaptureCoordinator, recoveryService: RecoveryService, settings: SettingsModel, cloudIdentity: CloudIdentityCoordinator) {
         self.coordinator = coordinator
         self.recoveryService = recoveryService
         self.settings = settings
+        self.cloudIdentity = cloudIdentity
         _selection = State(initialValue: AudioSelectionModel())
     }
 
@@ -68,8 +72,12 @@ struct RootView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingSettings) {
-                SettingsView(settings: settings)
+            .sheet(isPresented: $showingSettings, onDismiss: presentCloudIdentityAfterSettingsDismissal) {
+                SettingsView(settings: settings, onConfigureCloudBackup: configureCloudBackup)
+                    .presentationDetents([.medium])
+            }
+            .sheet(isPresented: $showingCloudIdentity) {
+                CloudIdentityView(coordinator: cloudIdentity)
                     .presentationDetents([.medium])
             }
             .sheet(isPresented: $showingPreparation) {
@@ -115,6 +123,17 @@ struct RootView: View {
                 }
             }
         }
+    }
+
+    private func configureCloudBackup() {
+        shouldShowCloudIdentityAfterSettingsDismissal = true
+        showingSettings = false
+    }
+
+    private func presentCloudIdentityAfterSettingsDismissal() {
+        guard shouldShowCloudIdentityAfterSettingsDismissal else { return }
+        shouldShowCloudIdentityAfterSettingsDismissal = false
+        showingCloudIdentity = true
     }
 
     private func requestDeletion(_ item: AudioItem) {

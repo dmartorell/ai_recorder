@@ -7,6 +7,7 @@ struct AIRecorderApp: App {
     let modelContainer: ModelContainer
     @State private var coordinator: CaptureCoordinator
     @State private var settings = SettingsModel()
+    @State private var cloudIdentity: CloudIdentityCoordinator
     let recoveryService: RecoveryService
 
     init() {
@@ -37,6 +38,8 @@ struct AIRecorderApp: App {
             let storageMonitor: (any StorageMonitoring)? = isUITesting ? UITestStorageMonitor() : nil
             _coordinator = State(initialValue: CaptureCoordinator(repository: AudioRepository(context: container.mainContext, files: files), recorder: recorder, inspector: inspector, storageMonitor: storageMonitor, permissionProvider: { isUITesting || AVAudioApplication.shared.recordPermission == .granted }))
             recoveryService = RecoveryService(context: container.mainContext, files: files, inspector: inspector)
+            let authentication: any CloudAuthenticating = SupabaseConfiguration.load().map(SupabaseCloudAuthentication.init) ?? UnavailableCloudAuthentication()
+            _cloudIdentity = State(initialValue: CloudIdentityCoordinator(authentication: authentication))
         } catch {
             fatalError("Unable to initialize local storage: \(error)")
         }
@@ -44,8 +47,11 @@ struct AIRecorderApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView(coordinator: coordinator, recoveryService: recoveryService, settings: settings)
+            RootView(coordinator: coordinator, recoveryService: recoveryService, settings: settings, cloudIdentity: cloudIdentity)
                 .environment(\.locale, settings.locale)
+                .onOpenURL { url in
+                    Task { await cloudIdentity.handleMagicLink(url) }
+                }
         }
         .modelContainer(modelContainer)
     }

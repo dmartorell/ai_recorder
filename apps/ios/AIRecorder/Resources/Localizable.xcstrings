@@ -1,1535 +1,2069 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "Audio": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recording"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ Audio items were retained because deletion failed." : {
+
+    },
+    "%@ of %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ of %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ de %@"
+          }
+        }
+      }
+    },
+    "%@ selected" : {
+
+    },
+    "%lld Audio items were retained because deletion failed." : {
+      "comment" : "Bulk deletion failure message. Placeholder is the number of Audio items retained.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld Recording items were retained because deletion failed."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se conservaron %lld audios porque no se pudieron eliminar."
+          }
+        }
+      }
+    },
+    "%lld selected" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld selected"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld seleccionados"
+          }
+        }
+      }
+    },
+    "≈ %@ min" : {
+
+    },
+    "Active input" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active input"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrada activa"
+          }
+        }
+      }
+    },
+    "Add marker" : {
+      "comment" : "Creates a timestamp marker in the active Capture.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add marker"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir marcador"
+          }
+        }
+      }
+    },
+    "Allowed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allowed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitido"
+          }
+        }
+      }
+    },
+    "App language" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App language"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idioma de la app"
+          }
+        }
+      }
+    },
+    "Audio" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio"
+          }
+        }
+      }
+    },
+    "Audio - %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording - %@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio - %@"
+          }
+        }
+      }
+    },
+    "Audio interruption ended this Capture. Finalizing playable audio…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio interruption ended this Capture. Finalizing playable audio…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Una interrupción de audio terminó esta captura. Finalizando el audio reproducible…"
+          }
+        }
+      }
+    },
+    "Available" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disponible"
+          }
+        }
+      }
+    },
+    "Available after Capture finishes" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available after Capture finishes"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disponible cuando finalice la captura"
+          }
+        }
+      }
+    },
+    "Available recording" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Available recording"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grabación disponible"
+          }
+        }
+      }
+    },
+    "Back 10 seconds" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back 10 seconds"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retroceder 10 segundos"
+          }
+        }
+      }
+    },
+    "Backup eligibility" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backup eligibility"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elegibilidad para copia"
+          }
+        }
+      }
+    },
+    "Battery is low. Capture will continue." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Battery is low. Capture will continue."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La batería está baja. La captura continuará."
+          }
+        }
+      }
+    },
+    "Below safe threshold" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Below safe threshold"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por debajo del umbral seguro"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar"
+          }
+        }
+      }
+    },
+    "Capture" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audio"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captura"
           }
         }
       }
     },
-    "Recording": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recording"
+    "Capture continues until you confirm." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture continues until you confirm."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grabación"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La captura continúa hasta que confirmes."
           }
         }
       }
     },
-    "No Audio Yet": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No Recordings Yet"
+    "Capture is finalizing to preserve playable Original Audio." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture is finalizing to preserve playable Original Audio."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aún no hay audios"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La captura se está finalizando para conservar el audio original reproducible."
           }
         }
       }
     },
-    "Recordings you create appear here.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recordings you create appear here."
+    "Capture starts immediately after permission is granted" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture starts immediately after permission is granted"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Las grabaciones que crees aparecerán aquí."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La captura empieza de inmediato tras conceder el permiso"
           }
         }
       }
     },
-    "Record": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Record"
+    "Capturing" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capturing"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grabar"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capturando"
           }
         }
-      },
-      "comment": "Starts a new Capture immediately after permission is granted."
+      }
     },
-    "Settings": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
+    "Check your email and open the magic link to finish signing in." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check your email and open the magic link to finish signing in."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Configuración"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisa tu correo y abre el enlace mágico para terminar de iniciar sesión."
           }
         }
       }
     },
-    "Choose the app language": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose the app language"
+    "Choose the app language" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the app language"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elige el idioma de la app"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige el idioma de la app"
           }
         }
       }
     },
-    "Capture starts immediately after permission is granted": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture starts immediately after permission is granted"
+    "Cloud backup" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud backup"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La captura empieza de inmediato tras conceder el permiso"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copia en la nube"
           }
         }
       }
     },
-    "Ended by interruption": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ended by interruption"
+    "Cloud backup is not configured on this app." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud backup is not configured on this app."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalizada por una interrupción"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La copia en la nube no está configurada en esta app."
           }
         }
       }
     },
-    "Ended: input unavailable": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ended: input unavailable"
+    "Configure cloud backup" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configure cloud backup"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalizada: entrada no disponible"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurar copia en la nube"
           }
         }
       }
     },
-    "Only on this iPhone": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Only on this iPhone"
+    "Context" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Context"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solo en este iPhone"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contexto"
           }
         }
       }
     },
-    "Needs recovery": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Needs recovery"
+    "Continue recording" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue recording"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Necesita recuperación"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir grabando"
           }
         }
       }
     },
-    "Capturing": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capturing"
+    "Could not delete local Audio" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not delete local Recording"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capturando"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo eliminar el audio local"
           }
         }
       }
     },
-    "Finalizing": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalizing"
+    "Could not delete local Audio: %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not delete local Recording: %@"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalizando"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo eliminar el audio local: %@"
           }
         }
       }
     },
-    "Recovered": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recovered"
+    "Could not delete selected Audio" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not delete selected Recordings"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recuperada"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron eliminar los audios seleccionados"
           }
         }
-      },
-      "comment": "State for playable Original Audio restored after an unexpected Capture end."
+      }
     },
-    "Language": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Language"
+    "Date" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Idioma"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fecha"
           }
         }
       }
     },
-    "App language": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "App language"
+    "Delete" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Idioma de la app"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
           }
         }
       }
     },
-    "Spanish": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spanish"
+    "Delete %@ permanently?" : {
+      "comment" : "Destructive confirmation. Placeholder is the Audio title.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete %@ permanently?"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Español"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar %@ permanentemente?"
           }
         }
       }
     },
-    "English": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "English"
+    "Delete %lld Audio items permanently?" : {
+      "comment" : "Final bulk permanent deletion confirmation. Placeholder is the selected Audio count.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete %lld Recording items permanently?"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inglés"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar %lld audios permanentemente?"
           }
         }
       }
     },
-    "Generated titles and interface text update immediately. Your titles stay unchanged.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Generated titles and interface text update immediately. Your titles stay unchanged."
+    "Delete %lld local Audio items?" : {
+      "comment" : "First bulk permanent-loss confirmation. Placeholder is the selected Audio count.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete %lld local Recording items?"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los títulos generados y el texto de la interfaz se actualizan al instante. Tus títulos no cambian."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar %lld audios locales?"
           }
         }
       }
     },
-    "Done": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Done"
+    "Delete %lld selected Audio items" : {
+      "comment" : "Accessibility label for the bulk deletion button. Placeholder is the selected Audio count.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete %lld selected Recordings"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Listo"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar %lld audios seleccionados"
           }
         }
       }
     },
-    "Preparation": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparation"
+    "Delete local Audio?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete local Recording?"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparación"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Eliminar el audio local?"
           }
         }
       }
     },
-    "Microphone": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Microphone"
+    "Delete permanently" : {
+      "comment" : "Final destructive action after warning that no verified cloud copy exists.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete permanently"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Micrófono"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar permanentemente"
           }
         }
       }
     },
-    "Input": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Input"
+    "Denied" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denied"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entrada"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Denegado"
           }
         }
       }
     },
-    "Format": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Format"
+    "Done" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Formato"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo"
           }
         }
       }
     },
-    "Free storage": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free storage"
+    "Duration" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duration"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Almacenamiento libre"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración"
           }
         }
       }
     },
-    "Available recording": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Available recording"
+    "Edit metadata" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit metadata"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grabación disponible"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar metadatos"
           }
         }
       }
     },
-    "Battery is low. Capture will continue.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Battery is low. Capture will continue."
+    "Edit Metadata" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit Metadata"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La batería está baja. La captura continuará."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar metadatos"
           }
         }
       }
     },
-    "Microphone access is required. Enable it in Settings.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Microphone access is required. Enable it in Settings."
+    "Email" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se necesita acceso al micrófono. Actívalo en Configuración."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Correo electrónico"
           }
         }
       }
     },
-    "Open Settings": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Open Settings"
+    "Ended by interruption" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ended by interruption"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abrir Configuración"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizada por una interrupción"
           }
         }
       }
     },
-    "Record now": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Record now"
+    "Ended: input unavailable" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ended: input unavailable"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Grabar ahora"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizada: entrada no disponible"
           }
         }
       }
     },
-    "Prepare": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prepare"
+    "English" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preparar"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inglés"
           }
         }
       }
     },
-    "Cancel": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel"
+    "Finalize" : {
+      "comment" : "Stops the active Capture and verifies its local Original Audio.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalize"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancelar"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizar"
           }
         }
       }
     },
-    "Available": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Available"
+    "Finalize this Audio?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalize this Recording?"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Disponible"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Finalizar este audio?"
           }
         }
       }
     },
-    "Below safe threshold": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Below safe threshold"
+    "Finalizing" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizing"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Por debajo del umbral seguro"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finalizando"
           }
         }
       }
     },
-    "Unavailable": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unavailable"
+    "For the interruption test, record for at least 25 seconds, terminate the process without Finalize, then relaunch. Repeat while the iPhone is locked." : {
+
+    },
+    "Format" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No disponible"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Formato"
           }
         }
       }
     },
-    "Recorded duration": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recorded duration"
+    "Forward 10 seconds" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Forward 10 seconds"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Duración grabada"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanzar 10 segundos"
           }
         }
       }
     },
-    "Active input": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Active input"
+    "Free storage" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free storage"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Entrada activa"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Almacenamiento libre"
           }
         }
       }
     },
-    "No input level detected. Capture will continue.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No input level detected. Capture will continue."
+    "Free storage is below the safe recording threshold." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free storage is below the safe recording threshold."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se detecta nivel de entrada. La captura continuará."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El almacenamiento libre está por debajo del umbral seguro de grabación."
           }
         }
       }
     },
-    "Add marker": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add marker"
+    "Free storage is getting low." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Free storage is getting low."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Añadir marcador"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El almacenamiento libre se está agotando."
           }
         }
-      },
-      "comment": "Creates a timestamp marker in the active Capture."
+      }
     },
-    "Marks the current audio time": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marks the current audio time"
+    "Generated titles and interface text update immediately. Your titles stay unchanged." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generated titles and interface text update immediately. Your titles stay unchanged."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marca el momento actual del audio"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los títulos generados y el texto de la interfaz se actualizan al instante. Tus títulos no cambian."
           }
         }
       }
     },
-    "Unavailable while Capture is finalizing": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unavailable while Capture is finalizing"
+    "Input" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Input"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No disponible mientras se finaliza la captura"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrada"
           }
         }
       }
     },
-    "Marker added": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marker added"
+    "Language" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marcador añadido"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idioma"
           }
         }
       }
     },
-    "Finalize": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalize"
+    "Leave the title empty to use the generated title." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave the title empty to use the generated title."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalizar"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deja el título vacío para usar el título generado."
           }
         }
-      },
-      "comment": "Stops the active Capture and verifies its local Original Audio."
+      }
     },
-    "Capture": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture"
+    "Marker added" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marker added"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Captura"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcador añadido"
           }
         }
       }
     },
-    "Finalize this Audio?": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finalize this Recording?"
+    "Markers" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Markers"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿Finalizar este audio?"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marcadores"
           }
         }
       }
     },
-    "Continue recording": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continue recording"
+    "Marks the current audio time" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marks the current audio time"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Seguir grabando"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marca el momento actual del audio"
           }
         }
       }
     },
-    "Capture continues until you confirm.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture continues until you confirm."
+    "Microphone" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La captura continúa hasta que confirmes."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Micrófono"
           }
         }
       }
     },
-    "Audio interruption ended this Capture. Finalizing playable audio…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audio interruption ended this Capture. Finalizing playable audio…"
+    "Microphone access is required. Enable it in Settings." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone access is required. Enable it in Settings."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Una interrupción de audio terminó esta captura. Finalizando el audio reproducible…"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se necesita acceso al micrófono. Actívalo en Configuración."
           }
         }
       }
     },
-    "The audio input became unavailable. Finalizing playable audio…": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The audio input became unavailable. Finalizing playable audio…"
+    "Microphone permission is required to record." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone permission is required to record."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La entrada de audio dejó de estar disponible. Finalizando el audio reproducible…"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se necesita permiso de micrófono para grabar."
           }
         }
       }
     },
-    "Not enough free storage to start Capture.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not enough free storage to start Capture."
+    "Needs recovery" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Needs recovery"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No hay suficiente almacenamiento libre para iniciar la captura."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Necesita recuperación"
           }
         }
       }
     },
-    "Free storage is below the safe recording threshold.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free storage is below the safe recording threshold."
+    "No Audio Yet" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Recordings Yet"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El almacenamiento libre está por debajo del umbral seguro de grabación."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no hay audios"
           }
         }
       }
     },
-    "Microphone permission is required to record.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Microphone permission is required to record."
+    "No input level detected. Capture will continue." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No input level detected. Capture will continue."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se necesita permiso de micrófono para grabar."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se detecta nivel de entrada. La captura continuará."
           }
         }
       }
     },
-    "Free storage is getting low.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free storage is getting low."
+    "No verified cloud copy exists for the selected Audio. Deletion is permanent." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No verified cloud copy exists for the selected Recordings. Deletion is permanent."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El almacenamiento libre se está agotando."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay una copia en la nube verificada de los audios seleccionados. La eliminación es permanente."
           }
         }
       }
     },
-    "Capture is finalizing to preserve playable Original Audio.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Capture is finalizing to preserve playable Original Audio."
+    "No verified cloud copy exists. Deleting this Original Audio is permanent." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No verified cloud copy exists. Deleting this Original Audio is permanent."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La captura se está finalizando para conservar el audio original reproducible."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay una copia en la nube verificada. Eliminar este audio original es permanente."
           }
         }
       }
     },
-    "Edit metadata": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edit metadata"
+    "Not enough free storage to start Capture." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enough free storage to start Capture."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Editar metadatos"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay suficiente almacenamiento libre para iniciar la captura."
           }
         }
       }
     },
-    "Delete": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete"
+    "Not requested" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not requested"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eliminar"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No solicitado"
           }
         }
       }
     },
-    "Delete local Audio?": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete local Recording?"
+    "Not selected" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not selected"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿Eliminar el audio local?"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No seleccionado"
           }
         }
       }
     },
-    "No verified cloud copy exists. Deleting this Original Audio is permanent.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No verified cloud copy exists. Deleting this Original Audio is permanent."
+    "Only on this iPhone" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only on this iPhone"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No hay una copia en la nube verificada. Eliminar este audio original es permanente."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solo en este iPhone"
           }
         }
       }
     },
-    "This removes the local Original Audio and its metadata.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This removes the local Original Audio and its metadata."
+    "Open Settings" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esto elimina el audio original local y sus metadatos."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Configuración"
           }
         }
       }
     },
-    "Playback failed: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Playback failed: %@"
+    "Original Audio is empty" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original Audio is empty"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La reproducción falló: %@"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El audio original está vacío"
           }
         }
       }
     },
-    "Could not delete local Audio: %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Could not delete local Recording: %@"
+    "Original Audio is missing" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original Audio is missing"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo eliminar el audio local: %@"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falta el audio original"
           }
         }
       }
     },
-    "Date": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date"
+    "Original Audio needs recovery" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Original Audio needs recovery"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fecha"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El audio original necesita recuperación"
           }
         }
       }
     },
-    "Duration": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Duration"
+    "Pause" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Duración"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar"
           }
         }
       }
     },
-    "State": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "State"
+    "Play" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Estado"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproducir"
           }
         }
       }
     },
-    "Playback": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Playback"
+    "Playback" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playback"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reproducción"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproducción"
           }
         }
       }
     },
-    "Playback position": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Playback position"
+    "Playback failed: %@" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playback failed: %@"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Posición de reproducción"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La reproducción falló: %@"
           }
         }
       }
     },
-    "%@ of %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ of %@"
+    "Playback position" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playback position"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ de %@"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posición de reproducción"
           }
         }
       }
     },
-    "Back 10 seconds": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Back 10 seconds"
+    "Plays or pauses the local Original Audio" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plays or pauses the local Original Audio"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retroceder 10 segundos"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduce o pausa el audio original local"
           }
         }
       }
     },
-    "Seeks backward in the local Original Audio": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Seeks backward in the local Original Audio"
+    "Preparation" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparation"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retrocede en el audio original local"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparación"
           }
         }
       }
     },
-    "Pause": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pause"
+    "Prepare" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prepare"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausar"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparar"
           }
         }
       }
     },
-    "Play": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Play"
+    "Ready for cloud backup" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready for cloud backup"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reproducir"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista para copia en la nube"
           }
         }
       }
     },
-    "Plays or pauses the local Original Audio": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Plays or pauses the local Original Audio"
+    "Record" : {
+      "comment" : "Starts a new Capture immediately after permission is granted.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Reproduce o pausa el audio original local"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grabar"
           }
         }
       }
     },
-    "Forward 10 seconds": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Forward 10 seconds"
+    "Record now" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record now"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avanzar 10 segundos"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grabar ahora"
           }
         }
       }
     },
-    "Seeks forward in the local Original Audio": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Seeks forward in the local Original Audio"
+    "Recorded duration" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recorded duration"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avanza en el audio original local"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración grabada"
           }
         }
       }
     },
-    "Markers": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Markers"
+    "Recording" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Marcadores"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grabación"
           }
         }
       }
     },
-    "Seeks playback to this marker": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Seeks playback to this marker"
+    "Recordings you create appear here." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recordings you create appear here."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desplaza la reproducción a este marcador"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las grabaciones que crees aparecerán aquí."
           }
         }
       }
     },
-    "Title": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Title"
+    "Recovered" : {
+      "comment" : "State for playable Original Audio restored after an unexpected Capture end.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovered"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Título"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recuperada"
           }
         }
       }
     },
-    "Leave the title empty to use the generated title.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Leave the title empty to use the generated title."
+    "Save" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deja el título vacío para usar el título generado."
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar"
           }
         }
       }
     },
-    "Context": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Context"
+    "Seeks backward in the local Original Audio" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seeks backward in the local Original Audio"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Contexto"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retrocede en el audio original local"
           }
         }
       }
     },
-    "Edit Metadata": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Edit Metadata"
+    "Seeks forward in the local Original Audio" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seeks forward in the local Original Audio"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Editar metadatos"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanza en el audio original local"
           }
         }
       }
     },
-    "Save": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save"
+    "Seeks playback to this marker" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seeks playback to this marker"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guardar"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplaza la reproducción a este marcador"
           }
         }
       }
     },
-    "Allowed": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Allowed"
+    "Select" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Permitido"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionar"
           }
         }
       }
     },
-    "Denied": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Denied"
+    "Select %@" : {
+      "comment" : "Accessibility label for an Audio selection control. Placeholder is the Audio title.",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select %@"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Denegado"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionar %@"
           }
         }
       }
     },
-    "Not requested": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not requested"
+    "Select multiple Audio items to delete" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select multiple Recordings to delete"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No solicitado"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selecciona varios audios para eliminarlos"
           }
         }
       }
     },
-    "Unknown": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unknown"
+    "Selected" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Selected"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Desconocido"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seleccionado"
           }
         }
       }
     },
-    "Audio - %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recording - %@"
+    "Send magic link" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send magic link"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Audio - %@"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviar enlace mágico"
           }
         }
       }
     },
-    "Delete %@ permanently?": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete %@ permanently?"
+    "Settings" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿Eliminar %@ permanentemente?"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuración"
           }
         }
-      },
-      "comment": "Destructive confirmation. Placeholder is the Audio title."
+      }
     },
-    "Delete permanently": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Delete permanently"
+    "Sign in to prepare this iPhone for private cloud backup. Recording and local Audio remain available offline." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to prepare this iPhone for private cloud backup. Recording and local Audio remain available offline."
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eliminar permanentemente"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para preparar este iPhone para la copia privada en la nube. La grabación y los audios locales siguen disponibles sin conexión."
           }
         }
-      },
-      "comment": "Final destructive action after warning that no verified cloud copy exists."
+      }
     },
-    "Select": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Select" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Seleccionar" } }
+    "Sign in with an email magic link without affecting local Audio" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with an email magic link without affecting local Audio"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión con un enlace mágico por correo sin afectar los audios locales"
+          }
+        }
       }
     },
-    "Select %@": {
-      "comment": "Accessibility label for an Audio selection control. Placeholder is the Audio title.",
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Select %@" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Seleccionar %@" } }
+    "Sign out" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerrar sesión"
+          }
+        }
       }
     },
-    "Selected": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Selected" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Seleccionado" } }
+    "Signed in as" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signed in as"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesión iniciada como"
+          }
+        }
       }
     },
-    "Not selected": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Not selected" } },
-        "es": { "stringUnit": { "state": "translated", "value": "No seleccionado" } }
+    "Spanish" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spanish"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Español"
+          }
+        }
       }
     },
-    "%lld selected": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%lld selected" } },
-        "es": { "stringUnit": { "state": "translated", "value": "%lld seleccionados" } }
+    "State" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado"
+          }
+        }
       }
     },
-    "Delete %lld selected Audio items": {
-      "comment": "Accessibility label for the bulk deletion button. Placeholder is the selected Audio count.",
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Delete %lld selected Recordings" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Eliminar %lld audios seleccionados" } }
+    "The audio input became unavailable. Finalizing playable audio…" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The audio input became unavailable. Finalizing playable audio…"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La entrada de audio dejó de estar disponible. Finalizando el audio reproducible…"
+          }
+        }
       }
     },
-    "Delete %lld local Audio items?": {
-      "comment": "First bulk permanent-loss confirmation. Placeholder is the selected Audio count.",
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Delete %lld local Recording items?" } },
-        "es": { "stringUnit": { "state": "translated", "value": "¿Eliminar %lld audios locales?" } }
+    "The magic link did not create a session." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The magic link did not create a session."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El enlace mágico no creó una sesión."
+          }
+        }
       }
     },
-    "No verified cloud copy exists for the selected Audio. Deletion is permanent.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No verified cloud copy exists for the selected Recordings. Deletion is permanent." } },
-        "es": { "stringUnit": { "state": "translated", "value": "No hay una copia en la nube verificada de los audios seleccionados. La eliminación es permanente." } }
+    "This iPhone’s local Audio library is already bound to another cloud account." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This iPhone’s local Audio library is already bound to another cloud account."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La biblioteca local de audios de este iPhone ya está vinculada a otra cuenta en la nube."
+          }
+        }
       }
     },
-    "Delete %lld Audio items permanently?": {
-      "comment": "Final bulk permanent deletion confirmation. Placeholder is the selected Audio count.",
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Delete %lld Recording items permanently?" } },
-        "es": { "stringUnit": { "state": "translated", "value": "¿Eliminar %lld audios permanentemente?" } }
+    "This removes the local Original Audio and its metadata." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This removes the local Original Audio and its metadata."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto elimina el audio original local y sus metadatos."
+          }
+        }
       }
     },
-    "This removes the selected local Original Audio files and their metadata.": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "This removes the selected local Original Audio files and their metadata." } },
-        "es": { "stringUnit": { "state": "translated", "value": "Esto elimina los archivos de audio original locales seleccionados y sus metadatos." } }
+    "This removes the selected local Original Audio files and their metadata." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This removes the selected local Original Audio files and their metadata."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto elimina los archivos de audio original locales seleccionados y sus metadatos."
+          }
+        }
       }
     },
-    "Could not delete selected Audio": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Could not delete selected Recordings" } },
-        "es": { "stringUnit": { "state": "translated", "value": "No se pudieron eliminar los audios seleccionados" } }
+    "Title" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Título"
+          }
+        }
       }
     },
-    "%lld Audio items were retained because deletion failed.": {
-      "comment": "Bulk deletion failure message. Placeholder is the number of Audio items retained.",
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%lld Recording items were retained because deletion failed." } },
-        "es": { "stringUnit": { "state": "translated", "value": "Se conservaron %lld audios porque no se pudieron eliminar." } }
+    "Unavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No disponible"
+          }
+        }
       }
     },
-    "Select multiple Audio items to delete": {
-      "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Select multiple Recordings to delete" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Selecciona varios audios para eliminarlos" } }
+    "Unavailable while Capture is finalizing" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unavailable while Capture is finalizing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No disponible mientras se finaliza la captura"
+          }
+        }
       }
     },
-    "Could not delete local Audio": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Could not delete local Recording"
+    "Unknown" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
           }
         },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo eliminar el audio local"
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desconocido"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

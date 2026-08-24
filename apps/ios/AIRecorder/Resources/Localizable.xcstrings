@@ -1431,6 +1431,89 @@
       },
       "comment": "Final destructive action after warning that no verified cloud copy exists."
     },
+    "Select": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Select" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Seleccionar" } }
+      }
+    },
+    "Select %@": {
+      "comment": "Accessibility label for an Audio selection control. Placeholder is the Audio title.",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Select %@" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Seleccionar %@" } }
+      }
+    },
+    "Selected": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Selected" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Seleccionado" } }
+      }
+    },
+    "Not selected": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Not selected" } },
+        "es": { "stringUnit": { "state": "translated", "value": "No seleccionado" } }
+      }
+    },
+    "%lld selected": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%lld selected" } },
+        "es": { "stringUnit": { "state": "translated", "value": "%lld seleccionados" } }
+      }
+    },
+    "Delete %lld selected Audio items": {
+      "comment": "Accessibility label for the bulk deletion button. Placeholder is the selected Audio count.",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Delete %lld selected Recordings" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Eliminar %lld audios seleccionados" } }
+      }
+    },
+    "Delete %lld local Audio items?": {
+      "comment": "First bulk permanent-loss confirmation. Placeholder is the selected Audio count.",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Delete %lld local Recording items?" } },
+        "es": { "stringUnit": { "state": "translated", "value": "¿Eliminar %lld audios locales?" } }
+      }
+    },
+    "No verified cloud copy exists for the selected Audio. Deletion is permanent.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No verified cloud copy exists for the selected Recordings. Deletion is permanent." } },
+        "es": { "stringUnit": { "state": "translated", "value": "No hay una copia en la nube verificada de los audios seleccionados. La eliminación es permanente." } }
+      }
+    },
+    "Delete %lld Audio items permanently?": {
+      "comment": "Final bulk permanent deletion confirmation. Placeholder is the selected Audio count.",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Delete %lld Recording items permanently?" } },
+        "es": { "stringUnit": { "state": "translated", "value": "¿Eliminar %lld audios permanentemente?" } }
+      }
+    },
+    "This removes the selected local Original Audio files and their metadata.": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This removes the selected local Original Audio files and their metadata." } },
+        "es": { "stringUnit": { "state": "translated", "value": "Esto elimina los archivos de audio original locales seleccionados y sus metadatos." } }
+      }
+    },
+    "Could not delete selected Audio": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Could not delete selected Recordings" } },
+        "es": { "stringUnit": { "state": "translated", "value": "No se pudieron eliminar los audios seleccionados" } }
+      }
+    },
+    "%lld Audio items were retained because deletion failed.": {
+      "comment": "Bulk deletion failure message. Placeholder is the number of Audio items retained.",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%lld Recording items were retained because deletion failed." } },
+        "es": { "stringUnit": { "state": "translated", "value": "Se conservaron %lld audios porque no se pudieron eliminar." } }
+      }
+    },
+    "Select multiple Audio items to delete": {
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Select multiple Recordings to delete" } },
+        "es": { "stringUnit": { "state": "translated", "value": "Selecciona varios audios para eliminarlos" } }
+      }
+    },
     "Could not delete local Audio": {
       "localizations": {
         "en": {

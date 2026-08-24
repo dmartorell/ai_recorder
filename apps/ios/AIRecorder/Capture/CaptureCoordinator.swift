@@ -99,6 +99,7 @@ final class CaptureCoordinator {
     }
 
     var files: AudioFileStore { repository.files }
+    var isCapturing: Bool { phase == .recording || phase == .finalizing }
     var microphonePermission: AVAudioApplication.recordPermission { AVAudioApplication.shared.recordPermission }
     var inputName: String { activeInputName }
     var availableDuration: Duration? {

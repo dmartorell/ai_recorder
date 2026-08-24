@@ -8,6 +8,7 @@ struct RootView: View {
     @Environment(\.locale) private var locale
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \AudioItem.startedAt, order: .reverse) private var items: [AudioItem]
+    @State private var selection: AudioSelectionModel
     @State private var showingPreparation = false
     @State private var showingSettings = false
     @State private var selectedItem: AudioItem?
@@ -16,33 +17,29 @@ struct RootView: View {
     @State private var showingPermanentDeletion = false
     @State private var deletionError: String?
 
+    init(coordinator: CaptureCoordinator, recoveryService: RecoveryService, settings: SettingsModel) {
+        self.coordinator = coordinator
+        self.recoveryService = recoveryService
+        self.settings = settings
+        _selection = State(initialValue: AudioSelectionModel())
+    }
+
     var body: some View {
         NavigationStack {
             Group {
                 if items.isEmpty {
                     ContentUnavailableView("No Audio Yet", systemImage: "waveform", description: Text("Recordings you create appear here."))
                 } else {
-                    List(items) { item in
-                        Button { selectedItem = item } label: {
-                            VStack(alignment: .leading) {
-                                Text(item.displayTitle(locale: locale))
-                                HStack {
-                                    Text(item.startedAt, format: .dateTime.month(.abbreviated).day().year().hour().minute())
-                                    Spacer()
-                                    Text(duration(item.durationMilliseconds))
-                                    Text(state(item))
-                                }.font(.caption).foregroundStyle(.secondary)
-                            }
-                        }
-                        .accessibilityElement(children: .combine)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button("Delete", role: .destructive) {
-                                itemPendingDeletion = item
-                                showingUnbackedDeletionWarning = true
-                            }
-                            .accessibilityLabel("Delete \(item.displayTitle(locale: locale))")
-                        }
-                    }
+                    LibraryView(
+                        items: items,
+                        locale: locale,
+                        selection: selection,
+                        onOpen: { selectedItem = $0 },
+                        onRequestSingleDeletion: requestDeletion,
+                        onDeleteSelected: deleteSelectedAudio,
+                        duration: duration,
+                        state: state
+                    )
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -54,8 +51,21 @@ struct RootView: View {
                         .accessibilityHint("Choose the app language")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Record", systemImage: "mic.fill") { showingPreparation = true }
-                        .accessibilityHint("Capture starts immediately after permission is granted")
+                    if selection.isSelecting {
+                        Button("Cancel") { selection.cancel() }
+                    } else if !coordinator.isCapturing {
+                        Button("Select") { selection.enter() }
+                            .accessibilityHint("Select multiple Audio items to delete")
+                    }
+                }
+                if #available(iOS 26.0, *) {
+                    ToolbarSpacer(.fixed)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    if !selection.isSelecting {
+                        Button("Record", systemImage: "mic.fill") { showingPreparation = true }
+                            .accessibilityHint("Capture starts immediately after permission is granted")
+                    }
                 }
             }
             .sheet(isPresented: $showingSettings) {
@@ -100,9 +110,16 @@ struct RootView: View {
             }
             .task { await recoveryService.recoverInterruptedItems() }
             .navigationDestination(for: UUID.self) { id in
-                if let item = items.first(where: { $0.id == id }) { AudioDetailView(item: item, files: coordinator.files) }
+                if let item = items.first(where: { $0.id == id }) {
+                    AudioDetailView(item: item, files: coordinator.files)
+                }
             }
         }
+    }
+
+    private func requestDeletion(_ item: AudioItem) {
+        itemPendingDeletion = item
+        showingUnbackedDeletionWarning = true
     }
 
     private func deletePendingAudio() {
@@ -116,6 +133,21 @@ struct RootView: View {
         } catch {
             deletionError = "Could not delete local Audio: \(error.localizedDescription)"
         }
+    }
+
+    private func deleteSelectedAudio(_ selectedIDs: Set<UUID>) -> Set<UUID> {
+        let repository = AudioRepository(context: modelContext, files: coordinator.files)
+        var failedIDs = Set<UUID>()
+
+        for item in items where selectedIDs.contains(item.id) {
+            do {
+                let confirmation = repository.confirmationForPermanentDeletion(of: item)
+                try repository.delete(item, confirmation: confirmation)
+            } catch {
+                failedIDs.insert(item.id)
+            }
+        }
+        return failedIDs
     }
 
     private func duration(_ milliseconds: Int) -> String {

@@ -5,4 +5,6 @@
     <string>https://your-project.supabase.co</string>
     <key>SUPABASE_PUBLISHABLE_KEY</key>
     <string>sb_publishable_replace_locally</string>
+    <key>CLOUD_BACKUP_WORKER_URL</key>
+    <string>https://your-cloud-backup-worker.workers.dev</string>
 </dict></plist>

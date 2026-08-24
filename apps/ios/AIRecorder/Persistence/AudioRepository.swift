@@ -1,6 +1,14 @@
 import Foundation
 import SwiftData
 
+enum AudioDeletionError: LocalizedError, Equatable {
+    case cloudBackupInProgress
+
+    var errorDescription: String? {
+        "Cancel the cloud backup before deleting the local Original Audio."
+    }
+}
+
 @MainActor
 final class AudioRepository {
     let context: ModelContext
@@ -92,6 +100,7 @@ final class AudioRepository {
     }
 
     func delete(_ item: AudioItem, confirmation: PermanentDeletionConfirmation) throws {
+        guard !item.cloudBackupState.preventsLocalDeletion else { throw AudioDeletionError.cloudBackupInProgress }
         try files.delete(item.id, confirmation: confirmation)
         context.delete(item)
         try context.save()

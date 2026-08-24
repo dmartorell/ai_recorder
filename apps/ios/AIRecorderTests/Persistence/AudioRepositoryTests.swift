@@ -70,6 +70,22 @@ final class AudioRepositoryTests: XCTestCase {
         XCTAssertTrue(try fixture.context.fetch(FetchDescriptor<AudioItem>()).isEmpty)
     }
 
+    func testPermanentDeletionIsBlockedWhileCloudBackupIsInProgress() throws {
+        let fixture = try Fixture()
+        let item = try fixture.repository.beginCapture()
+        let url = fixture.files.url(for: item.id)
+        try Data("audio".utf8).write(to: url)
+        item.cloudBackupState = .uploading
+
+        let confirmation = fixture.repository.confirmationForPermanentDeletion(of: item)
+
+        XCTAssertThrowsError(try fixture.repository.delete(item, confirmation: confirmation)) { error in
+            XCTAssertEqual(error as? AudioDeletionError, .cloudBackupInProgress)
+        }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+        XCTAssertNotNil(try fixture.context.fetch(FetchDescriptor<AudioItem>()).first)
+    }
+
     @MainActor
     private struct Fixture {
         let container: ModelContainer

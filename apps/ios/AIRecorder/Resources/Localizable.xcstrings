@@ -250,6 +250,74 @@
         }
       }
     },
+    "Back up" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back up"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud backup"
+          }
+        }
+      }
+    },
+    "Back up Original Audio" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back up Original Audio"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hacer Cloud backup del audio original"
+          }
+        }
+      }
+    },
+    "Back up Original Audio?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back up Original Audio?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Hacer Cloud backup del audio original?"
+          }
+        }
+      }
+    },
+    "Backed up" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backed up"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud backup realizado"
+          }
+        }
+      }
+    },
     "Backup eligibility" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -262,7 +330,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elegibilidad para copia"
+            "value" : "Elegibilidad para Cloud backup"
           }
         }
       }
@@ -318,6 +386,57 @@
         }
       }
     },
+    "Cancel cloud backup" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel cloud backup"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar Cloud backup"
+          }
+        }
+      }
+    },
+    "Cancel cloud backup?" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel cloud backup?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Cancelar Cloud backup?"
+          }
+        }
+      }
+    },
+    "Cancel upload" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel upload"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar subida"
+          }
+        }
+      }
+    },
     "Capture" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -347,6 +466,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "La captura continúa hasta que confirmes."
+          }
+        }
+      }
+    },
+    "Capture in progress" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capture in progress"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Captura en curso"
           }
         }
       }
@@ -435,6 +571,23 @@
         }
       }
     },
+    "Cloud audio" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cloud audio"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio en la nube"
+          }
+        }
+      }
+    },
     "Cloud backup" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -447,7 +600,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Copia en la nube"
+            "value" : "Cloud backup"
           }
         }
       }
@@ -464,7 +617,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La copia en la nube no está configurada en esta app."
+            "value" : "Cloud backup no está configurado en esta app."
           }
         }
       }
@@ -481,7 +634,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Configurar copia en la nube"
+            "value" : "Configurar Cloud backup"
           }
         }
       }
@@ -814,6 +967,23 @@
         }
       }
     },
+    "Empty" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empty"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vacío"
+          }
+        }
+      }
+    },
     "Ended by interruption" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1037,6 +1207,40 @@
         }
       }
     },
+    "Keep uploading" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep uploading"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir subiendo"
+          }
+        }
+      }
+    },
+    "Keeps the local Original Audio and stops this upload." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keeps the local Original Audio and stops this upload."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conserva el audio original local y detiene esta subida."
+          }
+        }
+      }
+    },
     "Language" : {
       "localizations" : {
         "en" : {
@@ -1065,6 +1269,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deja el título vacío para usar el título generado."
+          }
+        }
+      }
+    },
+    "Local audio" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Local audio"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio local"
           }
         }
       }
@@ -1170,6 +1391,23 @@
         }
       }
     },
+    "Missing" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No disponible"
+          }
+        }
+      }
+    },
     "Needs recovery" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1232,7 +1470,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No hay una copia en la nube verificada de los audios seleccionados. La eliminación es permanente."
+            "value" : "No hay un Cloud backup verificado de los audios seleccionados. La eliminación es permanente."
           }
         }
       }
@@ -1248,7 +1486,24 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No hay una copia en la nube verificada. Eliminar este audio original es permanente."
+            "value" : "No hay un Cloud backup verificado. Eliminar este audio original es permanente."
+          }
+        }
+      }
+    },
+    "Not backed up" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not backed up"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin Cloud backup"
           }
         }
       }
@@ -1536,7 +1791,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lista para copia en la nube"
+            "value" : "Lista para Cloud backup"
           }
         }
       }
@@ -1826,7 +2081,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inicia sesión para preparar este iPhone para la copia privada en la nube. La grabación y los audios locales siguen disponibles sin conexión."
+            "value" : "Inicia sesión para preparar este iPhone para Cloud backup privado. La grabación y los audios locales siguen disponibles sin conexión."
           }
         }
       }
@@ -1932,6 +2187,22 @@
         }
       }
     },
+    "The local Original Audio stays on this iPhone." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The local Original Audio stays on this iPhone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El audio original local permanece en este iPhone."
+          }
+        }
+      }
+    },
     "The magic link did not create a session." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1993,6 +2264,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Esto elimina los archivos de audio original locales seleccionados y sus metadatos."
+          }
+        }
+      }
+    },
+    "This uploads a private cloud copy. The local Original Audio stays on this iPhone." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This uploads a private cloud copy. The local Original Audio stays on this iPhone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto sube un Cloud backup privado. El audio original local permanece en este iPhone."
           }
         }
       }
@@ -2060,6 +2347,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Desconocido"
+          }
+        }
+      }
+    },
+    "Upload failed" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload failed"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Error al subir"
+          }
+        }
+      }
+    },
+    "Upload paused" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Upload paused"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subida en pausa"
+          }
+        }
+      }
+    },
+    "Uploading" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploading"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subiendo"
+          }
+        }
+      }
+    },
+    "Uploads a private cloud copy. The local Original Audio stays on this iPhone." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Uploads a private cloud copy. The local Original Audio stays on this iPhone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sube un Cloud backup privado. El audio original local permanece en este iPhone."
+          }
+        }
+      }
+    },
+    "Verifying backup" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verifying backup"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificando Cloud backup"
           }
         }
       }

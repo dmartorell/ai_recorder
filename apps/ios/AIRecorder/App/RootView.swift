@@ -4,8 +4,10 @@ import SwiftData
 struct RootView: View {
     let coordinator: CaptureCoordinator
     let recoveryService: RecoveryService
+    let cloudBackupRecoveryService: CloudBackupRecoveryService
     let settings: SettingsModel
     let cloudIdentity: CloudIdentityCoordinator
+    let cloudBackup: CloudBackupCoordinator
     @Environment(\.locale) private var locale
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \AudioItem.startedAt, order: .reverse) private var items: [AudioItem]
@@ -20,11 +22,13 @@ struct RootView: View {
     @State private var showingPermanentDeletion = false
     @State private var deletionError: String?
 
-    init(coordinator: CaptureCoordinator, recoveryService: RecoveryService, settings: SettingsModel, cloudIdentity: CloudIdentityCoordinator) {
+    init(coordinator: CaptureCoordinator, recoveryService: RecoveryService, cloudBackupRecoveryService: CloudBackupRecoveryService, settings: SettingsModel, cloudIdentity: CloudIdentityCoordinator, cloudBackup: CloudBackupCoordinator) {
         self.coordinator = coordinator
         self.recoveryService = recoveryService
+        self.cloudBackupRecoveryService = cloudBackupRecoveryService
         self.settings = settings
         self.cloudIdentity = cloudIdentity
+        self.cloudBackup = cloudBackup
         _selection = State(initialValue: AudioSelectionModel())
     }
 
@@ -85,7 +89,7 @@ struct RootView: View {
                     .presentationDetents([.large])
             }
             .sheet(item: $selectedItem) {
-                AudioDetailView(item: $0, files: coordinator.files)
+                AudioDetailView(item: $0, files: coordinator.files, cloudBackup: cloudBackup)
                     .presentationDetents([.large])
             }
             .alert("Delete local Audio?", isPresented: $showingUnbackedDeletionWarning) {
@@ -116,10 +120,15 @@ struct RootView: View {
             } message: {
                 Text(deletionError ?? "")
             }
-            .task { await recoveryService.recoverInterruptedItems() }
+            .task {
+                await recoveryService.recoverInterruptedItems()
+                await cloudIdentity.restoreSession()
+                guard cloudIdentity.state == .authenticated else { return }
+                await cloudBackupRecoveryService.recoverPendingBackups()
+            }
             .navigationDestination(for: UUID.self) { id in
                 if let item = items.first(where: { $0.id == id }) {
-                    AudioDetailView(item: item, files: coordinator.files)
+                    AudioDetailView(item: item, files: coordinator.files, cloudBackup: cloudBackup)
                 }
             }
         }

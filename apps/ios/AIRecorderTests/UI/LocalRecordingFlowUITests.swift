@@ -58,6 +58,8 @@ final class LocalRecordingFlowUITests: XCTestCase {
         app.textFields["metadata-title"].typeText("Local source")
         app.buttons["Save"].tap()
         XCTAssertTrue(app.staticTexts["Local source"].waitForExistence(timeout: 5))
+        app.swipeUp()
+        XCTAssertTrue(app.buttons["Delete"].waitForExistence(timeout: 5))
 
         app.buttons["Delete"].tap()
         XCTAssertTrue(app.alerts["Delete local Recording?"].waitForExistence(timeout: 5))
@@ -162,6 +164,23 @@ final class LocalRecordingFlowUITests: XCTestCase {
             NSPredicate(format: "label BEGINSWITH 'Recording -'")
         )
         XCTAssertEqual(remainingAudioRows.count, 1)
+    }
+
+    func testAudioDetailRequiresConfirmationBeforeCloudBackup() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-local-audio-fixture", "-app-language", "en"]
+        app.launch()
+
+        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Recording -'")).firstMatch
+        XCTAssertTrue(audioRow.waitForExistence(timeout: 5))
+        audioRow.tap()
+
+        let backup = app.buttons["cloud-backup-request"]
+        XCTAssertTrue(backup.waitForExistence(timeout: 5))
+        backup.tap()
+        XCTAssertTrue(app.buttons["Back up"].waitForExistence(timeout: 5))
+        app.buttons["Back up"].tap()
+        XCTAssertTrue(app.staticTexts["Cloud backup is not configured on this app."].waitForExistence(timeout: 5))
     }
 
     func testConfiguringCloudBackupDismissesSettingsThenPresentsCloudIdentity() {

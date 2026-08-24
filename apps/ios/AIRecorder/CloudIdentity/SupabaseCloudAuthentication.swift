@@ -12,6 +12,10 @@ final class SupabaseCloudAuthentication: CloudAuthenticating {
         implicitFlowClient = Self.makeClient(configuration: configuration, flowType: .implicit)
     }
 
+    func accessToken() async throws -> String {
+        try await client.auth.session.accessToken
+    }
+
     func restoreIdentity() async throws -> CloudIdentity? {
         guard let session = try? await client.auth.session else { return nil }
         return CloudIdentity(id: session.user.id, email: session.user.email ?? "")
@@ -60,6 +64,7 @@ final class SupabaseCloudAuthentication: CloudAuthenticating {
 struct SupabaseConfiguration {
     let url: URL
     let publishableKey: String
+    let cloudBackupWorkerURL: URL?
 
     static func load(bundle: Bundle = .main) -> Self? {
         guard let url = bundle.url(forResource: "Supabase", withExtension: "plist"),
@@ -68,6 +73,10 @@ struct SupabaseConfiguration {
               let apiURL = URL(string: urlString),
               let key = values["SUPABASE_PUBLISHABLE_KEY"], !key.isEmpty
         else { return nil }
-        return Self(url: apiURL, publishableKey: key)
+        return Self(
+            url: apiURL,
+            publishableKey: key,
+            cloudBackupWorkerURL: values["CLOUD_BACKUP_WORKER_URL"].flatMap(URL.init(string:))
+        )
     }
 }

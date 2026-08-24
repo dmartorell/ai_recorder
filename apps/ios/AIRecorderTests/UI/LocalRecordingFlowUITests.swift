@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class LocalRecordingFlowUITests: XCTestCase {
     func testLibraryOpensPreparationForANewAudio() {
         let app = XCUIApplication()
@@ -36,6 +37,47 @@ final class LocalRecordingFlowUITests: XCTestCase {
         confirmation.tap()
 
         XCTAssertTrue(app.navigationBars["Audio"].waitForExistence(timeout: 5))
+    }
+
+    func testMetadataAndTwoStepDeletionKeepAudioUntilFinalConfirmation() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-local-audio-fixture"]
+        app.launch()
+
+        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Audio -'")).firstMatch
+        XCTAssertTrue(audioRow.waitForExistence(timeout: 5))
+        audioRow.tap()
+        XCTAssertTrue(app.navigationBars["Audio"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["playback-back-10"].exists)
+        XCTAssertTrue(app.buttons["playback-toggle"].exists)
+        XCTAssertTrue(app.buttons["playback-forward-10"].exists)
+
+        app.buttons["Edit metadata"].tap()
+        XCTAssertTrue(app.navigationBars["Edit Metadata"].waitForExistence(timeout: 5))
+        app.textFields["metadata-title"].tap()
+        app.textFields["metadata-title"].typeText("Local source")
+        app.buttons["Save"].tap()
+        XCTAssertTrue(app.staticTexts["Local source"].waitForExistence(timeout: 5))
+
+        app.buttons["Delete"].tap()
+        XCTAssertTrue(app.alerts["Delete local Audio?"].waitForExistence(timeout: 5))
+        app.alerts["Delete local Audio?"].buttons["Cancel"].tap()
+        XCTAssertTrue(app.staticTexts["Local source"].exists)
+
+        app.buttons["Delete"].tap()
+        app.alerts["Delete local Audio?"].buttons["Delete"].tap()
+        let finalAlert = app.alerts.matching(NSPredicate(format: "label CONTAINS[c] 'Local source'")).firstMatch
+        XCTAssertTrue(finalAlert.waitForExistence(timeout: 5))
+        finalAlert.buttons["Cancel"].tap()
+        XCTAssertTrue(app.staticTexts["Local source"].exists)
+
+        app.buttons["Delete"].tap()
+        app.alerts["Delete local Audio?"].buttons["Delete"].tap()
+        XCTAssertTrue(finalAlert.waitForExistence(timeout: 5))
+        finalAlert.buttons["Delete"].tap()
+
+        XCTAssertTrue(app.navigationBars["Audio"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Local source"].exists)
     }
 
     func testPreparationCanBeCancelledWithoutCreatingAnAudio() {

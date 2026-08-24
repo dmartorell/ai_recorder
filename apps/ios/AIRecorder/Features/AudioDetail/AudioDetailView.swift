@@ -1,81 +1,52 @@
-import SwiftUI
 import AVFoundation
 import AVFAudio
+import SwiftData
+import SwiftUI
 
 struct AudioDetailView: View {
     let item: AudioItem
     let files: AudioFileStore
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @State private var playback: LocalPlaybackModel
-    @State private var showingDelete = false
+    @State private var metadataItem: AudioItem?
+    @State private var showingUnbackedDeletionWarning = false
+    @State private var showingPermanentDeletion = false
     @State private var playbackError: String?
-    @State private var deleteError: String?
-    @State private var didDelete = false
+    @State private var deletionError: String?
 
     init(item: AudioItem, files: AudioFileStore) {
         self.item = item
         self.files = files
         _playback = State(initialValue: LocalPlaybackModel(
-            player: AVPlayerPlaybackPlayer(url: files.url(for: item.id))
+            player: AVPlayerPlaybackPlayer(url: files.url(for: item.id)),
+            durationSeconds: Double(item.durationMilliseconds) / 1_000
         ))
     }
 
     var body: some View {
         Form {
-            Section("Audio") {
-                Text(item.displayTitle()).font(.headline)
-                LabeledContent("Date", value: item.startedAt.formatted(date: .long, time: .shortened))
-                LabeledContent("Duration", value: duration)
-                LabeledContent("State", value: state)
-            }
-            if let captureEndMessage {
-                Section("Capture ended") {
-                    Label(captureEndMessage, systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
-                }
-            }
-            Section("Playback") {
-                HStack {
-                    Button(action: { playback.togglePlayback() }) {
-                        Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
-                            .font(.title2)
-                            .frame(width: 44, height: 44)
-                    }
-                    .buttonStyle(.bordered)
-                    .accessibilityLabel(playback.isPlaying ? "Pausar reproducción" : "Reproducir")
-                    .accessibilityHint("Plays the local Original Audio")
+            AudioInformationSection(item: item, state: state)
+            PlaybackSection(playback: playback, durationSeconds: durationSeconds)
 
-                    Spacer()
-
-                    Button(action: { playback.restartPlayback() }) {
-                        Image(systemName: "backward.end.fill")
-                            .font(.title2)
-                            .frame(width: 44, height: 44)
-                    }
-                    .buttonStyle(.bordered)
-                    .accessibilityLabel("Reiniciar reproducción")
-                    .accessibilityHint("Starts playback from the beginning")
-                }
-                if let playbackError { Text(playbackError).foregroundStyle(.red) }
-            }
             if !item.markers.isEmpty {
-                Section("Markers") {
-                    ForEach(item.markers.sorted { $0.positionMilliseconds < $1.positionMilliseconds }) { marker in
-                        Button {
-                            playback.seek(to: Double(marker.positionMilliseconds) / 1_000)
-                        } label: {
-                            Label(markerTime(marker.positionMilliseconds), systemImage: "bookmark.fill")
-                        }
-                        .accessibilityLabel("Marker at \(markerTime(marker.positionMilliseconds))")
-                        .accessibilityHint("Seeks playback to this marker")
-                    }
+                MarkerSection(markers: item.markers, playback: playback)
+            }
+
+            Section {
+                Button("Edit metadata") { metadataItem = item }
+                Button("Delete", role: .destructive) {
+                    showingUnbackedDeletionWarning = true
                 }
             }
-            Section {
-                Button("Delete permanently", role: .destructive) { showingDelete = true }
+
+            if let playbackError {
+                Section { Text(playbackError).foregroundStyle(.red) }
             }
-            if let deleteError { Text(deleteError).foregroundStyle(.red) }
+            if let deletionError {
+                Section { Text(deletionError).foregroundStyle(.red) }
+            }
         }
         .navigationTitle("Audio")
         .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { notification in
@@ -83,35 +54,32 @@ struct AudioDetailView: View {
                 playback.handlePlaybackEnded()
             }
         }
-        .confirmationDialog("Delete permanently?", isPresented: $showingDelete) {
-            Button("Delete permanently", role: .destructive) { deleteAudio() }
+        .sheet(item: $metadataItem) { editableItem in
+            AudioMetadataEditor(item: editableItem, files: files)
+        }
+        .alert("Delete local Audio?", isPresented: $showingUnbackedDeletionWarning) {
+            Button("Delete", role: .destructive) {
+                showingPermanentDeletion = true
+            }
             Button("Cancel", role: .cancel) { }
-        } message: { Text("No cloud copy exists. This local Original Audio cannot be recovered.") }
+        } message: {
+            Text("No verified cloud copy exists. Deleting this Original Audio is permanent.")
+        }
+        .alert("Delete \(item.displayTitle()) permanently?", isPresented: $showingPermanentDeletion) {
+            Button("Delete", role: .destructive) { deleteAudio() }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This removes the local Original Audio and its metadata.")
+        }
         .onDisappear {
-            if !didDelete {
-                playback.handlePlaybackEnded()
-                try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-            }
+            playback.tearDown()
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         }
-        .task {
-            do {
-                let audioSession = AVAudioSession.sharedInstance()
-                try audioSession.setCategory(.playback, mode: .spokenAudio)
-                try audioSession.setActive(true)
-            } catch {
-                playbackError = "Playback failed: \(error.localizedDescription)"
-            }
-        }
+        .task { configurePlaybackSession() }
     }
 
-    private var captureEndMessage: String? {
-        if item.captureEndedByInterruption {
-            return "An audio interruption ended this Capture. Start a new Capture to continue recording."
-        }
-        if item.captureEndedByUnavailableInput {
-            return "The audio input became unavailable. Start a new Capture to continue recording."
-        }
-        return nil
+    private var durationSeconds: Double {
+        Double(item.durationMilliseconds) / 1_000
     }
 
     private var state: String {
@@ -120,25 +88,140 @@ struct AudioDetailView: View {
         return item.localState == .needsRecovery ? "Needs recovery" : "Only on this iPhone"
     }
 
-    private var duration: String {
-        let seconds = item.durationMilliseconds / 1000
-        return String(format: "%02d:%02d", seconds / 60, seconds % 60)
-    }
-
-    private func markerTime(_ milliseconds: Int) -> String {
-        let seconds = milliseconds / 1_000
-        return String(format: "%02d:%02d", seconds / 60, seconds % 60)
+    private func configurePlaybackSession() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+            try audioSession.setCategory(.playback, mode: .spokenAudio)
+            try audioSession.setActive(true)
+        } catch {
+            playbackError = "Playback failed: \(error.localizedDescription)"
+        }
     }
 
     private func deleteAudio() {
+        let repository = AudioRepository(context: modelContext, files: files)
         do {
-            didDelete = true
-            try files.delete(item.id)
-            modelContext.delete(item)
-            try modelContext.save()
+            let confirmation = repository.confirmationForPermanentDeletion(of: item)
+            try repository.delete(item, confirmation: confirmation)
             dismiss()
         } catch {
-            deleteError = error.localizedDescription
+            deletionError = "Could not delete local Audio: \(error.localizedDescription)"
         }
     }
+}
+
+private struct AudioInformationSection: View {
+    let item: AudioItem
+    let state: String
+
+    var body: some View {
+        Section("Audio") {
+            Text(item.displayTitle()).font(.headline)
+            LabeledContent("Date", value: item.startedAt.formatted(date: .long, time: .shortened))
+            LabeledContent("Duration", value: formattedDuration(Double(item.durationMilliseconds) / 1_000))
+            LabeledContent("State", value: state)
+        }
+    }
+}
+
+private struct PlaybackSection: View {
+    let playback: LocalPlaybackModel
+    let durationSeconds: Double
+
+    var body: some View {
+        Section("Playback") {
+            HStack {
+                Text(formattedDuration(playback.positionSeconds))
+                    .monospacedDigit()
+                Spacer()
+                Text(formattedDuration(durationSeconds))
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Playback position")
+            .accessibilityValue("\(formattedDuration(playback.positionSeconds)) of \(formattedDuration(durationSeconds))")
+
+            Slider(
+                value: Binding(
+                    get: { playback.positionSeconds },
+                    set: { playback.previewPosition(at: $0) }
+                ),
+                in: 0...max(durationSeconds, 0.001),
+                onEditingChanged: { isEditing in
+                    if isEditing {
+                        playback.beginScrubbing()
+                    } else {
+                        playback.endScrubbing()
+                    }
+                }
+            ) {
+                Text("Playback position")
+            }
+            .accessibilityValue("\(formattedDuration(playback.positionSeconds)) of \(formattedDuration(durationSeconds))")
+            .animation(
+                playback.isScrubbing ? nil : .linear(duration: 0.1),
+                value: playback.positionSeconds
+            )
+
+            HStack {
+                Button { playback.skip(by: -10) } label: {
+                    Image(systemName: "gobackward.10")
+                        .font(.title)
+                        .frame(width: 68, height: 68)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Back 10 seconds")
+                .accessibilityHint("Seeks backward in the local Original Audio")
+                .accessibilityIdentifier("playback-back-10")
+
+                Spacer()
+
+                Button { playback.togglePlayback() } label: {
+                    Image(systemName: playback.isPlaying ? "pause.fill" : "play.fill")
+                        .font(.title)
+                        .frame(width: 68, height: 68)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(playback.isPlaying ? "Pause" : "Play")
+                .accessibilityHint("Plays or pauses the local Original Audio")
+                .accessibilityIdentifier("playback-toggle")
+
+                Spacer()
+
+                Button { playback.skip(by: 10) } label: {
+                    Image(systemName: "goforward.10")
+                        .font(.title)
+                        .frame(width: 68, height: 68)
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel("Forward 10 seconds")
+                .accessibilityHint("Seeks forward in the local Original Audio")
+                .accessibilityIdentifier("playback-forward-10")
+            }
+        }
+    }
+}
+
+private struct MarkerSection: View {
+    let markers: [Marker]
+    let playback: LocalPlaybackModel
+
+    var body: some View {
+        Section("Markers") {
+            ForEach(markers.sorted { $0.positionMilliseconds < $1.positionMilliseconds }) { marker in
+                Button {
+                    playback.seek(to: Double(marker.positionMilliseconds) / 1_000)
+                } label: {
+                    Label(formattedDuration(Double(marker.positionMilliseconds) / 1_000), systemImage: "bookmark.fill")
+                }
+                .accessibilityHint("Seeks playback to this marker")
+            }
+        }
+    }
+}
+
+private func formattedDuration(_ seconds: Double) -> String {
+    let totalSeconds = max(0, Int(seconds.rounded(.down)))
+    return String(format: "%02d:%02d", totalSeconds / 60, totalSeconds % 60)
 }

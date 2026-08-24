@@ -226,7 +226,7 @@ final class CaptureCoordinator {
             try? repository.save()
             phase = .needsRecovery(item.id, error.localizedDescription)
         } else {
-            try? repository.delete(item)
+            try? repository.delete(item, confirmation: repository.confirmationForPermanentDeletion(of: item))
             currentItem = nil
             phase = .failed(error.localizedDescription)
         }

@@ -42,7 +42,7 @@ final class AudioRepositoryTests: XCTestCase {
         XCTAssertEqual(item.localState, .finalizing)
     }
 
-    func testMetadataEditsDoNotChangeFileName() throws {
+    func testMetadataEditsDoNotChangeFileNameAndClearingTitleRestoresFallback() throws {
         let fixture = try Fixture()
         let item = try fixture.repository.beginCapture()
         let fileName = item.fileName
@@ -50,8 +50,24 @@ final class AudioRepositoryTests: XCTestCase {
         item.customTitle = "Interview"
         item.context = "Field notes"
         try fixture.repository.save()
+        item.customTitle = nil
+        try fixture.repository.save()
 
         XCTAssertEqual(item.fileName, fileName)
+        XCTAssertTrue(item.displayTitle().hasPrefix("Audio - "))
+    }
+
+    func testPermanentDeletionRemovesOriginalAudioBeforeMetadata() throws {
+        let fixture = try Fixture()
+        let item = try fixture.repository.beginCapture()
+        let url = fixture.files.url(for: item.id)
+        try Data("audio".utf8).write(to: url)
+
+        let confirmation = fixture.repository.confirmationForPermanentDeletion(of: item)
+        try fixture.repository.delete(item, confirmation: confirmation)
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+        XCTAssertTrue(try fixture.context.fetch(FetchDescriptor<AudioItem>()).isEmpty)
     }
 
     @MainActor

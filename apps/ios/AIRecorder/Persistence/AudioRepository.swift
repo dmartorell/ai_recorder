@@ -87,8 +87,12 @@ final class AudioRepository {
         return marker
     }
 
-    func delete(_ item: AudioItem) throws {
-        try files.delete(item.id)
+    func confirmationForPermanentDeletion(of item: AudioItem) -> PermanentDeletionConfirmation {
+        files.confirmPermanentDeletion(id: item.id)
+    }
+
+    func delete(_ item: AudioItem, confirmation: PermanentDeletionConfirmation) throws {
+        try files.delete(item.id, confirmation: confirmation)
         context.delete(item)
         try context.save()
     }

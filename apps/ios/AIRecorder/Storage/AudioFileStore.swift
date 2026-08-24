@@ -1,5 +1,9 @@
 import Foundation
 
+struct PermanentDeletionConfirmation: Sendable {
+    fileprivate init() { }
+}
+
 struct AudioFileStore: Sendable {
     let rootDirectory: URL
 
@@ -18,7 +22,11 @@ struct AudioFileStore: Sendable {
         try FileManager.default.createDirectory(at: rootDirectory, withIntermediateDirectories: true, attributes: [.protectionKey: FileProtectionType.completeUnlessOpen])
     }
 
-    func delete(_ id: UUID) throws {
+    func confirmPermanentDeletion(id: UUID) -> PermanentDeletionConfirmation {
+        PermanentDeletionConfirmation()
+    }
+
+    func delete(_ id: UUID, confirmation: PermanentDeletionConfirmation) throws {
         let url = url(for: id)
         if FileManager.default.fileExists(atPath: url.path) { try FileManager.default.removeItem(at: url) }
     }

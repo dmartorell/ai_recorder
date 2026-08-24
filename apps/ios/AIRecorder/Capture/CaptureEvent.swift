@@ -5,6 +5,7 @@ import Foundation
 enum CaptureRecorderEvent: Equatable, Sendable {
     case interruptionBegan(Date)
     case inputLevelChanged(Float)
+    case inputLevelUnavailable
     case routeChanged(Date, inputName: String)
     case inputBecameUnavailable(Date)
 }

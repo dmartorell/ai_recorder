@@ -146,6 +146,42 @@ final class CaptureCoordinatorTests: XCTestCase {
         XCTAssertTrue(secondItem.endedUnexpectedly)
     }
 
+    func testSilenceDoesNotShowMissingInputWarning() async throws {
+        let fixture = try Fixture()
+        let recorder = FakeRecorder()
+        let coordinator = CaptureCoordinator(
+            repository: fixture.repository,
+            recorder: recorder,
+            inspector: FixedInspector(),
+            storageMonitor: AlwaysSufficientStorageMonitor(),
+            permissionProvider: { true }
+        )
+
+        await coordinator.start()
+        recorder.send(.inputLevelChanged(0))
+        try await Task.sleep(for: .milliseconds(50))
+
+        XCTAssertFalse(coordinator.noInputLevelWarning)
+    }
+
+    func testMissingInputLevelEventShowsWarning() async throws {
+        let fixture = try Fixture()
+        let recorder = FakeRecorder()
+        let coordinator = CaptureCoordinator(
+            repository: fixture.repository,
+            recorder: recorder,
+            inspector: FixedInspector(),
+            storageMonitor: AlwaysSufficientStorageMonitor(),
+            permissionProvider: { true }
+        )
+
+        await coordinator.start()
+        recorder.send(.inputLevelUnavailable)
+        try await Task.sleep(for: .milliseconds(50))
+
+        XCTAssertTrue(coordinator.noInputLevelWarning)
+    }
+
     func testRouteChangePersistsResultingInputNameAndCaptureContinues() async throws {
         let fixture = try Fixture()
         let recorder = FakeRecorder()

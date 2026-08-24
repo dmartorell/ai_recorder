@@ -1,4 +1,5 @@
 import AVFAudio
+import AVFoundation
 import Foundation
 import Observation
 
@@ -91,7 +92,7 @@ final class CaptureCoordinator {
         self.storageMonitor = storageMonitor ?? StorageMonitor(volumeURL: repository.files.rootDirectory)
         self.batteryMonitor = batteryMonitor ?? BatteryMonitor()
         self.permissionProvider = permissionProvider
-        activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? CaptureEvent.noInputName
+        activeInputName = Self.currentInputName()
     }
 
     var files: AudioFileStore { repository.files }
@@ -154,7 +155,7 @@ final class CaptureCoordinator {
             positionBaseMilliseconds = 0
             currentAudioPositionMilliseconds = 0
             markerCount = item.markers.count
-            activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? CaptureEvent.noInputName
+            activeInputName = Self.currentInputName()
             startPositionUpdates()
             startEventConsumption()
             startResourceMonitoring()
@@ -209,7 +210,9 @@ final class CaptureCoordinator {
         switch event {
         case let .inputLevelChanged(level):
             inputLevel = max(0, min(1, level))
-            noInputLevelWarning = level < 0.01
+            noInputLevelWarning = false
+        case .inputLevelUnavailable:
+            noInputLevelWarning = true
         case let .interruptionBegan(date):
             beginAutomaticFinalization(
                 of: item,
@@ -313,6 +316,12 @@ final class CaptureCoordinator {
         item.localState = .needsRecovery
         try? repository.save()
         phase = .needsRecovery(item.id, error.localizedDescription)
+    }
+
+    private static func currentInputName() -> String {
+        AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName
+            ?? AVCaptureDevice.default(for: .audio)?.localizedName
+            ?? CaptureEvent.noInputName
     }
 
     private var canBeginCapture: Bool {

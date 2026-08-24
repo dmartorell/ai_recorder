@@ -1,0 +1,21 @@
+{
+  "name": "ai-recorder-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "types": "wrangler types"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.20",
+    "jose": "^6.2.10"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@types/node": "^26.2.0",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.125.0"
+  }
+}

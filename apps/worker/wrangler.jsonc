@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "ai-recorder-backup",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-22",
+  "vars": {
+    "SUPABASE_URL": "https://your-project.supabase.co",
+    "R2_ACCOUNT_ID": "your-account-id",
+    "R2_BUCKET_NAME": "ai-recorder-original-audio"
+  },
+  "r2_buckets": [
+    {
+      "binding": "ORIGINAL_AUDIO",
+      "bucket_name": "ai-recorder-original-audio"
+    }
+  ]
+}

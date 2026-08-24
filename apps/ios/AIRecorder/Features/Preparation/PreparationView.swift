@@ -6,6 +6,7 @@ struct PreparationView: View {
     @Bindable var coordinator: CaptureCoordinator
     @Environment(\.dismiss) private var dismiss
     @State private var showingSettings = false
+    @State private var showingRecording = false
 
     var body: some View {
         NavigationStack {
@@ -29,7 +30,10 @@ struct PreparationView: View {
                 }
                 Section {
                     Button("Record now", systemImage: "record.circle.fill") {
-                        Task { await coordinator.start(); if coordinator.phase == .recording { dismiss() } }
+                        Task {
+                            await coordinator.start()
+                            if coordinator.phase == .recording { showingRecording = true }
+                        }
                     }
                     .disabled(coordinator.microphonePermission == .denied || coordinator.availableDuration == nil)
                 }
@@ -42,10 +46,22 @@ struct PreparationView: View {
             }
             .navigationTitle("Prepare")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+            .navigationDestination(isPresented: $showingRecording) {
+                RecordingView(coordinator: coordinator)
+            }
             .onAppear { coordinator.refreshResources() }
             .onDisappear { coordinator.releasePreparationAudioSession() }
             .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)) { _ in
+                guard coordinator.phase != .recording, coordinator.phase != .finalizing else { return }
                 coordinator.refreshInputRoute()
+            }
+            .onChange(of: coordinator.phase) { _, phase in
+                switch phase {
+                case .available, .needsRecovery:
+                    dismiss()
+                default:
+                    break
+                }
             }
             .onOpenURL { _ in }
         }

@@ -17,7 +17,8 @@ struct AIRecorderApp: App {
             let files = try AudioFileStore.applicationStore()
             let recorder: any CaptureRecorder = isUITesting ? UITestCaptureRecorder() : FragmentedM4ARecorder()
             let inspector: any AudioInspector = isUITesting ? UITestAudioInspector() : OriginalAudioInspector()
-            _coordinator = State(initialValue: CaptureCoordinator(repository: AudioRepository(context: container.mainContext, files: files), recorder: recorder, inspector: inspector, permissionProvider: { isUITesting || AVAudioApplication.shared.recordPermission == .granted }))
+            let storageMonitor: (any StorageMonitoring)? = isUITesting ? UITestStorageMonitor() : nil
+            _coordinator = State(initialValue: CaptureCoordinator(repository: AudioRepository(context: container.mainContext, files: files), recorder: recorder, inspector: inspector, storageMonitor: storageMonitor, permissionProvider: { isUITesting || AVAudioApplication.shared.recordPermission == .granted }))
             recoveryService = RecoveryService(context: container.mainContext, files: files, inspector: inspector)
         } catch {
             fatalError("Unable to initialize local storage: \(error)")

@@ -28,6 +28,17 @@ struct RecordingView: View {
                     .foregroundStyle(.orange)
                     .multilineTextAlignment(.center)
                     .accessibilityAddTraits(.updatesFrequently)
+            } else if let resourceWarning = coordinator.resourceWarning {
+                Label(resourceWarning, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.orange)
+                    .multilineTextAlignment(.center)
+                    .accessibilityAddTraits(.updatesFrequently)
+            }
+
+            if coordinator.noInputLevelWarning {
+                Label("No input level detected. Capture will continue.", systemImage: "mic.slash")
+                    .foregroundStyle(.orange)
+                    .multilineTextAlignment(.center)
             }
 
             Button {

@@ -29,6 +29,7 @@ struct AudioDetailView: View {
     var body: some View {
         Form {
             AudioInformationSection(item: item, state: state, locale: locale)
+            CloudBackupEligibilitySection(eligibility: BackupEligibility.forBackup(of: item, files: files))
             PlaybackSection(playback: playback, durationSeconds: durationSeconds)
 
             if !item.markers.isEmpty {
@@ -124,6 +125,26 @@ private struct AudioInformationSection: View {
             }
             LabeledContent("Duration", value: formattedDuration(Double(item.durationMilliseconds) / 1_000, locale: locale))
             LabeledContent("State") { Text(state) }
+        }
+    }
+}
+
+private struct CloudBackupEligibilitySection: View {
+    let eligibility: BackupEligibility
+
+    var body: some View {
+        Section("Cloud backup") {
+            LabeledContent("Backup eligibility") { Text(status) }
+        }
+    }
+
+    private var status: LocalizedStringResource {
+        switch eligibility {
+        case .eligible: "Ready for cloud backup"
+        case .captureIsActive: "Available after Capture finishes"
+        case .originalAudioIsUnverified: "Original Audio needs recovery"
+        case .originalAudioIsMissing: "Original Audio is missing"
+        case .originalAudioIsEmpty: "Original Audio is empty"
         }
     }
 }

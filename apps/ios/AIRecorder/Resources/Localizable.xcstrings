@@ -1433,85 +1433,215 @@
     },
     "Select": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Select" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Seleccionar" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionar"
+          }
+        }
       }
     },
     "Select %@": {
       "comment": "Accessibility label for an Audio selection control. Placeholder is the Audio title.",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Select %@" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Seleccionar %@" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionar %@"
+          }
+        }
       }
     },
     "Selected": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Selected" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Seleccionado" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selected"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionado"
+          }
+        }
       }
     },
     "Not selected": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Not selected" } },
-        "es": { "stringUnit": { "state": "translated", "value": "No seleccionado" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not selected"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No seleccionado"
+          }
+        }
       }
     },
     "%lld selected": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%lld selected" } },
-        "es": { "stringUnit": { "state": "translated", "value": "%lld seleccionados" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld selected"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld seleccionados"
+          }
+        }
       }
     },
     "Delete %lld selected Audio items": {
       "comment": "Accessibility label for the bulk deletion button. Placeholder is the selected Audio count.",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Delete %lld selected Recordings" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Eliminar %lld audios seleccionados" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %lld selected Recordings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar %lld audios seleccionados"
+          }
+        }
       }
     },
     "Delete %lld local Audio items?": {
       "comment": "First bulk permanent-loss confirmation. Placeholder is the selected Audio count.",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Delete %lld local Recording items?" } },
-        "es": { "stringUnit": { "state": "translated", "value": "¿Eliminar %lld audios locales?" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %lld local Recording items?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar %lld audios locales?"
+          }
+        }
       }
     },
     "No verified cloud copy exists for the selected Audio. Deletion is permanent.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "No verified cloud copy exists for the selected Recordings. Deletion is permanent." } },
-        "es": { "stringUnit": { "state": "translated", "value": "No hay una copia en la nube verificada de los audios seleccionados. La eliminación es permanente." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No verified cloud copy exists for the selected Recordings. Deletion is permanent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay una copia en la nube verificada de los audios seleccionados. La eliminación es permanente."
+          }
+        }
       }
     },
     "Delete %lld Audio items permanently?": {
       "comment": "Final bulk permanent deletion confirmation. Placeholder is the selected Audio count.",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Delete %lld Recording items permanently?" } },
-        "es": { "stringUnit": { "state": "translated", "value": "¿Eliminar %lld audios permanentemente?" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete %lld Recording items permanently?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Eliminar %lld audios permanentemente?"
+          }
+        }
       }
     },
     "This removes the selected local Original Audio files and their metadata.": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "This removes the selected local Original Audio files and their metadata." } },
-        "es": { "stringUnit": { "state": "translated", "value": "Esto elimina los archivos de audio original locales seleccionados y sus metadatos." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This removes the selected local Original Audio files and their metadata."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto elimina los archivos de audio original locales seleccionados y sus metadatos."
+          }
+        }
       }
     },
     "Could not delete selected Audio": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Could not delete selected Recordings" } },
-        "es": { "stringUnit": { "state": "translated", "value": "No se pudieron eliminar los audios seleccionados" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not delete selected Recordings"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron eliminar los audios seleccionados"
+          }
+        }
       }
     },
     "%lld Audio items were retained because deletion failed.": {
       "comment": "Bulk deletion failure message. Placeholder is the number of Audio items retained.",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "%lld Recording items were retained because deletion failed." } },
-        "es": { "stringUnit": { "state": "translated", "value": "Se conservaron %lld audios porque no se pudieron eliminar." } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Recording items were retained because deletion failed."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se conservaron %lld audios porque no se pudieron eliminar."
+          }
+        }
       }
     },
     "Select multiple Audio items to delete": {
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Select multiple Recordings to delete" } },
-        "es": { "stringUnit": { "state": "translated", "value": "Selecciona varios audios para eliminarlos" } }
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select multiple Recordings to delete"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona varios audios para eliminarlos"
+          }
+        }
       }
     },
     "Could not delete local Audio": {
@@ -1526,6 +1656,294 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo eliminar el audio local"
+          }
+        }
+      }
+    },
+    "Cloud backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud backup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copia en la nube"
+          }
+        }
+      }
+    },
+    "Configure cloud backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure cloud backup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurar copia en la nube"
+          }
+        }
+      }
+    },
+    "Sign in with an email magic link without affecting local Audio": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with an email magic link without affecting local Audio"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión con un enlace mágico por correo sin afectar los audios locales"
+          }
+        }
+      }
+    },
+    "Signed in as": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in as"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión iniciada como"
+          }
+        }
+      }
+    },
+    "Sign out": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar sesión"
+          }
+        }
+      }
+    },
+    "Sign in to prepare this iPhone for private cloud backup. Recording and local Audio remain available offline.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to prepare this iPhone for private cloud backup. Recording and local Audio remain available offline."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión para preparar este iPhone para la copia privada en la nube. La grabación y los audios locales siguen disponibles sin conexión."
+          }
+        }
+      }
+    },
+    "Email": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Email"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correo electrónico"
+          }
+        }
+      }
+    },
+    "Send magic link": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send magic link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar enlace mágico"
+          }
+        }
+      }
+    },
+    "Check your email and open the magic link to finish signing in.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your email and open the magic link to finish signing in."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa tu correo y abre el enlace mágico para terminar de iniciar sesión."
+          }
+        }
+      }
+    },
+    "This iPhone’s local Audio library is already bound to another cloud account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone’s local Audio library is already bound to another cloud account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La biblioteca local de audios de este iPhone ya está vinculada a otra cuenta en la nube."
+          }
+        }
+      }
+    },
+    "Cloud backup is not configured on this app.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cloud backup is not configured on this app."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La copia en la nube no está configurada en esta app."
+          }
+        }
+      }
+    },
+    "The magic link did not create a session.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The magic link did not create a session."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El enlace mágico no creó una sesión."
+          }
+        }
+      }
+    },
+    "Backup eligibility": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Backup eligibility"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegibilidad para copia"
+          }
+        }
+      }
+    },
+    "Ready for cloud backup": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready for cloud backup"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lista para copia en la nube"
+          }
+        }
+      }
+    },
+    "Available after Capture finishes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Available after Capture finishes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disponible cuando finalice la captura"
+          }
+        }
+      }
+    },
+    "Original Audio needs recovery": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Audio needs recovery"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El audio original necesita recuperación"
+          }
+        }
+      }
+    },
+    "Original Audio is missing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Audio is missing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta el audio original"
+          }
+        }
+      }
+    },
+    "Original Audio is empty": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Audio is empty"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El audio original está vacío"
           }
         }
       }

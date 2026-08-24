@@ -32,6 +32,7 @@ coverage/
 .env
 .env.*
 !.env.example
+apps/ios/AIRecorder/Resources/Supabase.plist
 *.pem
 *.p12
 *.mobileprovision

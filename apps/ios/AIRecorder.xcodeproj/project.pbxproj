@@ -13,7 +13,9 @@
 		1662E3DAED3B925672877957 /* AudioMetadataEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72FFCA588B7F3C9359AFFC40 /* AudioMetadataEditor.swift */; };
 		1E35747E79B51CE62D1352FA /* LocalPlaybackModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE5993A1C97D5BB42DF4F4F /* LocalPlaybackModelTests.swift */; };
 		26676C86AA276D478C601726 /* LocalAudioState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07D7A2D5D2F9D9F78D4016BB /* LocalAudioState.swift */; };
+		27D697139FAB87925B1192C9 /* CloudAuthenticating.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD4B39DB2928416683D5DF2 /* CloudAuthenticating.swift */; };
 		28BF01FF3D5D080EBF8226DA /* AppConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4039331EB02D2E501D862C2B /* AppConfigurationTests.swift */; };
+		2DC251A4ABF35236AED13379 /* CloudIdentityCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A9997B46298679BEC370736 /* CloudIdentityCoordinatorTests.swift */; };
 		2E4261062C4CB9D85FB6F7BF /* CaptureEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E166091B28B4EB5215860B /* CaptureEventTests.swift */; };
 		307AD4080336091019CEDB3B /* CaptureProofStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DC23E53EFE91E55691AABA /* CaptureProofStoreTests.swift */; };
 		33873ED35B1E26791401EA7B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1C2583B1EDB71F01C22C3FFE /* Localizable.xcstrings */; };
@@ -32,12 +34,16 @@
 		839665E4B1E2BACD9049F3A4 /* AudioRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = E78485A020C90E1A3FF2AD01 /* AudioRepository.swift */; };
 		847D0C402B153439E8958578 /* StoragePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1577664CF9846927FC9E4E41 /* StoragePolicy.swift */; };
 		94551A76D1D5C0A76305C77E /* BatteryMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D659F2FFFD7BBC85C130B98E /* BatteryMonitor.swift */; };
+		9E2C79E76662BDA3FE6024DA /* CloudIdentityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE24F51A714F1D11160A6387 /* CloudIdentityView.swift */; };
 		A5EDC2F7911518DE03A5CCAF /* MarkerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E036DE91B07AD2DAC2724183 /* MarkerTests.swift */; };
+		A650D2E6EB61D155AC9F2F36 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = DF595262F076B12EED1E569A /* Supabase */; };
 		A9A1CE9D116B0B5D72F9CA31 /* AudioItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EFC9A5D70C0D8E59553B02 /* AudioItem.swift */; };
 		AD9CB64638B8B6AAF48D9E7F /* LibraryAudioRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42FD315D56C0BE1E428677CA /* LibraryAudioRow.swift */; };
+		AFB22959499AD9E2E11D26A2 /* CloudIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B8CDF6CA716D8F5A4C37097 /* CloudIdentity.swift */; };
 		C093D1215FB6E404E32A4BFF /* OriginalAudioInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411D81D5CBC544E328FDA159 /* OriginalAudioInspector.swift */; };
 		C1C954FD6419180BA1542D7A /* AudioSelectionModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC265222077C97CE75A56BF /* AudioSelectionModelTests.swift */; };
 		C4816B26E9AC38AEFFE941D8 /* AudioVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 676E57AAEE37657E016A8E0A /* AudioVerifier.swift */; };
+		C99A26C853EE3BFDED0D1A08 /* SupabaseCloudAuthentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E22F72593A77535F990479 /* SupabaseCloudAuthentication.swift */; };
 		CA0ACA3894B5DFECE6E85493 /* RecoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52F8BFF45583184FED28C58 /* RecoveryService.swift */; };
 		CB2CFB0462948499C5CAFE00 /* LocalPlaybackModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDD8DD8A2DF5D7BC098A275A /* LocalPlaybackModel.swift */; };
 		D2F17F0566AB13B33FD945A3 /* AppLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72BED32931F5115C85C74E31 /* AppLanguage.swift */; };
@@ -45,11 +51,16 @@
 		D4639DF2D66292C59CA9F034 /* BatteryMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11C7865089DCD7D48AC1A19D /* BatteryMonitorTests.swift */; };
 		D6F248EA92BCC4AC1AC312B9 /* CaptureProofStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB6F0B3B547E0ECB297C7012 /* CaptureProofStore.swift */; };
 		E2BFE33D29402A632D13F099 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA7C73DA4279BA7456E7CC43 /* LibraryView.swift */; };
+		ED51EB8FE1C6CB61940913DF /* BackupEligibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6AF22CE9724A29BA7000FDE /* BackupEligibilityTests.swift */; };
+		F0856D9587E43B9FECE9AF5D /* CloudLibraryOwnerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C36C9B9F608B7ADB2AEB8D /* CloudLibraryOwnerStore.swift */; };
 		F351C99542064986CEB58B78 /* FragmentedM4ARecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CA261ECD24F2772B818C468 /* FragmentedM4ARecorder.swift */; };
 		F383A72D04ABA84F23D950DB /* LocalRecordingFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EB6055BD69074DC7E5EA17E /* LocalRecordingFlowUITests.swift */; };
 		F443CD9F96C9D66113BC52F8 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B51BFA8E55C7516F8A1F08B /* RootView.swift */; };
 		F6F71F2275F772BE932F2DF7 /* CaptureCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8BAAE67271C4AB9F318746 /* CaptureCoordinatorTests.swift */; };
+		F8F8C8E9443E721788302E6C /* Supabase.plist.example in Resources */ = {isa = PBXBuildFile; fileRef = B294DEE04BD030184E61CC2E /* Supabase.plist.example */; };
+		FCC35A3FDD4DBE900ECC09C6 /* BackupEligibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C11F7FE70F2BE84C44933C5 /* BackupEligibility.swift */; };
 		FCCBC24E984968FF4B1BF3E4 /* AudioDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB3213EE670293B353A4726A /* AudioDetailView.swift */; };
+		FD6F953321A7586384DAAEAD /* CloudIdentityCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2637A8BD4B018657EFC124B /* CloudIdentityCoordinator.swift */; };
 		FDF5B8ED2EE88C43F1D262EF /* RecoveryServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E4F651A5678E4835FF78069 /* RecoveryServiceTests.swift */; };
 		FE819EBBA2A14F92BE746819 /* SettingsModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B399DE5D1E84413424BE979 /* SettingsModelTests.swift */; };
 		FF250CC6E57E7E3F6611942A /* SettingsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4024D44758FD4FBF6F5A2887 /* SettingsModel.swift */; };
@@ -77,6 +88,7 @@
 		08DDFAAFB23670D83BD59928 /* AudioSelectionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSelectionModel.swift; sourceTree = "<group>"; };
 		0B61D82D5D8C020F96DC18EE /* AudioVerifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioVerifierTests.swift; sourceTree = "<group>"; };
 		0BC265222077C97CE75A56BF /* AudioSelectionModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSelectionModelTests.swift; sourceTree = "<group>"; };
+		0C11F7FE70F2BE84C44933C5 /* BackupEligibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupEligibility.swift; sourceTree = "<group>"; };
 		0E4F651A5678E4835FF78069 /* RecoveryServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryServiceTests.swift; sourceTree = "<group>"; };
 		0E8BAAE67271C4AB9F318746 /* CaptureCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureCoordinatorTests.swift; sourceTree = "<group>"; };
 		11C7865089DCD7D48AC1A19D /* BatteryMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryMonitorTests.swift; sourceTree = "<group>"; };
@@ -89,20 +101,25 @@
 		2774DCA228C896079754FCFB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2C0572EBE5F21FA165027FDA /* AIRecorderUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AIRecorderUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		32CF9B1E17DA1DFB44591EAF /* OriginalAudioInspectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginalAudioInspectorTests.swift; sourceTree = "<group>"; };
+		37C36C9B9F608B7ADB2AEB8D /* CloudLibraryOwnerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryOwnerStore.swift; sourceTree = "<group>"; };
 		4024D44758FD4FBF6F5A2887 /* SettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModel.swift; sourceTree = "<group>"; };
 		4039331EB02D2E501D862C2B /* AppConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigurationTests.swift; sourceTree = "<group>"; };
 		411D81D5CBC544E328FDA159 /* OriginalAudioInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginalAudioInspector.swift; sourceTree = "<group>"; };
 		42FD315D56C0BE1E428677CA /* LibraryAudioRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAudioRow.swift; sourceTree = "<group>"; };
+		50E22F72593A77535F990479 /* SupabaseCloudAuthentication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseCloudAuthentication.swift; sourceTree = "<group>"; };
 		5B399DE5D1E84413424BE979 /* SettingsModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModelTests.swift; sourceTree = "<group>"; };
 		5BE5993A1C97D5BB42DF4F4F /* LocalPlaybackModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalPlaybackModelTests.swift; sourceTree = "<group>"; };
 		5CF9DE4F5B6C95D9CE7170B4 /* CaptureCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureCoordinator.swift; sourceTree = "<group>"; };
 		5E68B32E184D7DAA0109B39A /* StoragePolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoragePolicyTests.swift; sourceTree = "<group>"; };
 		676E57AAEE37657E016A8E0A /* AudioVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioVerifier.swift; sourceTree = "<group>"; };
+		6A9997B46298679BEC370736 /* CloudIdentityCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudIdentityCoordinatorTests.swift; sourceTree = "<group>"; };
+		6DD4B39DB2928416683D5DF2 /* CloudAuthenticating.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudAuthenticating.swift; sourceTree = "<group>"; };
 		72BED32931F5115C85C74E31 /* AppLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguage.swift; sourceTree = "<group>"; };
 		72FFCA588B7F3C9359AFFC40 /* AudioMetadataEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioMetadataEditor.swift; sourceTree = "<group>"; };
 		7EB6055BD69074DC7E5EA17E /* LocalRecordingFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalRecordingFlowUITests.swift; sourceTree = "<group>"; };
 		84CF9908877BC60761CE3929 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		8581E5457AE37CF03D6B0510 /* RecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingView.swift; sourceTree = "<group>"; };
+		8B8CDF6CA716D8F5A4C37097 /* CloudIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudIdentity.swift; sourceTree = "<group>"; };
 		9B51BFA8E55C7516F8A1F08B /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		9CA261ECD24F2772B818C468 /* FragmentedM4ARecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FragmentedM4ARecorder.swift; sourceTree = "<group>"; };
 		A1B6BFF14B1117851CF75ED5 /* AudioRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRepositoryTests.swift; sourceTree = "<group>"; };
@@ -112,20 +129,43 @@
 		A9EFC9A5D70C0D8E59553B02 /* AudioItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioItem.swift; sourceTree = "<group>"; };
 		AB6F0B3B547E0ECB297C7012 /* CaptureProofStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureProofStore.swift; sourceTree = "<group>"; };
 		B17DEF72ABE23ECB8D02A3FD /* AIRecorder.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AIRecorder.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B294DEE04BD030184E61CC2E /* Supabase.plist.example */ = {isa = PBXFileReference; path = Supabase.plist.example; sourceTree = "<group>"; };
 		B47D1BD35D2F7F37D65A0D61 /* CaptureEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureEvent.swift; sourceTree = "<group>"; };
+		C6AF22CE9724A29BA7000FDE /* BackupEligibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupEligibilityTests.swift; sourceTree = "<group>"; };
 		CB3213EE670293B353A4726A /* AudioDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDetailView.swift; sourceTree = "<group>"; };
+		CE24F51A714F1D11160A6387 /* CloudIdentityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudIdentityView.swift; sourceTree = "<group>"; };
 		D659F2FFFD7BBC85C130B98E /* BatteryMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryMonitor.swift; sourceTree = "<group>"; };
 		DA500480B81DB6B18A0B91E4 /* PreparationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreparationView.swift; sourceTree = "<group>"; };
 		DDD8DD8A2DF5D7BC098A275A /* LocalPlaybackModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalPlaybackModel.swift; sourceTree = "<group>"; };
 		E036DE91B07AD2DAC2724183 /* MarkerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkerTests.swift; sourceTree = "<group>"; };
 		E23458FF6EB8C35BAA4CE5F6 /* CaptureProofModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureProofModel.swift; sourceTree = "<group>"; };
+		E2637A8BD4B018657EFC124B /* CloudIdentityCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudIdentityCoordinator.swift; sourceTree = "<group>"; };
 		E78485A020C90E1A3FF2AD01 /* AudioRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRepository.swift; sourceTree = "<group>"; };
 		F0DC23E53EFE91E55691AABA /* CaptureProofStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureProofStoreTests.swift; sourceTree = "<group>"; };
 		F3511430A0F94FC6C6516A6E /* AudioFileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFileStore.swift; sourceTree = "<group>"; };
 		FA7C73DA4279BA7456E7CC43 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		A8E161E037E9CD78B468E1BA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A650D2E6EB61D155AC9F2F36 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
+		133685146C58B99736DB6C50 /* CloudBackup */ = {
+			isa = PBXGroup;
+			children = (
+				0C11F7FE70F2BE84C44933C5 /* BackupEligibility.swift */,
+			);
+			path = CloudBackup;
+			sourceTree = "<group>";
+		};
 		194D75E8682F2DD1826D6401 /* Persistence */ = {
 			isa = PBXGroup;
 			children = (
@@ -150,6 +190,7 @@
 			isa = PBXGroup;
 			children = (
 				5BCA906DA0BE4F583241E641 /* AudioDetail */,
+				82CDC0D91B95415BF978FCBF /* CloudIdentity */,
 				234138957380728A293035EF /* Library */,
 				C15C1C15B4CBF5E10A3DD39A /* Preparation */,
 				BB361B8E4C34ECC930EE821A /* Recording */,
@@ -187,6 +228,18 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		2B6C2EFB7B6EFF8397D9EFFA /* CloudIdentity */ = {
+			isa = PBXGroup;
+			children = (
+				6DD4B39DB2928416683D5DF2 /* CloudAuthenticating.swift */,
+				8B8CDF6CA716D8F5A4C37097 /* CloudIdentity.swift */,
+				E2637A8BD4B018657EFC124B /* CloudIdentityCoordinator.swift */,
+				37C36C9B9F608B7ADB2AEB8D /* CloudLibraryOwnerStore.swift */,
+				50E22F72593A77535F990479 /* SupabaseCloudAuthentication.swift */,
+			);
+			path = CloudIdentity;
+			sourceTree = "<group>";
+		};
 		2F9423BE9113C743AD8AB53B = {
 			isa = PBXGroup;
 			children = (
@@ -221,6 +274,8 @@
 				C7FC5E9942980209EF77D8D1 /* App */,
 				FE5FB0828015FC3C11A2CCC8 /* Capture */,
 				8D4977F1FFF524BDDDD22E94 /* CaptureProof */,
+				133685146C58B99736DB6C50 /* CloudBackup */,
+				2B6C2EFB7B6EFF8397D9EFFA /* CloudIdentity */,
 				1EE69698FC67F5B96507680D /* Features */,
 				194D75E8682F2DD1826D6401 /* Persistence */,
 				7C854D6AE96B70B2B5C651E4 /* Resources */,
@@ -263,6 +318,7 @@
 			isa = PBXGroup;
 			children = (
 				1C2583B1EDB71F01C22C3FFE /* Localizable.xcstrings */,
+				B294DEE04BD030184E61CC2E /* Supabase.plist.example */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -275,6 +331,14 @@
 				2C0572EBE5F21FA165027FDA /* AIRecorderUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		82CDC0D91B95415BF978FCBF /* CloudIdentity */ = {
+			isa = PBXGroup;
+			children = (
+				CE24F51A714F1D11160A6387 /* CloudIdentityView.swift */,
+			);
+			path = CloudIdentity;
 			sourceTree = "<group>";
 		};
 		86EA99FD9CAC603CFB7876AC /* Storage */ = {
@@ -311,6 +375,8 @@
 		976BEB23700CA05D8A4C45EF /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				C6AF22CE9724A29BA7000FDE /* BackupEligibilityTests.swift */,
+				6A9997B46298679BEC370736 /* CloudIdentityCoordinatorTests.swift */,
 				5BE5993A1C97D5BB42DF4F4F /* LocalPlaybackModelTests.swift */,
 				5B399DE5D1E84413424BE979 /* SettingsModelTests.swift */,
 				96CC3FE56C0D22981FF0EB46 /* Library */,
@@ -375,6 +441,7 @@
 			buildPhases = (
 				467CDE8A92A9F6F58DDEEBE0 /* Sources */,
 				7C70180AAF97518ED3F7C07B /* Resources */,
+				A8E161E037E9CD78B468E1BA /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -382,6 +449,7 @@
 			);
 			name = AIRecorder;
 			packageProductDependencies = (
+				DF595262F076B12EED1E569A /* Supabase */,
 			);
 			productName = AIRecorder;
 			productReference = B17DEF72ABE23ECB8D02A3FD /* AIRecorder.app */;
@@ -451,6 +519,9 @@
 			);
 			mainGroup = 2F9423BE9113C743AD8AB53B;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				064B5C47D807C5AFE975C136 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
@@ -468,6 +539,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				33873ED35B1E26791401EA7B /* Localizable.xcstrings in Resources */,
+				F8F8C8E9443E721788302E6C /* Supabase.plist.example in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -487,6 +559,7 @@
 				839665E4B1E2BACD9049F3A4 /* AudioRepository.swift in Sources */,
 				12C3E513D54CBCA05B46502E /* AudioSelectionModel.swift in Sources */,
 				C4816B26E9AC38AEFFE941D8 /* AudioVerifier.swift in Sources */,
+				FCC35A3FDD4DBE900ECC09C6 /* BackupEligibility.swift in Sources */,
 				94551A76D1D5C0A76305C77E /* BatteryMonitor.swift in Sources */,
 				049E4C67911E1A282DBA9D27 /* CaptureCoordinator.swift in Sources */,
 				6313B5E11B3155816C8C5BEC /* CaptureEvent.swift in Sources */,
@@ -494,6 +567,11 @@
 				783893EAD23C76DDA3E7F597 /* CaptureProofModel.swift in Sources */,
 				D6F248EA92BCC4AC1AC312B9 /* CaptureProofStore.swift in Sources */,
 				76958712A9D76FF103015F71 /* CaptureProofView.swift in Sources */,
+				27D697139FAB87925B1192C9 /* CloudAuthenticating.swift in Sources */,
+				AFB22959499AD9E2E11D26A2 /* CloudIdentity.swift in Sources */,
+				FD6F953321A7586384DAAEAD /* CloudIdentityCoordinator.swift in Sources */,
+				9E2C79E76662BDA3FE6024DA /* CloudIdentityView.swift in Sources */,
+				F0856D9587E43B9FECE9AF5D /* CloudLibraryOwnerStore.swift in Sources */,
 				F351C99542064986CEB58B78 /* FragmentedM4ARecorder.swift in Sources */,
 				AD9CB64638B8B6AAF48D9E7F /* LibraryAudioRow.swift in Sources */,
 				E2BFE33D29402A632D13F099 /* LibraryView.swift in Sources */,
@@ -508,6 +586,7 @@
 				FF250CC6E57E7E3F6611942A /* SettingsModel.swift in Sources */,
 				71D658D589E194B6C946FFA4 /* SettingsView.swift in Sources */,
 				847D0C402B153439E8958578 /* StoragePolicy.swift in Sources */,
+				C99A26C853EE3BFDED0D1A08 /* SupabaseCloudAuthentication.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -519,10 +598,12 @@
 				38EC2416D23D7569068403B9 /* AudioRepositoryTests.swift in Sources */,
 				C1C954FD6419180BA1542D7A /* AudioSelectionModelTests.swift in Sources */,
 				51C66B708B47A9281643E92C /* AudioVerifierTests.swift in Sources */,
+				ED51EB8FE1C6CB61940913DF /* BackupEligibilityTests.swift in Sources */,
 				D4639DF2D66292C59CA9F034 /* BatteryMonitorTests.swift in Sources */,
 				F6F71F2275F772BE932F2DF7 /* CaptureCoordinatorTests.swift in Sources */,
 				2E4261062C4CB9D85FB6F7BF /* CaptureEventTests.swift in Sources */,
 				307AD4080336091019CEDB3B /* CaptureProofStoreTests.swift in Sources */,
+				2DC251A4ABF35236AED13379 /* CloudIdentityCoordinatorTests.swift in Sources */,
 				1E35747E79B51CE62D1352FA /* LocalPlaybackModelTests.swift in Sources */,
 				A5EDC2F7911518DE03A5CCAF /* MarkerTests.swift in Sources */,
 				6FB8D53C5B1BDC3BC34D001F /* OriginalAudioInspectorTests.swift in Sources */,
@@ -831,6 +912,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		064B5C47D807C5AFE975C136 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DF595262F076B12EED1E569A /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 064B5C47D807C5AFE975C136 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7ABACEACAC34A1A358469793 /* Project object */;
 }

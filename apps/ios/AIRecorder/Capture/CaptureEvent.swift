@@ -4,14 +4,16 @@ import Foundation
 
 enum CaptureRecorderEvent: Equatable, Sendable {
     case interruptionBegan(Date)
-    case interruptionEnded(Date, shouldResume: Bool)
     case routeChanged(Date, inputName: String)
+    case inputBecameUnavailable(Date)
 }
 
 struct CaptureEvent: Equatable, Sendable {
+    static let noInputName = "No input"
+
     enum Kind: String, Codable, Sendable {
         case interruptionBegan
-        case interruptionEnded
+        case interruptionEnded // Legacy persisted value. New Captures never emit it.
         case routeChanged
     }
 
@@ -19,18 +21,23 @@ struct CaptureEvent: Equatable, Sendable {
     let date: Date
     let audioPositionMilliseconds: Int
     let inputName: String?
-    let shouldResume: Bool
 }
 
 enum CaptureNotificationMapper {
-    static func captureInterruptionBeganDate(_ notification: Notification, now: Date = .now) -> Date? {
-        notification.name == AVCaptureSession.wasInterruptedNotification ? now : nil
+    static func observeAudioInterruptions(
+        center: NotificationCenter = .default,
+        handler: @escaping @Sendable (Notification) -> Void
+    ) -> NSObjectProtocol {
+        center.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: nil,
+            queue: nil,
+            using: handler
+        )
     }
 
-    static func captureInterruptionEnded(_ notification: Notification, now: Date = .now) -> (date: Date, shouldResume: Bool)? {
-        notification.name == AVCaptureSession.interruptionEndedNotification
-            ? (date: now, shouldResume: true)
-            : nil
+    static func captureInterruptionBeganDate(_ notification: Notification, now: Date = .now) -> Date? {
+        notification.name == AVCaptureSession.wasInterruptedNotification ? now : nil
     }
 
     static func interruptionBeganDate(_ notification: Notification, now: Date = .now) -> Date? {
@@ -39,17 +46,10 @@ enum CaptureNotificationMapper {
         return now
     }
 
-    static func interruptionEnded(_ notification: Notification, now: Date = .now) -> (date: Date, shouldResume: Bool)? {
-        guard let type = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-              AVAudioSession.InterruptionType(rawValue: type) == .ended else { return nil }
-        let options = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
-        return (now, AVAudioSession.InterruptionOptions(rawValue: options).contains(.shouldResume))
-    }
-
-    static func routeInputName(_ notification: Notification, fallback: String = "No input") -> String? {
+    static func routeInputName(_ notification: Notification) -> String? {
         guard let reasonValue = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
               AVAudioSession.RouteChangeReason(rawValue: reasonValue) != nil else { return nil }
         let session = notification.object as? AVAudioSession
-        return session?.currentRoute.inputs.first?.portName ?? fallback
+        return session?.currentRoute.inputs.first?.portName
     }
 }

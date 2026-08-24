@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct RootView: View {
-    @Bindable var coordinator: CaptureCoordinator
+    let coordinator: CaptureCoordinator
     let recoveryService: RecoveryService
     @Query(sort: \AudioItem.startedAt, order: .reverse) private var items: [AudioItem]
     @State private var showingPreparation = false
@@ -10,34 +10,24 @@ struct RootView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .top) {
-                Group {
-                    if items.isEmpty {
-                        ContentUnavailableView("No Audio Yet", systemImage: "waveform", description: Text("Recordings you create appear here."))
-                    } else {
-                        List(items) { item in
-                            Button { selectedItem = item } label: {
-                                VStack(alignment: .leading) {
-                                    Text(item.displayTitle())
-                                    HStack {
-                                        Text(item.startedAt.formatted(date: .abbreviated, time: .shortened))
-                                        Spacer()
-                                        Text(duration(item.durationMilliseconds))
-                                        Text(state(item))
-                                    }.font(.caption).foregroundStyle(.secondary)
-                                }
+            Group {
+                if items.isEmpty {
+                    ContentUnavailableView("No Audio Yet", systemImage: "waveform", description: Text("Recordings you create appear here."))
+                } else {
+                    List(items) { item in
+                        Button { selectedItem = item } label: {
+                            VStack(alignment: .leading) {
+                                Text(item.displayTitle())
+                                HStack {
+                                    Text(item.startedAt.formatted(date: .abbreviated, time: .shortened))
+                                    Spacer()
+                                    Text(duration(item.durationMilliseconds))
+                                    Text(state(item))
+                                }.font(.caption).foregroundStyle(.secondary)
                             }
-                            .accessibilityElement(children: .combine)
                         }
+                        .accessibilityElement(children: .combine)
                     }
-                }
-                .disabled(coordinator.isInterrupted)
-                .opacity(coordinator.isInterrupted ? 0.45 : 1)
-
-                if coordinator.isInterrupted {
-                    interruptionBanner
-                        .padding(.horizontal)
-                        .padding(.top, 8)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -47,7 +37,6 @@ struct RootView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Record", systemImage: "mic.fill") { showingPreparation = true }
                         .accessibilityHint("Capture starts immediately after permission is granted")
-                        .disabled(coordinator.isInterrupted)
                 }
             }
             .sheet(isPresented: $showingPreparation) {
@@ -71,8 +60,11 @@ struct RootView: View {
     }
 
     private func state(_ item: AudioItem) -> String {
-        if item.id == coordinator.currentItem?.id, coordinator.isInterrupted {
-            return "Recording interrupted"
+        if item.captureEndedByInterruption {
+            return "Ended by interruption"
+        }
+        if item.captureEndedByUnavailableInput {
+            return "Ended: input unavailable"
         }
         switch item.localState {
         case .available: return "Only on this iPhone"
@@ -81,23 +73,5 @@ struct RootView: View {
         case .finalizing: return "Finalizing"
         case .recovered: return "Recovered"
         }
-    }
-
-    private var interruptionBanner: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label("Recording interrupted", systemImage: "pause.circle.fill")
-                .font(.headline)
-            Text("Waiting to resume… Your recording is still safe.")
-                .font(.subheadline)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .foregroundStyle(.primary)
-        .background(.orange.opacity(0.9), in: .rect(cornerRadius: 12))
-        .overlay {
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(.orange, lineWidth: 1)
-        }
-        .accessibilityElement(children: .combine)
     }
 }

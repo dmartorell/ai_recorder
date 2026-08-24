@@ -1,6 +1,6 @@
 # iOS local recording validation
 
-Status: manual validation passed on the paired physical iPhone.
+Status: core recovery and Issue #7 interruption validation passed. Non-interrupting route validation remains pending.
 
 ## Environment
 
@@ -20,6 +20,13 @@ Status: manual validation passed on the paired physical iPhone.
 | Abrupt termination before the first completed fragment | No unverifiable audio is presented as recovered | Audio appeared as `Needs recovery` with zero recoverable duration | Pass |
 | Delete while playing | Local file and library metadata are removed after explicit confirmation | Audio disappeared and a new capture could start immediately | Pass |
 | Relaunch after playback | Playback can start without recording a new Audio first | Existing Audio played after relaunch | Pass |
+| Spotify playback during Capture | Any resulting audio-session interruption ends Capture, persists the terminal interruption event, and preserves verified playable audio | Two consecutive Captures ended on interruption and preserved separate Audio items | Pass |
+| Real system interruption | Capture ends without automatic or manual resumption; continuing creates a separate Audio and Original Audio | A Clock timer alarm ended Capture; repeating the scenario in a second Capture also ended it correctly | Pass |
+| Non-interrupting route change | Capture continues with the same Original Audio identity and shows the resulting active input name | Pending physical-device run | Pending |
+
+## Issue #7 device procedure
+
+For each pending scenario, record the app commit, device and iOS version, event sequence, verified duration, final Capture event, Original Audio identifier before and after the event, and pass/fail result. Do not mark a scenario passed from simulator or synthetic-event tests.
 
 ## Recovery boundary
 

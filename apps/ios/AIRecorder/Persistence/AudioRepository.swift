@@ -67,6 +67,16 @@ final class AudioRepository {
         try context.save()
     }
 
+    func pruneMarkers(after durationMilliseconds: Int, from item: AudioItem) {
+        Self.pruneMarkers(after: durationMilliseconds, from: item, in: context)
+    }
+
+    static func pruneMarkers(after durationMilliseconds: Int, from item: AudioItem, in context: ModelContext) {
+        let invalidMarkers = item.markers.filter { $0.positionMilliseconds > durationMilliseconds }
+        invalidMarkers.forEach(context.delete)
+        item.markers.removeAll { $0.positionMilliseconds > durationMilliseconds }
+    }
+
     @discardableResult
     func addMarker(to item: AudioItem, positionMilliseconds: Int) throws -> Marker {
         guard item.localState == .capturing else { throw CaptureItemError.invalidState }

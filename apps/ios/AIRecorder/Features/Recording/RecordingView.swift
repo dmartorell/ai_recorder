@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct RecordingView: View {
-    @Bindable var coordinator: CaptureCoordinator
+    let coordinator: CaptureCoordinator
     @State private var showingFinalize = false
     @State private var showingMarkerConfirmation = false
 
@@ -23,8 +23,8 @@ struct RecordingView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityLabel("Active input")
 
-            if coordinator.isInterrupted {
-                Label("Audio interrupted. Waiting for a safe resume.", systemImage: "exclamationmark.triangle.fill")
+            if let automaticFinalizationMessage = coordinator.automaticFinalizationMessage {
+                Label(automaticFinalizationMessage, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(.orange)
                     .multilineTextAlignment(.center)
                     .accessibilityAddTraits(.updatesFrequently)
@@ -37,8 +37,8 @@ struct RecordingView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .accessibilityHint(coordinator.isInterrupted ? "Unavailable while audio is interrupted" : "Marks the current audio time")
-            .disabled(coordinator.isInterrupted)
+            .accessibilityHint(coordinator.phase == .recording ? "Marks the current audio time" : "Unavailable while Capture is finalizing")
+            .disabled(coordinator.phase != .recording)
             .sensoryFeedback(.selection, trigger: coordinator.markerConfirmation)
 
             if showingMarkerConfirmation {
@@ -50,6 +50,7 @@ struct RecordingView: View {
 
             Button("Finalize", role: .destructive) { showingFinalize = true }
                 .buttonStyle(.bordered)
+                .disabled(coordinator.phase != .recording)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal)

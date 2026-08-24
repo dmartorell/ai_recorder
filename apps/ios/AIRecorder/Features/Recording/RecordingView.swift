@@ -49,7 +49,7 @@ struct RecordingView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .accessibilityHint(coordinator.phase == .recording ? "Marks the current audio time" : "Unavailable while Capture is finalizing")
-            .disabled(coordinator.phase != .recording)
+            .disabled(coordinator.phase != .recording || coordinator.isStartingRecorder)
             .sensoryFeedback(.selection, trigger: coordinator.markerConfirmation)
 
             if showingMarkerConfirmation {
@@ -61,7 +61,7 @@ struct RecordingView: View {
 
             Button("Finalize", role: .destructive) { showingFinalize = true }
                 .buttonStyle(.bordered)
-                .disabled(coordinator.phase != .recording)
+                .disabled(coordinator.phase != .recording || coordinator.isStartingRecorder)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal)

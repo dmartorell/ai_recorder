@@ -5,8 +5,38 @@ import Foundation
 enum CaptureRecorderEvent: Equatable, Sendable {
     case interruptionBegan(Date)
     case inputLevelChanged(Float)
+    case inputLevelUnavailable
     case routeChanged(Date, inputName: String)
     case inputBecameUnavailable(Date)
+}
+
+struct CaptureInputRoute: Equatable, Sendable {
+    let uid: String
+    let name: String
+    let portType: String
+}
+
+struct CaptureInputDevice: Equatable, Sendable {
+    let uniqueID: String
+    let name: String
+}
+
+enum CaptureInputSelection: Equatable, Sendable {
+    case matched(CaptureInputDevice)
+    case unavailable
+    case unverified(routeName: String)
+}
+
+enum CaptureInputSelector {
+    static func select(route: CaptureInputRoute?, devices: [CaptureInputDevice]) -> CaptureInputSelection {
+        guard let route else { return .unavailable }
+        guard let device = devices.first(where: { $0.uniqueID == route.uid })
+                ?? devices.first(where: { $0.name == route.name })
+        else {
+            return .unverified(routeName: route.name)
+        }
+        return .matched(device)
+    }
 }
 
 struct CaptureEvent: Equatable, Sendable {
@@ -49,10 +79,18 @@ enum CaptureNotificationMapper {
         return now
     }
 
-    static func routeInputName(_ notification: Notification) -> String? {
+    static func currentInputRoute(_ session: AVAudioSession = .sharedInstance()) -> CaptureInputRoute? {
+        guard let input = session.currentRoute.inputs.first else { return nil }
+        return CaptureInputRoute(uid: input.uid, name: input.portName, portType: input.portType.rawValue)
+    }
+
+    static func routeInput(_ notification: Notification) -> CaptureInputRoute? {
         guard let reasonValue = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
               AVAudioSession.RouteChangeReason(rawValue: reasonValue) != nil else { return nil }
-        let session = notification.object as? AVAudioSession
-        return session?.currentRoute.inputs.first?.portName
+        return currentInputRoute(notification.object as? AVAudioSession ?? .sharedInstance())
+    }
+
+    static func routeInputName(_ notification: Notification) -> String? {
+        routeInput(notification)?.name
     }
 }

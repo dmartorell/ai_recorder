@@ -1,4 +1,5 @@
 import AVFAudio
+import AVFoundation
 import Foundation
 import Observation
 
@@ -60,6 +61,7 @@ final class CaptureCoordinator {
     private(set) var resourceWarning: String?
     private(set) var inputLevel: Float?
     private(set) var noInputLevelWarning = false
+    private(set) var isStartingRecorder = false
 
     private var recordingStartedAt: Date?
     private var positionBaseMilliseconds = 0
@@ -67,6 +69,7 @@ final class CaptureCoordinator {
     private var eventTask: Task<Void, Never>?
     private var interruptionFinalizationTask: Task<Void, Never>?
     private var resourceTask: Task<Void, Never>?
+    private var recorderStartTask: Task<Void, Never>?
 
     private let repository: AudioRepository
     private let storageMonitor: any StorageMonitoring
@@ -91,7 +94,7 @@ final class CaptureCoordinator {
         self.storageMonitor = storageMonitor ?? StorageMonitor(volumeURL: repository.files.rootDirectory)
         self.batteryMonitor = batteryMonitor ?? BatteryMonitor()
         self.permissionProvider = permissionProvider
-        activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? CaptureEvent.noInputName
+        activeInputName = Self.currentInputName()
     }
 
     var files: AudioFileStore { repository.files }
@@ -118,8 +121,21 @@ final class CaptureCoordinator {
     }
 
     func refreshResources() {
+        refreshInputRoute()
         storageAssessment = storageMonitor.refresh()
         isLowBatteryWarning = batteryMonitor.refresh()
+    }
+
+    func refreshInputRoute() {
+        let audioSession = AVAudioSession.sharedInstance()
+        try? audioSession.setCategory(.record, mode: .default, options: [.allowBluetoothHFP])
+        try? audioSession.setActive(true)
+        activeInputName = Self.currentInputName()
+    }
+
+    func releasePreparationAudioSession() {
+        guard phase != .recording, phase != .finalizing else { return }
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     func requestPermission() async {
@@ -148,29 +164,31 @@ final class CaptureCoordinator {
         do {
             let item = try repository.beginCapture()
             currentItem = item
-            try await recorder.start(outputURL: repository.files.url(for: item.id))
             phase = .recording
             recordingStartedAt = .now
             positionBaseMilliseconds = 0
             currentAudioPositionMilliseconds = 0
             markerCount = item.markers.count
-            activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? CaptureEvent.noInputName
+            activeInputName = Self.currentInputName()
+            isStartingRecorder = true
             startPositionUpdates()
             startEventConsumption()
             startResourceMonitoring()
-        } catch {
-            if let item = currentItem {
-                let values = try? repository.files.url(for: item.id).resourceValues(forKeys: [.fileSizeKey])
-                if (values?.fileSize ?? 0) > 0 {
-                    item.localState = .needsRecovery
-                    try? repository.save()
-                    phase = .needsRecovery(item.id, error.localizedDescription)
-                } else {
-                    try? repository.delete(item)
-                    currentItem = nil
-                    phase = .failed(error.localizedDescription)
+
+            let outputURL = repository.files.url(for: item.id)
+            recorderStartTask = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    try await self.recorder.start(outputURL: outputURL)
+                    self.isStartingRecorder = false
+                    self.recorderStartTask = nil
+                } catch {
+                    self.handleRecorderStartFailure(item: item, error: error)
                 }
-            } else { phase = .failed(error.localizedDescription) }
+            }
+            await Task.yield()
+        } catch {
+            phase = .failed(error.localizedDescription)
         }
     }
 
@@ -187,11 +205,31 @@ final class CaptureCoordinator {
 
     func finalize() async {
         guard phase == .recording, let item = currentItem else { return }
+        if let recorderStartTask {
+            await recorderStartTask.value
+        }
+        guard phase == .recording else { return }
         stopLiveUpdates()
         phase = .finalizing
         item.localState = .finalizing
         try? repository.save()
         await completeFinalization(of: item, endedUnexpectedly: false)
+    }
+
+    private func handleRecorderStartFailure(item: AudioItem, error: Error) {
+        isStartingRecorder = false
+        recorderStartTask = nil
+        stopLiveUpdates()
+        let values = try? repository.files.url(for: item.id).resourceValues(forKeys: [.fileSizeKey])
+        if (values?.fileSize ?? 0) > 0 {
+            item.localState = .needsRecovery
+            try? repository.save()
+            phase = .needsRecovery(item.id, error.localizedDescription)
+        } else {
+            try? repository.delete(item)
+            currentItem = nil
+            phase = .failed(error.localizedDescription)
+        }
     }
 
     private func startEventConsumption() {
@@ -209,7 +247,9 @@ final class CaptureCoordinator {
         switch event {
         case let .inputLevelChanged(level):
             inputLevel = max(0, min(1, level))
-            noInputLevelWarning = level < 0.01
+            noInputLevelWarning = false
+        case .inputLevelUnavailable:
+            noInputLevelWarning = true
         case let .interruptionBegan(date):
             beginAutomaticFinalization(
                 of: item,
@@ -313,6 +353,12 @@ final class CaptureCoordinator {
         item.localState = .needsRecovery
         try? repository.save()
         phase = .needsRecovery(item.id, error.localizedDescription)
+    }
+
+    private static func currentInputName() -> String {
+        AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName
+            ?? AVCaptureDevice.default(for: .audio)?.localizedName
+            ?? CaptureEvent.noInputName
     }
 
     private var canBeginCapture: Bool {

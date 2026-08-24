@@ -1,6 +1,6 @@
 # iOS local recording validation
 
-Status: core recovery and Issue #7 interruption validation passed. Non-interrupting route validation remains pending.
+Status: core recovery and Issue #7 interruption validation passed. External-input validation for Issue #25 remains pending on physical hardware.
 
 ## Environment
 
@@ -23,10 +23,12 @@ Status: core recovery and Issue #7 interruption validation passed. Non-interrupt
 | Spotify playback during Capture | Any resulting audio-session interruption ends Capture, persists the terminal interruption event, and preserves verified playable audio | Two consecutive Captures ended on interruption and preserved separate Audio items | Pass |
 | Real system interruption | Capture ends without automatic or manual resumption; continuing creates a separate Audio and Original Audio | A Clock timer alarm ended Capture; repeating the scenario in a second Capture also ended it correctly | Pass |
 | Non-interrupting route change | Capture continues with the same Original Audio identity and shows the resulting active input name | Pending physical-device run | Pending |
+| Bluetooth HFP microphone | The routed Bluetooth microphone is selected, captured, and its route name matches the capture device | Pending Bluetooth headset run | Pending |
+| Wired or USB/Lightning microphone | The routed external microphone is selected, captured, and its route name matches the capture device | Pending external-microphone run | Pending |
 
-## Issue #7 device procedure
+## Physical route validation procedure
 
-For each pending scenario, record the app commit, device and iOS version, event sequence, verified duration, final Capture event, Original Audio identifier before and after the event, and pass/fail result. Do not mark a scenario passed from simulator or synthetic-event tests.
+For each pending scenario, record the app commit, device and iOS version, `AVAudioSession` input port name, port type and UID, selected `AVCaptureDevice` name and unique ID, event sequence, verified duration, final Capture event, Original Audio identifier before and after the event, and pass/fail result. Confirm the recorded signal comes from the attached external microphone. Do not retain audio or personal data, and do not mark a scenario passed from simulator or synthetic-event tests.
 
 ## Recovery boundary
 

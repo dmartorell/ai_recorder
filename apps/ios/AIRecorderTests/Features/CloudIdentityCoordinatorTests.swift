@@ -20,6 +20,18 @@ final class CloudIdentityCoordinatorTests: XCTestCase {
         super.tearDown()
     }
 
+    func testImplicitGrantRedirectUsesTheImplicitFlowClient() {
+        let callback = URL(string: "com.danielmartorell.ai-recorder://auth/callback#access_token=access&refresh_token=refresh")!
+
+        XCTAssertTrue(SupabaseCloudAuthentication.usesImplicitGrantRedirect(callback))
+    }
+
+    func testPKCERedirectDoesNotUseTheImplicitFlowClient() {
+        let callback = URL(string: "com.danielmartorell.ai-recorder://auth/callback?code=authorization-code")!
+
+        XCTAssertFalse(SupabaseCloudAuthentication.usesImplicitGrantRedirect(callback))
+    }
+
     func testFirstRestoredAccountBindsLocalLibrary() async {
         let account = CloudIdentity(id: UUID(), email: "journalist@example.test")
         let authentication = FakeCloudAuthentication(restoredIdentity: account)

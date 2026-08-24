@@ -164,6 +164,18 @@ final class LocalRecordingFlowUITests: XCTestCase {
         XCTAssertEqual(remainingAudioRows.count, 1)
     }
 
+    func testConfiguringCloudBackupDismissesSettingsThenPresentsCloudIdentity() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-app-language", "en"]
+        app.launch()
+
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 5))
+        app.buttons["Configure cloud backup"].tap()
+
+        XCTAssertTrue(app.navigationBars["Cloud backup"].waitForExistence(timeout: 5))
+    }
+
     func testSpanishCaptureFlowUsesLocalizedControls() {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-app-language", "es"]

@@ -13,6 +13,7 @@ struct RootView: View {
     @State private var showingPreparation = false
     @State private var showingSettings = false
     @State private var showingCloudIdentity = false
+    @State private var shouldShowCloudIdentityAfterSettingsDismissal = false
     @State private var selectedItem: AudioItem?
     @State private var itemPendingDeletion: AudioItem?
     @State private var showingUnbackedDeletionWarning = false
@@ -71,8 +72,8 @@ struct RootView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingSettings) {
-                SettingsView(settings: settings, onConfigureCloudBackup: { showingCloudIdentity = true })
+            .sheet(isPresented: $showingSettings, onDismiss: presentCloudIdentityAfterSettingsDismissal) {
+                SettingsView(settings: settings, onConfigureCloudBackup: configureCloudBackup)
                     .presentationDetents([.medium])
             }
             .sheet(isPresented: $showingCloudIdentity) {
@@ -122,6 +123,17 @@ struct RootView: View {
                 }
             }
         }
+    }
+
+    private func configureCloudBackup() {
+        shouldShowCloudIdentityAfterSettingsDismissal = true
+        showingSettings = false
+    }
+
+    private func presentCloudIdentityAfterSettingsDismissal() {
+        guard shouldShowCloudIdentityAfterSettingsDismissal else { return }
+        shouldShowCloudIdentityAfterSettingsDismissal = false
+        showingCloudIdentity = true
     }
 
     private func requestDeletion(_ item: AudioItem) {

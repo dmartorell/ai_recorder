@@ -16,12 +16,20 @@ struct AIRecorderApp: App {
             let container = try ModelContainer(for: AudioItem.self, Marker.self, CaptureEventRecord.self, configurations: configuration)
             modelContainer = container
             let files = try AudioFileStore.applicationStore()
-            if isUITesting, ProcessInfo.processInfo.arguments.contains("-local-audio-fixture") {
-                let item = AudioItem(fileName: "ui-test-source.m4a")
-                item.localState = .available
-                item.durationMilliseconds = 2_500
-                container.mainContext.insert(item)
-                try Data("ui-test-audio".utf8).write(to: files.url(for: item.id))
+            let fixtureCount = ProcessInfo.processInfo.arguments.contains("-local-audio-fixtures")
+                ? 3
+                : (ProcessInfo.processInfo.arguments.contains("-local-audio-fixture") ? 1 : 0)
+            if isUITesting, fixtureCount > 0 {
+                for index in 0..<fixtureCount {
+                    let item = AudioItem(
+                        startedAt: .now.addingTimeInterval(TimeInterval(-index)),
+                        fileName: "ui-test-source-\(index).m4a"
+                    )
+                    item.localState = .available
+                    item.durationMilliseconds = 2_500
+                    container.mainContext.insert(item)
+                    try Data("ui-test-audio".utf8).write(to: files.url(for: item.id))
+                }
                 try container.mainContext.save()
             }
             let recorder: any CaptureRecorder = isUITesting ? UITestCaptureRecorder() : FragmentedM4ARecorder()

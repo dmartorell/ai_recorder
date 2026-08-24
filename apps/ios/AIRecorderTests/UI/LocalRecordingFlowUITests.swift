@@ -106,6 +106,64 @@ final class LocalRecordingFlowUITests: XCTestCase {
         XCTAssertFalse(audioRow.waitForExistence(timeout: 2))
     }
 
+    func testDraggingDownAcrossSelectionControlsSelectsEachCrossedRecording() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-local-audio-fixtures", "-app-language", "en"]
+        app.launch()
+
+        app.buttons["Select"].tap()
+        let selectionControls = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'library-selection-'")
+        )
+        XCTAssertEqual(selectionControls.count, 3)
+
+        selectionControls.element(boundBy: 0).press(
+            forDuration: 0.1,
+            thenDragTo: selectionControls.element(boundBy: 1)
+        )
+
+        XCTAssertTrue(app.buttons["Delete 2 selected Recordings"].waitForExistence(timeout: 5))
+    }
+
+    func testBulkDeletionRequiresBothConfirmations() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-local-audio-fixtures", "-app-language", "en"]
+        app.launch()
+
+        XCTAssertTrue(app.buttons["Select"].waitForExistence(timeout: 5))
+        app.buttons["Select"].tap()
+
+        let selectionControls = app.buttons.matching(
+            NSPredicate(format: "identifier BEGINSWITH 'library-selection-'")
+        )
+        XCTAssertEqual(selectionControls.count, 3)
+        selectionControls.element(boundBy: 0).tap()
+        selectionControls.element(boundBy: 1).tap()
+
+        let trash = app.buttons["Delete 2 selected Recordings"]
+        XCTAssertTrue(trash.exists)
+        trash.tap()
+        XCTAssertTrue(app.alerts["Delete 2 local Recording items?"].waitForExistence(timeout: 5))
+        app.alerts["Delete 2 local Recording items?"].buttons["Cancel"].tap()
+        XCTAssertEqual(selectionControls.count, 3)
+
+        trash.tap()
+        app.alerts["Delete 2 local Recording items?"].buttons["Delete"].tap()
+        XCTAssertTrue(app.alerts["Delete 2 Recording items permanently?"].waitForExistence(timeout: 5))
+        app.alerts["Delete 2 Recording items permanently?"].buttons["Cancel"].tap()
+        XCTAssertEqual(selectionControls.count, 3)
+
+        trash.tap()
+        app.alerts["Delete 2 local Recording items?"].buttons["Delete"].tap()
+        XCTAssertTrue(app.alerts["Delete 2 Recording items permanently?"].waitForExistence(timeout: 5))
+        app.alerts["Delete 2 Recording items permanently?"].buttons["Delete permanently"].tap()
+
+        let remainingAudioRows = app.buttons.matching(
+            NSPredicate(format: "label BEGINSWITH 'Recording -'")
+        )
+        XCTAssertEqual(remainingAudioRows.count, 1)
+    }
+
     func testSpanishCaptureFlowUsesLocalizedControls() {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-app-language", "es"]

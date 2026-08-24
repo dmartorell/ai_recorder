@@ -55,14 +55,22 @@ final class CaptureCoordinator {
     private(set) var markerCount = 0
     private(set) var markerConfirmation = 0
     private(set) var activeInputName = CaptureEvent.noInputName
+    private(set) var storageAssessment: StorageAssessment = .critical
+    private(set) var isLowBatteryWarning = false
+    private(set) var resourceWarning: String?
+    private(set) var inputLevel: Float?
+    private(set) var noInputLevelWarning = false
 
     private var recordingStartedAt: Date?
     private var positionBaseMilliseconds = 0
     private var positionTask: Task<Void, Never>?
     private var eventTask: Task<Void, Never>?
     private var interruptionFinalizationTask: Task<Void, Never>?
+    private var resourceTask: Task<Void, Never>?
 
     private let repository: AudioRepository
+    private let storageMonitor: any StorageMonitoring
+    private let batteryMonitor: any BatteryMonitoring
     private let recorder: any CaptureRecorder
     private let inspector: any AudioInspector
     private let permissionProvider: @Sendable () async -> Bool
@@ -71,6 +79,8 @@ final class CaptureCoordinator {
         repository: AudioRepository,
         recorder: any CaptureRecorder = FragmentedM4ARecorder(),
         inspector: any AudioInspector = OriginalAudioInspector(),
+        storageMonitor: (any StorageMonitoring)? = nil,
+        batteryMonitor: (any BatteryMonitoring)? = nil,
         permissionProvider: @escaping @Sendable () async -> Bool = {
             AVAudioApplication.shared.recordPermission == .granted
         }
@@ -78,6 +88,8 @@ final class CaptureCoordinator {
         self.repository = repository
         self.recorder = recorder
         self.inspector = inspector
+        self.storageMonitor = storageMonitor ?? StorageMonitor(volumeURL: repository.files.rootDirectory)
+        self.batteryMonitor = batteryMonitor ?? BatteryMonitor()
         self.permissionProvider = permissionProvider
         activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? CaptureEvent.noInputName
     }
@@ -85,6 +97,13 @@ final class CaptureCoordinator {
     var files: AudioFileStore { repository.files }
     var microphonePermission: AVAudioApplication.recordPermission { AVAudioApplication.shared.recordPermission }
     var inputName: String { activeInputName }
+    var availableDuration: Duration? {
+        switch storageAssessment {
+        case let .sufficient(duration), let .warning(duration): duration
+        case .critical: nil
+        }
+    }
+
     var automaticFinalizationMessage: String? {
         guard phase == .finalizing,
               let event = currentItem?.events.max(by: { $0.startedAt < $1.startedAt })
@@ -98,6 +117,11 @@ final class CaptureCoordinator {
         return nil
     }
 
+    func refreshResources() {
+        storageAssessment = storageMonitor.refresh()
+        isLowBatteryWarning = batteryMonitor.refresh()
+    }
+
     func requestPermission() async {
         guard microphonePermission == .undetermined else { return }
         _ = await withCheckedContinuation { continuation in
@@ -107,6 +131,12 @@ final class CaptureCoordinator {
 
     func start() async {
         guard canBeginCapture else { return }
+        storageAssessment = storageMonitor.refresh()
+        guard storageAssessment != .critical else {
+            phase = .failed("Not enough free storage to start Capture.")
+            resourceWarning = "Free storage is below the safe recording threshold."
+            return
+        }
         if !(await permissionProvider()) {
             await requestPermission()
             guard await permissionProvider() else {
@@ -127,6 +157,7 @@ final class CaptureCoordinator {
             activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? CaptureEvent.noInputName
             startPositionUpdates()
             startEventConsumption()
+            startResourceMonitoring()
         } catch {
             if let item = currentItem {
                 let values = try? repository.files.url(for: item.id).resourceValues(forKeys: [.fileSizeKey])
@@ -176,6 +207,9 @@ final class CaptureCoordinator {
     private func handle(_ event: CaptureRecorderEvent) {
         guard let item = currentItem else { return }
         switch event {
+        case let .inputLevelChanged(level):
+            inputLevel = max(0, min(1, level))
+            noInputLevelWarning = level < 0.01
         case let .interruptionBegan(date):
             beginAutomaticFinalization(
                 of: item,
@@ -304,7 +338,41 @@ final class CaptureCoordinator {
         positionTask = nil
     }
 
+    private func startResourceMonitoring() {
+        resourceTask?.cancel()
+        resourceTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard !Task.isCancelled, let self else { return }
+                let assessment = self.storageMonitor.refresh()
+                self.storageAssessment = assessment
+                self.isLowBatteryWarning = self.batteryMonitor.refresh()
+                switch assessment {
+                case .sufficient:
+                    self.resourceWarning = self.isLowBatteryWarning ? "Battery is low. Capture will continue." : nil
+                case .warning:
+                    self.resourceWarning = "Free storage is getting low."
+                case .critical:
+                    self.resourceWarning = "Capture is finalizing to preserve playable Original Audio."
+                    if self.phase == .recording, let item = self.currentItem {
+                        self.beginAutomaticFinalization(
+                            of: item,
+                            event: CaptureEvent(
+                                kind: .automaticFinalization,
+                                date: .now,
+                                audioPositionMilliseconds: self.currentAudioPositionMilliseconds,
+                                inputName: nil
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     private func stopLiveUpdates() {
         stopPositionUpdates()
+        resourceTask?.cancel()
+        resourceTask = nil
     }
 }

@@ -12,7 +12,7 @@ final class CaptureCoordinatorTests: XCTestCase {
             repository: fixture.repository,
             recorder: recorder,
             inspector: FixedInspector(),
-            permissionProvider: { true }
+            storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true }
         )
 
         await coordinator.start()
@@ -42,7 +42,7 @@ final class CaptureCoordinatorTests: XCTestCase {
             repository: fixture.repository,
             recorder: recorder,
             inspector: FixedInspector(),
-            permissionProvider: { true }
+            storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true }
         )
 
         await coordinator.start()
@@ -60,7 +60,7 @@ final class CaptureCoordinatorTests: XCTestCase {
             repository: fixture.repository,
             recorder: FakeRecorder(error: TestError.failed),
             inspector: FixedInspector(),
-            permissionProvider: { true }
+            storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true }
         )
 
         await coordinator.start()
@@ -73,7 +73,7 @@ final class CaptureCoordinatorTests: XCTestCase {
     func testInterruptionFinalizesCaptureAndPersistsFinalEvent() async throws {
         let fixture = try Fixture()
         let recorder = FakeRecorder()
-        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), permissionProvider: { true })
+        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true })
 
         await coordinator.start()
         guard let item = coordinator.currentItem else { return XCTFail("Missing Audio") }
@@ -96,7 +96,7 @@ final class CaptureCoordinatorTests: XCTestCase {
     func testInterruptionFinishFailureRecoversVerifiedFragment() async throws {
         let fixture = try Fixture()
         let recorder = FakeRecorder(finishError: TestError.failed)
-        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), permissionProvider: { true })
+        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true })
 
         await coordinator.start()
         guard let item = coordinator.currentItem else { return XCTFail("Missing Audio") }
@@ -111,7 +111,7 @@ final class CaptureCoordinatorTests: XCTestCase {
     func testStartingAfterInterruptionCreatesSeparateAudio() async throws {
         let fixture = try Fixture()
         let recorder = FakeRecorder()
-        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), permissionProvider: { true })
+        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true })
 
         await coordinator.start()
         guard let interruptedID = coordinator.currentItem?.id else { return XCTFail("Missing first Audio") }
@@ -129,7 +129,7 @@ final class CaptureCoordinatorTests: XCTestCase {
     func testSecondCaptureAlsoFinalizesOnInterruption() async throws {
         let fixture = try Fixture()
         let recorder = FakeRecorder()
-        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), permissionProvider: { true })
+        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true })
 
         await coordinator.start()
         guard let firstID = coordinator.currentItem?.id else { return XCTFail("Missing first Audio") }
@@ -149,7 +149,7 @@ final class CaptureCoordinatorTests: XCTestCase {
     func testRouteChangePersistsResultingInputNameAndCaptureContinues() async throws {
         let fixture = try Fixture()
         let recorder = FakeRecorder()
-        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), permissionProvider: { true })
+        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true })
 
         await coordinator.start()
         let originalAudioID = coordinator.currentItem?.id
@@ -167,7 +167,7 @@ final class CaptureCoordinatorTests: XCTestCase {
     func testUnavailableInputFinalizesWithRouteEvent() async throws {
         let fixture = try Fixture()
         let recorder = FakeRecorder()
-        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), permissionProvider: { true })
+        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true })
 
         await coordinator.start()
         guard let item = coordinator.currentItem else { return XCTFail("Missing Audio") }
@@ -184,7 +184,7 @@ final class CaptureCoordinatorTests: XCTestCase {
     func testInterruptionRemainsFinalEventWhenLaterRecorderEventsArrive() async throws {
         let fixture = try Fixture()
         let recorder = FakeRecorder()
-        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), permissionProvider: { true })
+        let coordinator = CaptureCoordinator(repository: fixture.repository, recorder: recorder, inspector: FixedInspector(), storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true })
 
         await coordinator.start()
         guard let item = coordinator.currentItem else { return XCTFail("Missing Audio") }
@@ -205,7 +205,7 @@ final class CaptureCoordinatorTests: XCTestCase {
             repository: fixture.repository,
             recorder: recorder,
             inspector: FixedInspector(),
-            permissionProvider: { true }
+            storageMonitor: AlwaysSufficientStorageMonitor(), permissionProvider: { true }
         )
 
         await coordinator.start()
@@ -242,6 +242,11 @@ final class CaptureCoordinatorTests: XCTestCase {
     }
 
     private enum TestError: Error { case failed, timedOut }
+
+    private final class AlwaysSufficientStorageMonitor: StorageMonitoring {
+        var assessment: StorageAssessment = .sufficient(estimatedDuration: .seconds(24 * 60 * 60))
+        func refresh() -> StorageAssessment { assessment }
+    }
 
     @MainActor
     private final class FakeRecorder: CaptureRecorder {

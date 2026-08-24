@@ -266,6 +266,11 @@ extension FragmentedM4ARecorder: AVCaptureAudioDataOutputSampleBufferDelegate {
         didOutput sampleBuffer: CMSampleBuffer,
         from connection: AVCaptureConnection
     ) {
+        if let channel = connection.audioChannels.first {
+            let normalizedLevel = max(0, min(1, (channel.averagePowerLevel + 50) / 50))
+            eventContinuation?.yield(.inputLevelChanged(normalizedLevel))
+        }
+
         guard CMSampleBufferDataIsReady(sampleBuffer),
               let writer,
               let writerInput,

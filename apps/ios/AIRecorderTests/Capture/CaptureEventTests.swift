@@ -22,6 +22,15 @@ final class CaptureEventTests: XCTestCase {
         center.removeObserver(token)
     }
 
+    func testCaptureSessionPreservesTheApplicationSelectedAudioRoute() {
+        let session = AVCaptureSession()
+
+        FragmentedM4ARecorder.preserveApplicationAudioRoute(for: session)
+
+        XCTAssertTrue(session.usesApplicationAudioSession)
+        XCTAssertFalse(session.automaticallyConfiguresApplicationAudioSession)
+    }
+
     func testInputSelectorMatchesTheRoutedDeviceByUniqueIdentifier() {
         let route = CaptureInputRoute(uid: "usb-1", name: "USB Microphone", portType: "USBAudio")
         let devices = [

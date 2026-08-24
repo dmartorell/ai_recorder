@@ -87,6 +87,11 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         }
     }
 
+    static func preserveApplicationAudioRoute(for session: AVCaptureSession) {
+        session.usesApplicationAudioSession = true
+        session.automaticallyConfiguresApplicationAudioSession = false
+    }
+
     private func availableAudioDevices() -> [AVCaptureDevice] {
         var devices: [AVCaptureDevice] = []
         if let routedDevice = AVCaptureDevice.default(for: .audio) {
@@ -129,6 +134,7 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         }
 
         let session = AVCaptureSession()
+        Self.preserveApplicationAudioRoute(for: session)
         session.beginConfiguration()
 
         let deviceInput = try AVCaptureDeviceInput(device: selectedDevice)

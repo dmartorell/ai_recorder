@@ -61,6 +61,7 @@ final class CaptureCoordinator {
     private(set) var resourceWarning: String?
     private(set) var inputLevel: Float?
     private(set) var noInputLevelWarning = false
+    private(set) var isStartingRecorder = false
 
     private var recordingStartedAt: Date?
     private var positionBaseMilliseconds = 0
@@ -68,6 +69,7 @@ final class CaptureCoordinator {
     private var eventTask: Task<Void, Never>?
     private var interruptionFinalizationTask: Task<Void, Never>?
     private var resourceTask: Task<Void, Never>?
+    private var recorderStartTask: Task<Void, Never>?
 
     private let repository: AudioRepository
     private let storageMonitor: any StorageMonitoring
@@ -162,29 +164,31 @@ final class CaptureCoordinator {
         do {
             let item = try repository.beginCapture()
             currentItem = item
-            try await recorder.start(outputURL: repository.files.url(for: item.id))
             phase = .recording
             recordingStartedAt = .now
             positionBaseMilliseconds = 0
             currentAudioPositionMilliseconds = 0
             markerCount = item.markers.count
             activeInputName = Self.currentInputName()
+            isStartingRecorder = true
             startPositionUpdates()
             startEventConsumption()
             startResourceMonitoring()
-        } catch {
-            if let item = currentItem {
-                let values = try? repository.files.url(for: item.id).resourceValues(forKeys: [.fileSizeKey])
-                if (values?.fileSize ?? 0) > 0 {
-                    item.localState = .needsRecovery
-                    try? repository.save()
-                    phase = .needsRecovery(item.id, error.localizedDescription)
-                } else {
-                    try? repository.delete(item)
-                    currentItem = nil
-                    phase = .failed(error.localizedDescription)
+
+            let outputURL = repository.files.url(for: item.id)
+            recorderStartTask = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    try await self.recorder.start(outputURL: outputURL)
+                    self.isStartingRecorder = false
+                    self.recorderStartTask = nil
+                } catch {
+                    self.handleRecorderStartFailure(item: item, error: error)
                 }
-            } else { phase = .failed(error.localizedDescription) }
+            }
+            await Task.yield()
+        } catch {
+            phase = .failed(error.localizedDescription)
         }
     }
 
@@ -201,11 +205,31 @@ final class CaptureCoordinator {
 
     func finalize() async {
         guard phase == .recording, let item = currentItem else { return }
+        if let recorderStartTask {
+            await recorderStartTask.value
+        }
+        guard phase == .recording else { return }
         stopLiveUpdates()
         phase = .finalizing
         item.localState = .finalizing
         try? repository.save()
         await completeFinalization(of: item, endedUnexpectedly: false)
+    }
+
+    private func handleRecorderStartFailure(item: AudioItem, error: Error) {
+        isStartingRecorder = false
+        recorderStartTask = nil
+        stopLiveUpdates()
+        let values = try? repository.files.url(for: item.id).resourceValues(forKeys: [.fileSizeKey])
+        if (values?.fileSize ?? 0) > 0 {
+            item.localState = .needsRecovery
+            try? repository.save()
+            phase = .needsRecovery(item.id, error.localizedDescription)
+        } else {
+            try? repository.delete(item)
+            currentItem = nil
+            phase = .failed(error.localizedDescription)
+        }
     }
 
     private func startEventConsumption() {

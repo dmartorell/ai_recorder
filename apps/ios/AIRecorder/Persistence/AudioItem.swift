@@ -36,6 +36,20 @@ final class AudioItem {
         set { localStateRawValue = newValue.rawValue }
     }
 
+    var captureEndedByInterruption: Bool {
+        endedUnexpectedly && terminalCaptureEvent?.kind == .interruptionBegan
+    }
+
+    var captureEndedByUnavailableInput: Bool {
+        endedUnexpectedly
+            && terminalCaptureEvent?.kind == .routeChanged
+            && terminalCaptureEvent?.inputName == CaptureEvent.noInputName
+    }
+
+    private var terminalCaptureEvent: CaptureEventRecord? {
+        events.max(by: { $0.startedAt < $1.startedAt })
+    }
+
     func displayTitle(locale: Locale = .current, timeZone: TimeZone = .current) -> String {
         if let customTitle, !customTitle.isEmpty { return customTitle }
         let formatter = DateFormatter()

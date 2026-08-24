@@ -133,12 +133,12 @@ In the MVP, the native app does not display or edit transcripts, speakers, summa
 - Recording writes continuously to a local file. The active screen shows a persistent red indicator, recorded-audio duration, input level, and active input name. If no input level is detectable, it warns without stopping automatically.
 - The initial local-recording slice supports only AAC-LC in M4A, uses a fixed voice-appropriate quality configuration, and uses the audio route selected automatically by iOS. Quality controls, WAV, and manual input selection are deferred to a later MVP slice.
 - Preserve up to two channels when an external input provides them.
-- Markers are stored independently and persisted immediately with timestamps on the playable-audio timeline. A marker is created with one tap and confirmed using haptic feedback and a brief visual change. The native app does not attach text notes to markers during the MVP; annotation belongs to the web workflow. The primary elapsed-time counter also follows recorded audio duration and pauses during an interruption. Marker creation is unavailable during an interruption because no source audio exists for that interval. Recovery retains only markers whose timestamps map to recovered playable audio.
+- Markers are stored independently and persisted immediately with timestamps on the playable-audio timeline. A marker is created with one tap and confirmed using haptic feedback and a brief visual change. The native app does not attach text notes to markers during the MVP; annotation belongs to the web workflow. The primary elapsed-time counter also follows recorded audio duration and pauses during an interruption. Marker creation becomes unavailable as soon as an interruption triggers finalization. Finalization and recovery retain only markers whose timestamps map to verified playable audio.
 - While capture is active in the foreground, the app prevents automatic display sleep and uses a dark recording screen to reduce power consumption. It always respects explicit locking with the side button, never wakes the display after a manual lock, and restores the normal idle-timer behavior immediately after capture or when leaving the capture screen.
 - Recording continues while the screen is locked or the user is in another app. Returning to the app immediately reflects the current capture state. The initial local-recording slice does not expose finalize or marker controls on the lock screen.
 - The initial local-recording slice does not support manual pause and resume.
 - The recording screen uses a `Finalize` action. Selecting it opens a confirmation dialog while recording continues; confirming stops capture, closes the existing file, and verifies it. Saving is not a separate action.
-- The app records audio interruptions and communicates them clearly. It resumes automatically when iOS indicates that resumption is safe and preserves the interval without audio as an interruption event.
+- Any audio-session interruption ends the current Capture immediately. The app finalizes or recovers the playable Original Audio, records the interruption as the final Capture event, and requires the journalist to start a separate Capture to continue.
 - If the active microphone becomes unavailable, the app continues with an available iOS-routed input when possible, records the route change, and warns the user without discarding prior audio.
 - The physical audio file uses a stable private identifier. Editing user-facing metadata never renames it.
 - If capture fails before any audio is written, the app reports the error and removes only the empty Audio record. It never removes a file containing captured audio.
@@ -278,7 +278,7 @@ Use a 30-minute recording as the quick development check. Validate the reliabili
 Acceptance criteria:
 
 - A two-hour recording completes in airplane mode with the screen locked; the 30-minute variant remains the routine development check.
-- A separate recording survives a real audio-session interruption, records the interruption, and communicates it clearly.
+- A separate recording ends on a real audio-session interruption, preserves playable audio through the last verified fragment, records why Capture ended, and requires a new Capture to continue.
 - After unexpected app termination during recording, relaunch recovers the partial audio through the last successfully written block.
 - Manual markers preserve accurate timestamps.
 - The local file remains after completion and processing.

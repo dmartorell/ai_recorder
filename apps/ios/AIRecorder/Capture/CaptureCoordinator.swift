@@ -42,7 +42,6 @@ final class CaptureCoordinator {
         case idle
         case preparing
         case recording
-        case interrupted(startedAt: Date)
         case finalizing
         case available(UUID)
         case needsRecovery(UUID, String)
@@ -55,12 +54,13 @@ final class CaptureCoordinator {
     private(set) var currentAudioPositionMilliseconds = 0
     private(set) var markerCount = 0
     private(set) var markerConfirmation = 0
-    private(set) var activeInputName = "No input"
+    private(set) var activeInputName = CaptureEvent.noInputName
 
     private var recordingStartedAt: Date?
     private var positionBaseMilliseconds = 0
     private var positionTask: Task<Void, Never>?
     private var eventTask: Task<Void, Never>?
+    private var interruptionFinalizationTask: Task<Void, Never>?
 
     private let repository: AudioRepository
     private let recorder: any CaptureRecorder
@@ -79,15 +79,23 @@ final class CaptureCoordinator {
         self.recorder = recorder
         self.inspector = inspector
         self.permissionProvider = permissionProvider
-        activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? "No input"
+        activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? CaptureEvent.noInputName
     }
 
     var files: AudioFileStore { repository.files }
     var microphonePermission: AVAudioApplication.recordPermission { AVAudioApplication.shared.recordPermission }
     var inputName: String { activeInputName }
-    var isInterrupted: Bool {
-        if case .interrupted = phase { return true }
-        return false
+    var automaticFinalizationMessage: String? {
+        guard phase == .finalizing,
+              let event = currentItem?.events.max(by: { $0.startedAt < $1.startedAt })
+        else { return nil }
+        if event.kind == .interruptionBegan {
+            return "Audio interruption ended this Capture. Finalizing playable audio…"
+        }
+        if event.kind == .routeChanged, event.inputName == CaptureEvent.noInputName {
+            return "The audio input became unavailable. Finalizing playable audio…"
+        }
+        return nil
     }
 
     func requestPermission() async {
@@ -116,7 +124,7 @@ final class CaptureCoordinator {
             positionBaseMilliseconds = 0
             currentAudioPositionMilliseconds = 0
             markerCount = item.markers.count
-            activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? "No input"
+            activeInputName = AVAudioSession.sharedInstance().currentRoute.inputs.first?.portName ?? CaptureEvent.noInputName
             startPositionUpdates()
             startEventConsumption()
         } catch {
@@ -151,24 +159,12 @@ final class CaptureCoordinator {
         stopLiveUpdates()
         phase = .finalizing
         item.localState = .finalizing
-        do {
-            try await recorder.finish()
-            let summary = try await inspector.inspect(repository.files.url(for: item.id))
-            item.durationMilliseconds = Int((summary.duration * 1_000).rounded())
-            currentAudioPositionMilliseconds = item.durationMilliseconds
-            item.endedAt = .now
-            item.localState = .available
-            try repository.save()
-            phase = .available(item.id)
-        } catch {
-            item.localState = .needsRecovery
-            try? repository.save()
-            phase = .needsRecovery(item.id, error.localizedDescription)
-        }
+        try? repository.save()
+        await completeFinalization(of: item, endedUnexpectedly: false)
     }
 
     private func startEventConsumption() {
-        eventTask?.cancel()
+        guard eventTask == nil else { return }
         eventTask = Task { [weak self, events = recorder.events] in
             for await event in events {
                 guard !Task.isCancelled, let self else { return }
@@ -181,31 +177,114 @@ final class CaptureCoordinator {
         guard let item = currentItem else { return }
         switch event {
         case let .interruptionBegan(date):
-            guard phase == .recording else { return }
-            positionBaseMilliseconds = currentAudioPositionMilliseconds
-            stopPositionUpdates()
-            phase = .interrupted(startedAt: date)
-            try? repository.record(CaptureEvent(kind: .interruptionBegan, date: date, audioPositionMilliseconds: currentAudioPositionMilliseconds, inputName: nil, shouldResume: false), for: item)
-        case let .interruptionEnded(date, shouldResume):
-            guard case .interrupted = phase else { return }
-            try? repository.record(CaptureEvent(kind: .interruptionEnded, date: date, audioPositionMilliseconds: currentAudioPositionMilliseconds, inputName: nil, shouldResume: shouldResume), for: item)
-            if shouldResume {
-                phase = .recording
-                recordingStartedAt = date
-                startPositionUpdates()
-            } else {
-                errorMessage = "Recording was interrupted and cannot resume automatically."
-            }
+            beginAutomaticFinalization(
+                of: item,
+                event: CaptureEvent(
+                    kind: .interruptionBegan,
+                    date: date,
+                    audioPositionMilliseconds: currentAudioPositionMilliseconds,
+                    inputName: nil
+                )
+            )
         case let .routeChanged(date, inputName):
+            guard phase == .recording else { return }
             activeInputName = inputName
-            try? repository.record(CaptureEvent(kind: .routeChanged, date: date, audioPositionMilliseconds: currentAudioPositionMilliseconds, inputName: inputName, shouldResume: false), for: item)
+            try? repository.record(CaptureEvent(kind: .routeChanged, date: date, audioPositionMilliseconds: currentAudioPositionMilliseconds, inputName: inputName), for: item)
+        case let .inputBecameUnavailable(date):
+            activeInputName = CaptureEvent.noInputName
+            beginAutomaticFinalization(
+                of: item,
+                event: CaptureEvent(
+                    kind: .routeChanged,
+                    date: date,
+                    audioPositionMilliseconds: currentAudioPositionMilliseconds,
+                    inputName: activeInputName
+                )
+            )
         }
+    }
+
+    private func beginAutomaticFinalization(of item: AudioItem, event: CaptureEvent) {
+        guard phase == .recording else { return }
+        positionBaseMilliseconds = currentAudioPositionMilliseconds
+        stopPositionUpdates()
+        phase = .finalizing
+        item.localState = .finalizing
+        item.endedUnexpectedly = true
+        do {
+            try repository.record(event, for: item)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        interruptionFinalizationTask = Task { [weak self] in
+            await self?.completeFinalization(of: item, endedUnexpectedly: true)
+        }
+    }
+
+    private func completeFinalization(of item: AudioItem, endedUnexpectedly: Bool) async {
+        let outputURL = repository.files.url(for: item.id)
+        do {
+            try await recorder.finish()
+        } catch {
+            if endedUnexpectedly {
+                await recoverVerifiedFragment(of: item, at: outputURL, finishError: error)
+            } else {
+                markNeedsRecovery(item, error: error)
+                stopLiveUpdates()
+            }
+            return
+        }
+
+        do {
+            let summary = try await inspector.inspect(outputURL)
+            try persistVerified(summary, for: item, state: .available, endedUnexpectedly: endedUnexpectedly)
+            phase = .available(item.id)
+        } catch {
+            markNeedsRecovery(item, error: error)
+        }
+        stopLiveUpdates()
+        interruptionFinalizationTask = nil
+    }
+
+    private func recoverVerifiedFragment(of item: AudioItem, at url: URL, finishError: Error) async {
+        do {
+            let summary = try await inspector.inspect(url)
+            try persistVerified(summary, for: item, state: .recovered, endedUnexpectedly: true)
+            phase = .available(item.id)
+        } catch {
+            markNeedsRecovery(item, error: finishError)
+        }
+        stopLiveUpdates()
+        interruptionFinalizationTask = nil
+    }
+
+    private func persistVerified(
+        _ summary: CapturedAudioSummary,
+        for item: AudioItem,
+        state: LocalAudioState,
+        endedUnexpectedly: Bool
+    ) throws {
+        let durationMilliseconds = max(0, Int((summary.duration * 1_000).rounded()))
+        repository.pruneMarkers(after: durationMilliseconds, from: item)
+        markerCount = item.markers.count
+        item.durationMilliseconds = durationMilliseconds
+        currentAudioPositionMilliseconds = durationMilliseconds
+        item.endedAt = .now
+        item.endedUnexpectedly = endedUnexpectedly
+        item.localState = state
+        try repository.save()
+    }
+
+    private func markNeedsRecovery(_ item: AudioItem, error: Error) {
+        item.localState = .needsRecovery
+        try? repository.save()
+        phase = .needsRecovery(item.id, error.localizedDescription)
     }
 
     private var canBeginCapture: Bool {
         switch phase {
         case .idle, .available, .needsRecovery, .failed: true
-        case .preparing, .recording, .interrupted, .finalizing: false
+        case .preparing, .recording, .finalizing: false
         }
     }
 
@@ -227,7 +306,5 @@ final class CaptureCoordinator {
 
     private func stopLiveUpdates() {
         stopPositionUpdates()
-        eventTask?.cancel()
-        eventTask = nil
     }
 }

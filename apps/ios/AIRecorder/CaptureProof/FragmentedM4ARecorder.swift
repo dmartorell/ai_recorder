@@ -40,6 +40,8 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
     private var writer: AVAssetWriter?
     private var writerInput: AVAssetWriterInput?
     private var sessionStarted = false
+    private var interruptionHandled = false
+    private var stopRequested = false
     private var nextPresentationTime = CMTime.zero
 
     override init() {
@@ -135,12 +137,15 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         writer = assetWriter
         writerInput = assetWriterInput
         sessionStarted = false
+        interruptionHandled = false
+        stopRequested = false
         nextPresentationTime = .zero
         installNotificationObservers()
         session.startRunning()
     }
 
     private func finishOnQueue(continuation: CheckedContinuation<Void, Error>) {
+        stopRequested = true
         captureSession?.stopRunning()
         captureSession = nil
         removeNotificationObservers()
@@ -189,6 +194,8 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         writer = nil
         writerInput = nil
         sessionStarted = false
+        interruptionHandled = false
+        stopRequested = false
         nextPresentationTime = .zero
     }
 
@@ -199,40 +206,51 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
     private func installNotificationObservers() {
         let center = NotificationCenter.default
         notificationTokens = [
-            center.addObserver(forName: AVAudioSession.interruptionNotification, object: AVAudioSession.sharedInstance(), queue: nil) { [weak self] notification in
-                self?.queue.async {
-                    guard let self else { return }
-                    if let date = CaptureNotificationMapper.interruptionBeganDate(notification) {
-                        self.eventContinuation?.yield(.interruptionBegan(date))
-                    } else if let ended = CaptureNotificationMapper.interruptionEnded(notification) {
-                        if ended.shouldResume { self.captureSession?.startRunning() }
-                        self.eventContinuation?.yield(.interruptionEnded(ended.date, shouldResume: ended.shouldResume))
-                    }
-                }
-            },
-            center.addObserver(forName: AVAudioSession.routeChangeNotification, object: AVAudioSession.sharedInstance(), queue: nil) { [weak self] notification in
+            CaptureNotificationMapper.observeAudioInterruptions(center: center) { [weak self] notification in
                 self?.queue.async {
                     guard let self,
-                          let name = CaptureNotificationMapper.routeInputName(notification) else { return }
-                    self.eventContinuation?.yield(.routeChanged(.now, inputName: name))
+                          let date = CaptureNotificationMapper.interruptionBeganDate(notification) else { return }
+                    self.handleInterruption(date)
+                }
+            },
+            center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { [weak self] notification in
+                self?.queue.async {
+                    guard let self, !self.interruptionHandled else { return }
+                    if let name = CaptureNotificationMapper.routeInputName(notification) {
+                        self.eventContinuation?.yield(.routeChanged(.now, inputName: name))
+                    } else {
+                        self.handleUnavailableInput(.now)
+                    }
                 }
             },
             center.addObserver(forName: AVCaptureSession.wasInterruptedNotification, object: captureSession, queue: nil) { [weak self] notification in
                 self?.queue.async {
                     guard let self,
                           let date = CaptureNotificationMapper.captureInterruptionBeganDate(notification) else { return }
-                    self.eventContinuation?.yield(.interruptionBegan(date))
+                    self.handleInterruption(date)
                 }
             },
-            center.addObserver(forName: AVCaptureSession.interruptionEndedNotification, object: captureSession, queue: nil) { [weak self] notification in
+            center.addObserver(forName: AVCaptureSession.didStopRunningNotification, object: captureSession, queue: nil) { [weak self] _ in
                 self?.queue.async {
-                    guard let self,
-                          let ended = CaptureNotificationMapper.captureInterruptionEnded(notification) else { return }
-                    self.captureSession?.startRunning()
-                    self.eventContinuation?.yield(.interruptionEnded(ended.date, shouldResume: ended.shouldResume))
+                    guard let self, !self.stopRequested else { return }
+                    self.handleInterruption(.now)
                 }
             }
         ]
+    }
+
+    private func handleInterruption(_ date: Date) {
+        guard !interruptionHandled else { return }
+        interruptionHandled = true
+        captureSession?.stopRunning()
+        eventContinuation?.yield(.interruptionBegan(date))
+    }
+
+    private func handleUnavailableInput(_ date: Date) {
+        guard !interruptionHandled else { return }
+        interruptionHandled = true
+        captureSession?.stopRunning()
+        eventContinuation?.yield(.inputBecameUnavailable(date))
     }
 
     private func removeNotificationObservers() {

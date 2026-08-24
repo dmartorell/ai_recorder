@@ -35,13 +35,7 @@ final class RecoveryService {
                 item.endedUnexpectedly = true
                 item.localState = .recovered
 
-                let invalidMarkers = item.markers.filter {
-                    $0.positionMilliseconds > durationMilliseconds
-                }
-                for marker in invalidMarkers {
-                    context.delete(marker)
-                }
-                item.markers.removeAll { $0.positionMilliseconds > durationMilliseconds }
+                AudioRepository.pruneMarkers(after: durationMilliseconds, from: item, in: context)
             } catch {
                 item.localState = .needsRecovery
             }

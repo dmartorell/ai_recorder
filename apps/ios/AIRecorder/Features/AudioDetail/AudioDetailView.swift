@@ -27,7 +27,13 @@ struct AudioDetailView: View {
                 Text(item.displayTitle()).font(.headline)
                 LabeledContent("Date", value: item.startedAt.formatted(date: .long, time: .shortened))
                 LabeledContent("Duration", value: duration)
-                LabeledContent("State", value: item.localState == .needsRecovery ? "Needs recovery" : "Only on this iPhone")
+                LabeledContent("State", value: state)
+            }
+            if let captureEndMessage {
+                Section("Capture ended") {
+                    Label(captureEndMessage, systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                }
             }
             Section("Playback") {
                 HStack {
@@ -96,6 +102,22 @@ struct AudioDetailView: View {
                 playbackError = "Playback failed: \(error.localizedDescription)"
             }
         }
+    }
+
+    private var captureEndMessage: String? {
+        if item.captureEndedByInterruption {
+            return "An audio interruption ended this Capture. Start a new Capture to continue recording."
+        }
+        if item.captureEndedByUnavailableInput {
+            return "The audio input became unavailable. Start a new Capture to continue recording."
+        }
+        return nil
+    }
+
+    private var state: String {
+        if item.captureEndedByInterruption { return "Ended by interruption" }
+        if item.captureEndedByUnavailableInput { return "Ended: input unavailable" }
+        return item.localState == .needsRecovery ? "Needs recovery" : "Only on this iPhone"
     }
 
     private var duration: String {

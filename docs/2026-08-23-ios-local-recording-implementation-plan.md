@@ -271,6 +271,8 @@ enum CaptureEventKind: String, Codable, Sendable {
 }
 ```
 
+`interruptionEnded` remains decodable only for compatibility with records created before the terminal-interruption decision. New Captures never persist it.
+
 `AudioItem` must have a stable UUID independent of title, `startedAt`, optional `endedAt`, optional `customTitle`, `context`, stable `fileName`, duration in integer milliseconds, raw local-state storage, `endedUnexpectedly`, and `hasVerifiedCloudAudio`. Use cascade relationships for markers and events, but do not add a generic delete API to the model.
 
 `Marker` stores a stable UUID, integer audio-timeline milliseconds, and creation date. `CaptureEventRecord` stores stable UUID, kind, wall-clock start/end dates, and audio-timeline milliseconds. Do not store transcript or generated content.
@@ -457,8 +459,8 @@ enum CaptureEngineEvent: Equatable, Sendable {
     case started(CaptureSnapshot)
     case progressed(CaptureSnapshot)
     case interruptionBegan(Date)
-    case interruptionEnded(Date, shouldResume: Bool)
     case routeChanged(Date, inputName: String)
+    case inputBecameUnavailable(Date)
     case storageBecameCritical
     case failed(CaptureFailure)
 }
@@ -472,13 +474,13 @@ protocol AudioCaptureEngine: AnyObject {
 
 - [ ] **Step 2: Write failing level and notification-mapping tests**
 
-Verify RMS normalization for silence, half-scale and clipped PCM samples. Feed synthetic interruption dictionaries and route-change reasons into pure mapping functions; assert `.shouldResume` handling and stable input names.
+Verify RMS normalization for silence, half-scale and clipped PCM samples. Feed synthetic interruption dictionaries and route-change reasons into pure mapping functions; assert one terminal interruption event and stable input names.
 
 - [ ] **Step 3: Implement the audio session**
 
 Configure `AVAudioSession` with category `.record`, mode `.default`, and options that allow iOS-routed Bluetooth inputs where supported. Activate only when capture starts and deactivate after finalization. Use `AVAudioApplication.shared.recordPermission` and `AVAudioApplication.requestRecordPermission(completionHandler:)`, not the deprecated `AVAudioSession` permission API.
 
-Observe interruption and route notifications through `NotificationCenter` async sequences. Resume only when `.shouldResume` is present. A route change emits an event and rebuilds the capture input if necessary without replacing the writer or output URL.
+Observe interruption and route notifications through `NotificationCenter` async sequences. Any interruption stops the capture session immediately and emits one terminal interruption event; never resume the same Capture. A non-interrupting route change emits an event and may continue with the same writer and output URL only while iOS supplies an available input.
 
 - [ ] **Step 4: Implement the system engine**
 
@@ -577,7 +579,7 @@ feat: recover interrupted local recordings
 Cover this state machine:
 
 ```text
-idle → preparing → recording → interrupted → recording
+idle → preparing → recording → interruption finalization → available
 idle → preparing → recording → finalizing → available
 recording → finalizing → needsRecovery
 recording → automatic finalization → available
@@ -587,7 +589,7 @@ Also verify:
 
 - The Audio record exists before `engine.start` is called.
 - Start failure with no bytes removes only the empty item.
-- A marker uses current audio duration and is rejected during interruption.
+- A marker uses current audio duration and is rejected after interruption-triggered finalization begins.
 - Finalize confirmation does not stop capture until confirmed.
 - Critical storage triggers finalization.
 - Low battery only emits a warning.
@@ -600,7 +602,6 @@ enum CapturePhase: Equatable, Sendable {
     case idle
     case preparing
     case recording
-    case interrupted(startedAt: Date)
     case finalizing(reason: FinalizationReason)
     case available(audioID: UUID)
     case needsRecovery(audioID: UUID)
@@ -703,7 +704,7 @@ Use `.confirmationDialog` with `Continue recording` as cancel and `Finalize` as 
 
 - [ ] **Step 4: Surface failures without hiding audio**
 
-Show interruption, route change, no-input-level, low-battery, low-storage and automatic-finalization messages as distinct states. A needs-recovery result navigates to its detail view and remains in the library.
+Show interruption-ended Capture, route change, no-input-level, low-battery, low-storage and automatic-finalization messages as distinct states. A needs-recovery result navigates to its detail view and remains in the library.
 
 - [ ] **Step 5: Add a launch-argument UI test mode**
 
@@ -850,7 +851,7 @@ In airplane mode, begin capture, add markers before and after locking, leave the
 
 - [ ] **Step 3: Run interruption and route tests**
 
-Run separate short captures for an actual audio-session interruption and for external-input removal. Confirm automatic resumption only when iOS permits it, frozen audio-timeline duration during interruption, recorded events, visible warnings and continued playable output.
+Run separate short captures for Spotify playback, an actual audio-session interruption, and a non-interrupting route change. Confirm each interruption ends Capture, preserves verified playable output, persists the terminal interruption event, and requires a new Capture. Confirm a route change continues only when iOS supplies an available input and persists the resulting input name without changing Original Audio identity.
 
 - [ ] **Step 4: Run abrupt-termination recovery**
 
@@ -891,7 +892,7 @@ test: validate local recording reliability
 
 ## Self-review
 
-- The plan covers offline capture, continuous local writing, fragmented crash recovery, immediate marker persistence, interruptions, route changes, background and locked-screen operation, display wake behavior, storage estimates and emergency finalization, battery warnings, library, playback, metadata, localization and explicit deletion.
+- The plan covers offline capture, continuous local writing, fragmented crash recovery, immediate marker persistence, interruption-triggered finalization, non-interrupting route changes, background and locked-screen operation, display wake behavior, storage estimates and emergency finalization, battery warnings, library, playback, metadata, localization and explicit deletion.
 - It preserves the distinction between Audio metadata and immutable Original Audio.
 - It does not introduce cloud, transcript, AI, waveform, collaboration, import or destructive editing.
 - All runtime services have injected seams; the media writer has an executable recovery gate before UI investment.

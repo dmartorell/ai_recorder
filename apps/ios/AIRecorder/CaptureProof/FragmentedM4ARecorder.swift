@@ -5,6 +5,8 @@ import Foundation
 final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
     enum RecorderError: LocalizedError {
         case noAudioInput
+        case inputRouteUnavailable
+        case inputRouteUnverified(String)
         case cannotConfigureInput
         case cannotConfigureOutput
         case cannotConfigureWriter
@@ -16,6 +18,10 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
             switch self {
             case .noAudioInput:
                 "No audio input is available."
+            case .inputRouteUnavailable:
+                "The active audio input is unavailable."
+            case let .inputRouteUnverified(name):
+                "The active audio input could not be verified: \(name)."
             case .cannotConfigureInput:
                 "The audio input could not be configured."
             case .cannotConfigureOutput:
@@ -37,6 +43,8 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
     private var eventContinuation: AsyncStream<CaptureRecorderEvent>.Continuation?
     private var notificationTokens: [NSObjectProtocol] = []
     private var captureSession: AVCaptureSession?
+    private var captureDeviceInput: AVCaptureDeviceInput?
+    private var selectedCaptureDeviceID: String?
     private var writer: AVAssetWriter?
     private var writerInput: AVAssetWriterInput?
     private var sessionStarted = false
@@ -79,18 +87,46 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         }
     }
 
+    private func availableAudioDevices() -> [AVCaptureDevice] {
+        var devices: [AVCaptureDevice] = []
+        if let routedDevice = AVCaptureDevice.default(for: .audio) {
+            devices.append(routedDevice)
+        }
+        for device in AVCaptureDevice.DiscoverySession(
+            deviceTypes: [.microphone],
+            mediaType: .audio,
+            position: .unspecified
+        ).devices where !devices.contains(where: { $0.uniqueID == device.uniqueID }) {
+            devices.append(device)
+        }
+        return devices
+    }
+
     private func configureAndStart(outputURL: URL) throws {
         let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.record, mode: .default)
+        try audioSession.setCategory(.record, mode: .default, options: [.allowBluetoothHFP])
         try audioSession.setActive(true)
+
+        let route = CaptureNotificationMapper.currentInputRoute(audioSession)
+        let devices = availableAudioDevices()
+        let selection = CaptureInputSelector.select(route: route, devices: devices.map {
+            CaptureInputDevice(uniqueID: $0.uniqueID, name: $0.localizedName)
+        })
+        let selectedDevice: CaptureInputDevice
+        switch selection {
+        case .unavailable:
+            throw RecorderError.inputRouteUnavailable
+        case let .unverified(name):
+            throw RecorderError.inputRouteUnverified(name)
+        case let .matched(device):
+            selectedDevice = device
+        }
+        guard let device = availableAudioDevices().first(where: { $0.uniqueID == selectedDevice.uniqueID }) else {
+            throw RecorderError.inputRouteUnverified(selectedDevice.name)
+        }
 
         let session = AVCaptureSession()
         session.beginConfiguration()
-
-        guard let device = AVCaptureDevice.default(for: .audio) else {
-            session.commitConfiguration()
-            throw RecorderError.noAudioInput
-        }
 
         let deviceInput = try AVCaptureDeviceInput(device: device)
         guard session.canAddInput(deviceInput) else {
@@ -134,6 +170,8 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         }
 
         captureSession = session
+        captureDeviceInput = deviceInput
+        selectedCaptureDeviceID = device.uniqueID
         writer = assetWriter
         writerInput = assetWriterInput
         sessionStarted = false
@@ -148,6 +186,8 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         stopRequested = true
         captureSession?.stopRunning()
         captureSession = nil
+        captureDeviceInput = nil
+        selectedCaptureDeviceID = nil
         removeNotificationObservers()
 
         guard sessionStarted, let writer, let writerInput else {
@@ -193,6 +233,8 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
     private func resetWriterState() {
         writer = nil
         writerInput = nil
+        captureDeviceInput = nil
+        selectedCaptureDeviceID = nil
         sessionStarted = false
         interruptionHandled = false
         stopRequested = false
@@ -216,11 +258,7 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
             center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { [weak self] notification in
                 self?.queue.async {
                     guard let self, !self.interruptionHandled else { return }
-                    if let name = CaptureNotificationMapper.routeInputName(notification) {
-                        self.eventContinuation?.yield(.routeChanged(.now, inputName: name))
-                    } else {
-                        self.handleUnavailableInput(.now)
-                    }
+                    self.handleRouteChange(notification)
                 }
             },
             center.addObserver(forName: AVCaptureSession.wasInterruptedNotification, object: captureSession, queue: nil) { [weak self] notification in
@@ -244,6 +282,44 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         interruptionHandled = true
         captureSession?.stopRunning()
         eventContinuation?.yield(.interruptionBegan(date))
+    }
+
+    private func handleRouteChange(_ notification: Notification) {
+        guard !interruptionHandled,
+              let session = captureSession,
+              let route = CaptureNotificationMapper.routeInput(notification),
+              case let .matched(selected) = CaptureInputSelector.select(
+                  route: route,
+                  devices: availableAudioDevices().map {
+                      CaptureInputDevice(uniqueID: $0.uniqueID, name: $0.localizedName)
+                  }
+              ),
+              let device = availableAudioDevices().first(where: { $0.uniqueID == selected.uniqueID })
+        else {
+            handleUnavailableInput(.now)
+            return
+        }
+
+        if selectedCaptureDeviceID != selected.uniqueID {
+            do {
+                let newInput = try AVCaptureDeviceInput(device: device)
+                session.beginConfiguration()
+                if let oldInput = captureDeviceInput { session.removeInput(oldInput) }
+                guard session.canAddInput(newInput) else {
+                    session.commitConfiguration()
+                    handleUnavailableInput(.now)
+                    return
+                }
+                session.addInput(newInput)
+                session.commitConfiguration()
+                captureDeviceInput = newInput
+                selectedCaptureDeviceID = selected.uniqueID
+            } catch {
+                handleUnavailableInput(.now)
+                return
+            }
+        }
+        eventContinuation?.yield(.routeChanged(.now, inputName: route.name))
     }
 
     private func handleUnavailableInput(_ date: Date) {

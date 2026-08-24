@@ -22,6 +22,43 @@ final class CaptureEventTests: XCTestCase {
         center.removeObserver(token)
     }
 
+    func testInputSelectorMatchesTheRoutedDeviceByUniqueIdentifier() {
+        let route = CaptureInputRoute(uid: "usb-1", name: "USB Microphone", portType: "USBAudio")
+        let devices = [
+            CaptureInputDevice(uniqueID: "built-in", name: "Built-in Microphone"),
+            CaptureInputDevice(uniqueID: "usb-1", name: "USB Microphone")
+        ]
+
+        XCTAssertEqual(
+            CaptureInputSelector.select(route: route, devices: devices),
+            .matched(devices[1])
+        )
+    }
+
+    func testInputSelectorFallsBackToMatchingRouteNameWhenUIDNamespacesDiffer() {
+        let route = CaptureInputRoute(uid: "port-1", name: "USB Microphone", portType: "USBAudio")
+        let device = CaptureInputDevice(uniqueID: "device-1", name: "USB Microphone")
+
+        XCTAssertEqual(
+            CaptureInputSelector.select(route: route, devices: [device]),
+            .matched(device)
+        )
+    }
+
+    func testInputSelectorDoesNotFallbackToADeviceWhenRouteCannotBeVerified() {
+        let route = CaptureInputRoute(uid: "bluetooth-1", name: "Bluetooth Headset", portType: "BluetoothHFP")
+        let devices = [CaptureInputDevice(uniqueID: "built-in", name: "Built-in Microphone")]
+
+        XCTAssertEqual(
+            CaptureInputSelector.select(route: route, devices: devices),
+            .unverified(routeName: "Bluetooth Headset")
+        )
+    }
+
+    func testInputSelectorReportsNoInputWithoutAnActiveRoute() {
+        XCTAssertEqual(CaptureInputSelector.select(route: nil, devices: []), .unavailable)
+    }
+
     func testOnlyCaptureSessionInterruptionBeginningMapsToFinalizationEvent() {
         let date = Date(timeIntervalSince1970: 123)
         let began = Notification(name: AVCaptureSession.wasInterruptedNotification)

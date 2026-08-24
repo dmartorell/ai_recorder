@@ -2,8 +2,8 @@ import SwiftUI
 
 struct RecordingView: View {
     let coordinator: CaptureCoordinator
+    @Environment(\.locale) private var locale
     @State private var showingFinalize = false
-    @State private var showingMarkerConfirmation = false
 
     var body: some View {
         VStack(spacing: 28) {
@@ -11,7 +11,7 @@ struct RecordingView: View {
                 .font(.title2)
                 .foregroundStyle(.red)
 
-            Text(coordinator.currentItem?.displayTitle() ?? "Audio")
+            Text(coordinator.currentItem?.displayTitle(locale: locale) ?? String(localized: "Audio", locale: locale))
                 .font(.headline)
 
             Text(duration(coordinator.currentAudioPositionMilliseconds))
@@ -24,13 +24,21 @@ struct RecordingView: View {
                 .accessibilityLabel("Active input")
 
             if let automaticFinalizationMessage = coordinator.automaticFinalizationMessage {
-                Label(automaticFinalizationMessage, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
+                Label {
+                    Text(automaticFinalizationMessage)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }
+                .foregroundStyle(.orange)
                     .multilineTextAlignment(.center)
                     .accessibilityAddTraits(.updatesFrequently)
             } else if let resourceWarning = coordinator.resourceWarning {
-                Label(resourceWarning, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
+                Label {
+                    Text(resourceWarning)
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                }
+                .foregroundStyle(.orange)
                     .multilineTextAlignment(.center)
                     .accessibilityAddTraits(.updatesFrequently)
             }
@@ -46,18 +54,9 @@ struct RecordingView: View {
             } label: {
                 Label("Add marker", systemImage: "bookmark.fill")
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
             .accessibilityHint(coordinator.phase == .recording ? "Marks the current audio time" : "Unavailable while Capture is finalizing")
             .disabled(coordinator.phase != .recording || coordinator.isStartingRecorder)
             .sensoryFeedback(.selection, trigger: coordinator.markerConfirmation)
-
-            if showingMarkerConfirmation {
-                Text("Marker added")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .transition(.opacity)
-            }
 
             Button("Finalize", role: .destructive) { showingFinalize = true }
                 .buttonStyle(.bordered)
@@ -67,13 +66,6 @@ struct RecordingView: View {
         .padding(.horizontal)
         .background(Color(uiColor: .systemBackground).ignoresSafeArea())
         .navigationTitle("Capture")
-        .onChange(of: coordinator.markerConfirmation) {
-            showingMarkerConfirmation = true
-            Task {
-                try? await Task.sleep(for: .seconds(2))
-                showingMarkerConfirmation = false
-            }
-        }
         .confirmationDialog("Finalize this Audio?", isPresented: $showingFinalize) {
             Button("Finalize", role: .destructive) { Task { await coordinator.finalize() } }
             Button("Continue recording", role: .cancel) { }
@@ -82,6 +74,6 @@ struct RecordingView: View {
 
     private func duration(_ milliseconds: Int) -> String {
         let seconds = milliseconds / 1_000
-        return String(format: "%02d:%02d", seconds / 60, seconds % 60)
+        return String(format: "%02d:%02d", locale: locale, seconds / 60, seconds % 60)
     }
 }

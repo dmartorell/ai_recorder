@@ -8,6 +8,7 @@ struct AudioDetailView: View {
     let files: AudioFileStore
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
     @Environment(\.modelContext) private var modelContext
     @State private var playback: LocalPlaybackModel
     @State private var metadataItem: AudioItem?
@@ -27,7 +28,7 @@ struct AudioDetailView: View {
 
     var body: some View {
         Form {
-            AudioInformationSection(item: item, state: state)
+            AudioInformationSection(item: item, state: state, locale: locale)
             PlaybackSection(playback: playback, durationSeconds: durationSeconds)
 
             if !item.markers.isEmpty {
@@ -65,7 +66,7 @@ struct AudioDetailView: View {
         } message: {
             Text("No verified cloud copy exists. Deleting this Original Audio is permanent.")
         }
-        .alert("Delete \(item.displayTitle()) permanently?", isPresented: $showingPermanentDeletion) {
+        .alert("Delete \(item.displayTitle(locale: locale)) permanently?", isPresented: $showingPermanentDeletion) {
             Button("Delete", role: .destructive) { deleteAudio() }
             Button("Cancel", role: .cancel) { }
         } message: {
@@ -82,7 +83,7 @@ struct AudioDetailView: View {
         Double(item.durationMilliseconds) / 1_000
     }
 
-    private var state: String {
+    private var state: LocalizedStringResource {
         if item.captureEndedByInterruption { return "Ended by interruption" }
         if item.captureEndedByUnavailableInput { return "Ended: input unavailable" }
         return item.localState == .needsRecovery ? "Needs recovery" : "Only on this iPhone"
@@ -112,14 +113,17 @@ struct AudioDetailView: View {
 
 private struct AudioInformationSection: View {
     let item: AudioItem
-    let state: String
+    let state: LocalizedStringResource
+    let locale: Locale
 
     var body: some View {
         Section("Audio") {
-            Text(item.displayTitle()).font(.headline)
-            LabeledContent("Date", value: item.startedAt.formatted(date: .long, time: .shortened))
-            LabeledContent("Duration", value: formattedDuration(Double(item.durationMilliseconds) / 1_000))
-            LabeledContent("State", value: state)
+            Text(item.displayTitle(locale: locale)).font(.headline)
+            LabeledContent("Date") {
+                Text(item.startedAt, format: .dateTime.day().month(.wide).year().hour().minute())
+            }
+            LabeledContent("Duration", value: formattedDuration(Double(item.durationMilliseconds) / 1_000, locale: locale))
+            LabeledContent("State") { Text(state) }
         }
     }
 }
@@ -221,7 +225,7 @@ private struct MarkerSection: View {
     }
 }
 
-private func formattedDuration(_ seconds: Double) -> String {
+private func formattedDuration(_ seconds: Double, locale: Locale = .current) -> String {
     let totalSeconds = max(0, Int(seconds.rounded(.down)))
-    return String(format: "%02d:%02d", totalSeconds / 60, totalSeconds % 60)
+    return String(format: "%02d:%02d", locale: locale, totalSeconds / 60, totalSeconds % 60)
 }

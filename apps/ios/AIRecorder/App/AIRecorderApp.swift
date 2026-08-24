@@ -6,6 +6,7 @@ import AVFAudio
 struct AIRecorderApp: App {
     let modelContainer: ModelContainer
     @State private var coordinator: CaptureCoordinator
+    @State private var settings = SettingsModel()
     let recoveryService: RecoveryService
 
     init() {
@@ -35,7 +36,8 @@ struct AIRecorderApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView(coordinator: coordinator, recoveryService: recoveryService)
+            RootView(coordinator: coordinator, recoveryService: recoveryService, settings: settings)
+                .environment(\.locale, settings.locale)
         }
         .modelContainer(modelContainer)
     }

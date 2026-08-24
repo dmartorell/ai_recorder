@@ -6,6 +6,7 @@ struct AudioMetadataEditor: View {
     let files: AudioFileStore
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
     @Environment(\.modelContext) private var modelContext
     @State private var title: String
     @State private var context: String
@@ -21,7 +22,7 @@ struct AudioMetadataEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Title", text: $title, prompt: Text(item.displayTitle()))
+                    TextField("Title", text: $title, prompt: Text(item.displayTitle(locale: locale)))
                         .textInputAutocapitalization(.sentences)
                         .accessibilityIdentifier("metadata-title")
                 } footer: {

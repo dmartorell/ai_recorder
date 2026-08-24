@@ -12,11 +12,11 @@ struct PreparationView: View {
         NavigationStack {
             Form {
                 Section("Preparation") {
-                    LabeledContent("Microphone", value: permissionText)
+                    LabeledContent("Microphone") { Text(permissionText) }
                     LabeledContent("Input", value: coordinator.inputName)
                     LabeledContent("Format", value: "AAC-LC · M4A")
-                    LabeledContent("Free storage", value: storageText)
-                    LabeledContent("Available recording", value: durationText)
+                    LabeledContent("Free storage") { Text(storageText) }
+                    LabeledContent("Available recording") { durationText }
                     if coordinator.isLowBatteryWarning {
                         Label("Battery is low. Capture will continue.", systemImage: "battery.25percent")
                             .foregroundStyle(.orange)
@@ -39,7 +39,11 @@ struct PreparationView: View {
                 }
                 if let resourceWarning = coordinator.resourceWarning {
                     Section {
-                        Label(resourceWarning, systemImage: "exclamationmark.triangle.fill")
+                        Label {
+                            Text(resourceWarning)
+                        } icon: {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                        }
                             .foregroundStyle(.orange)
                     }
                 }
@@ -71,19 +75,23 @@ struct PreparationView: View {
         }
     }
 
-    private var storageText: String {
+    private var storageText: LocalizedStringResource {
         switch coordinator.storageAssessment {
         case .sufficient, .warning: "Available"
         case .critical: "Below safe threshold"
         }
     }
 
-    private var durationText: String {
-        guard let duration = coordinator.availableDuration else { return "Unavailable" }
-        return "≈ \(max(0, duration.components.seconds / 60)) min"
+    @ViewBuilder
+    private var durationText: some View {
+        if let duration = coordinator.availableDuration {
+            Text("≈ \(max(0, duration.components.seconds / 60)) min")
+        } else {
+            Text("Unavailable")
+        }
     }
 
-    private var permissionText: String {
+    private var permissionText: LocalizedStringResource {
         switch coordinator.microphonePermission { case .granted: "Allowed"; case .denied: "Denied"; case .undetermined: "Not requested"; @unknown default: "Unknown" }
     }
 }

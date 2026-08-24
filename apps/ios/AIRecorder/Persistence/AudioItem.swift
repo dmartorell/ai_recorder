@@ -55,7 +55,16 @@ final class AudioItem {
         let formatter = DateFormatter()
         formatter.locale = locale
         formatter.timeZone = timeZone
-        formatter.dateFormat = locale.identifier.hasPrefix("es") ? "d MMM yyyy, HH:mm 'h'" : "MMM d, yyyy, h:mm a"
-        return "Audio - \(formatter.string(from: startedAt))"
+        formatter.setLocalizedDateFormatFromTemplate("dMMMyyyyjm")
+        let formattedStart = formatter.string(from: startedAt)
+        let languageBundle = Bundle(
+            path: Bundle.main.path(forResource: locale.language.languageCode?.identifier, ofType: "lproj") ?? ""
+        ) ?? .main
+        let format = languageBundle.localizedString(
+            forKey: "Audio - %@",
+            value: nil,
+            table: "Localizable"
+        )
+        return String(format: format, locale: locale, formattedStart)
     }
 }

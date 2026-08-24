@@ -4,8 +4,11 @@ import SwiftData
 struct RootView: View {
     let coordinator: CaptureCoordinator
     let recoveryService: RecoveryService
+    let settings: SettingsModel
+    @Environment(\.locale) private var locale
     @Query(sort: \AudioItem.startedAt, order: .reverse) private var items: [AudioItem]
     @State private var showingPreparation = false
+    @State private var showingSettings = false
     @State private var selectedItem: AudioItem?
 
     var body: some View {
@@ -17,9 +20,9 @@ struct RootView: View {
                     List(items) { item in
                         Button { selectedItem = item } label: {
                             VStack(alignment: .leading) {
-                                Text(item.displayTitle())
+                                Text(item.displayTitle(locale: locale))
                                 HStack {
-                                    Text(item.startedAt.formatted(date: .abbreviated, time: .shortened))
+                                    Text(item.startedAt, format: .dateTime.month(.abbreviated).day().year().hour().minute())
                                     Spacer()
                                     Text(duration(item.durationMilliseconds))
                                     Text(state(item))
@@ -34,10 +37,18 @@ struct RootView: View {
             .background(Color(uiColor: .systemBackground).ignoresSafeArea())
             .navigationTitle("Audio")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Settings", systemImage: "gear") { showingSettings = true }
+                        .accessibilityHint("Choose the app language")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Record", systemImage: "mic.fill") { showingPreparation = true }
                         .accessibilityHint("Capture starts immediately after permission is granted")
                 }
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView(settings: settings)
+                    .presentationDetents([.medium])
             }
             .sheet(isPresented: $showingPreparation) {
                 PreparationView(coordinator: coordinator)
@@ -56,16 +67,12 @@ struct RootView: View {
 
     private func duration(_ milliseconds: Int) -> String {
         let seconds = milliseconds / 1000
-        return String(format: "%02d:%02d", seconds / 60, seconds % 60)
+        return String(format: "%02d:%02d", locale: locale, seconds / 60, seconds % 60)
     }
 
-    private func state(_ item: AudioItem) -> String {
-        if item.captureEndedByInterruption {
-            return "Ended by interruption"
-        }
-        if item.captureEndedByUnavailableInput {
-            return "Ended: input unavailable"
-        }
+    private func state(_ item: AudioItem) -> LocalizedStringResource {
+        if item.captureEndedByInterruption { return "Ended by interruption" }
+        if item.captureEndedByUnavailableInput { return "Ended: input unavailable" }
         switch item.localState {
         case .available: return "Only on this iPhone"
         case .needsRecovery: return "Needs recovery"

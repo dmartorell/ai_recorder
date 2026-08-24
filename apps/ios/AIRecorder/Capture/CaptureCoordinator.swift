@@ -2,6 +2,7 @@ import AVFAudio
 import AVFoundation
 import Foundation
 import Observation
+import SwiftUI
 
 @MainActor
 protocol CaptureRecorder: AnyObject {
@@ -58,7 +59,7 @@ final class CaptureCoordinator {
     private(set) var activeInputName = CaptureEvent.noInputName
     private(set) var storageAssessment: StorageAssessment = .critical
     private(set) var isLowBatteryWarning = false
-    private(set) var resourceWarning: String?
+    private(set) var resourceWarning: LocalizedStringResource?
     private(set) var inputLevel: Float?
     private(set) var noInputLevelWarning = false
     private(set) var isStartingRecorder = false
@@ -107,7 +108,7 @@ final class CaptureCoordinator {
         }
     }
 
-    var automaticFinalizationMessage: String? {
+    var automaticFinalizationMessage: LocalizedStringResource? {
         guard phase == .finalizing,
               let event = currentItem?.events.max(by: { $0.startedAt < $1.startedAt })
         else { return nil }

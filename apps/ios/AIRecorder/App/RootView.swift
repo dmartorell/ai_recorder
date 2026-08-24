@@ -6,10 +6,15 @@ struct RootView: View {
     let recoveryService: RecoveryService
     let settings: SettingsModel
     @Environment(\.locale) private var locale
+    @Environment(\.modelContext) private var modelContext
     @Query(sort: \AudioItem.startedAt, order: .reverse) private var items: [AudioItem]
     @State private var showingPreparation = false
     @State private var showingSettings = false
     @State private var selectedItem: AudioItem?
+    @State private var itemPendingDeletion: AudioItem?
+    @State private var showingUnbackedDeletionWarning = false
+    @State private var showingPermanentDeletion = false
+    @State private var deletionError: String?
 
     var body: some View {
         NavigationStack {
@@ -30,6 +35,13 @@ struct RootView: View {
                             }
                         }
                         .accessibilityElement(children: .combine)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button("Delete", role: .destructive) {
+                                itemPendingDeletion = item
+                                showingUnbackedDeletionWarning = true
+                            }
+                            .accessibilityLabel("Delete \(item.displayTitle(locale: locale))")
+                        }
                     }
                 }
             }
@@ -58,10 +70,51 @@ struct RootView: View {
                 AudioDetailView(item: $0, files: coordinator.files)
                     .presentationDetents([.large])
             }
+            .alert("Delete local Audio?", isPresented: $showingUnbackedDeletionWarning) {
+                Button("Delete", role: .destructive) {
+                    showingPermanentDeletion = true
+                }
+                Button("Cancel", role: .cancel) { itemPendingDeletion = nil }
+            } message: {
+                Text("No verified cloud copy exists. Deleting this Original Audio is permanent.")
+            }
+            .alert(
+                "Delete \(itemPendingDeletion?.displayTitle(locale: locale) ?? "") permanently?",
+                isPresented: $showingPermanentDeletion
+            ) {
+                Button("Delete permanently", role: .destructive) { deletePendingAudio() }
+                Button("Cancel", role: .cancel) { itemPendingDeletion = nil }
+            } message: {
+                Text("This removes the local Original Audio and its metadata.")
+            }
+            .alert(
+                "Could not delete local Audio",
+                isPresented: Binding(
+                    get: { deletionError != nil },
+                    set: { if !$0 { deletionError = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) { deletionError = nil }
+            } message: {
+                Text(deletionError ?? "")
+            }
             .task { await recoveryService.recoverInterruptedItems() }
             .navigationDestination(for: UUID.self) { id in
                 if let item = items.first(where: { $0.id == id }) { AudioDetailView(item: item, files: coordinator.files) }
             }
+        }
+    }
+
+    private func deletePendingAudio() {
+        guard let item = itemPendingDeletion else { return }
+        let repository = AudioRepository(context: modelContext, files: coordinator.files)
+
+        do {
+            let confirmation = repository.confirmationForPermanentDeletion(of: item)
+            try repository.delete(item, confirmation: confirmation)
+            itemPendingDeletion = nil
+        } catch {
+            deletionError = "Could not delete local Audio: \(error.localizedDescription)"
         }
     }
 

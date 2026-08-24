@@ -262,29 +262,34 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         let center = NotificationCenter.default
         notificationTokens = [
             CaptureNotificationMapper.observeAudioInterruptions(center: center) { [weak self] notification in
-                self?.queue.async {
-                    guard let self,
-                          let date = CaptureNotificationMapper.interruptionBeganDate(notification) else { return }
-                    self.handleInterruption(date)
+                guard let recorder = self,
+                      let date = CaptureNotificationMapper.interruptionBeganDate(notification)
+                else { return }
+                recorder.queue.async {
+                    recorder.handleInterruption(date)
                 }
             },
             center.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { [weak self] notification in
-                self?.queue.async {
-                    guard let self, !self.interruptionHandled else { return }
-                    self.handleRouteChange(notification)
+                guard let recorder = self else { return }
+                let route = CaptureNotificationMapper.routeInput(notification)
+                recorder.queue.async {
+                    guard !recorder.interruptionHandled else { return }
+                    recorder.handleRouteChange(route)
                 }
             },
             center.addObserver(forName: AVCaptureSession.wasInterruptedNotification, object: captureSession, queue: nil) { [weak self] notification in
-                self?.queue.async {
-                    guard let self,
-                          let date = CaptureNotificationMapper.captureInterruptionBeganDate(notification) else { return }
-                    self.handleInterruption(date)
+                guard let recorder = self,
+                      let date = CaptureNotificationMapper.captureInterruptionBeganDate(notification)
+                else { return }
+                recorder.queue.async {
+                    recorder.handleInterruption(date)
                 }
             },
             center.addObserver(forName: AVCaptureSession.didStopRunningNotification, object: captureSession, queue: nil) { [weak self] _ in
-                self?.queue.async {
-                    guard let self, !self.stopRequested else { return }
-                    self.handleInterruption(.now)
+                guard let recorder = self else { return }
+                recorder.queue.async {
+                    guard !recorder.stopRequested else { return }
+                    recorder.handleInterruption(.now)
                 }
             }
         ]
@@ -297,10 +302,10 @@ final class FragmentedM4ARecorder: NSObject, @unchecked Sendable {
         eventContinuation?.yield(.interruptionBegan(date))
     }
 
-    private func handleRouteChange(_ notification: Notification) {
+    private func handleRouteChange(_ route: CaptureInputRoute?) {
         guard !interruptionHandled,
               let session = captureSession,
-              let route = CaptureNotificationMapper.routeInput(notification)
+              let route
         else {
             handleUnavailableInput(.now)
             return

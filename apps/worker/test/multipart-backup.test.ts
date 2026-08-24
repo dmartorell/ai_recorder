@@ -63,12 +63,41 @@ describe("multipart audio backup", () => {
     expect(response.status).toBe(400);
     expect(backups.parts).toEqual([]);
   });
+
+  it("denies another owner access to every backup operation", async () => {
+    const backups = new MemoryStore();
+    const multipart = new StubMultipart();
+    const worker = createWorker({
+      authentication: new Authenticator("44444444-4444-4444-4444-444444444444"),
+      backups,
+      multipart
+    });
+
+    const responses = await Promise.all([
+      request(worker, `/${id}`, "GET"),
+      request(worker, `/${id}/multipart`, "POST"),
+      request(worker, `/${id}/parts/1/url`, "POST", { sha256 }),
+      request(worker, `/${id}/parts/1/confirm`, "POST", { etag: "r2-etag" }),
+      request(worker, `/${id}/complete`, "POST"),
+      request(worker, `/${id}/cancel`, "POST")
+    ]);
+
+    expect(responses.map((response) => response.status)).toEqual([404, 404, 404, 404, 404, 404]);
+    expect(multipart.createCount).toBe(0);
+    expect(multipart.abortCount).toBe(0);
+    expect(backups.parts).toEqual([]);
+    expect(backups.backup.state).toBe("uploading");
+  });
 });
 
 async function request(worker: ReturnType<typeof createWorker>, path: string, method: string, body?: unknown) {
   return worker.fetch!(new Request(`https://worker.example.test/v1/audio-backups${path}`, { method, headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined }), {} as Env, {} as ExecutionContext);
 }
-class Authenticator implements WorkerAuthenticator { async authenticate() { return { userID: owner }; } }
+class Authenticator implements WorkerAuthenticator {
+  constructor(private readonly userID = owner) {}
+
+  async authenticate() { return { userID: this.userID }; }
+}
 class MemoryStore implements BackupStore {
   backup: StoredBackup = { id, owner_id: owner, local_audio_id: "33333333-3333-3333-3333-333333333333", object_key: "original-audio/opaque", byte_count: multipartPartSize, sha256, state: "uploading", r2_upload_id: null, r2_upload_claim: null, r2_upload_claimed_at: null };
   parts: StoredPart[] = [];

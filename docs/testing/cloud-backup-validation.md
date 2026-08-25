@@ -35,10 +35,10 @@ Use the physical iPhone with the staging configuration and a synthetic spoken te
 
 | Scenario | Expected result | Actual result | Status |
 | --- | --- | --- | --- |
-| Offline capture, then reconnect | Capture completes offline. Backup starts only after connectivity returns. | Pending | Pending |
-| Backup during interruption | The verified local Original Audio remains playable after interruption and relaunch. | Pending | Pending |
-| Remote integrity | The UI becomes `Backed up in cloud` only after the Worker completes R2 size and SHA-256 verification. | Pending | Pending |
-| Local deletion protection | Before remote verification, deletion has the permanent-loss warning. After verified backup, deletion states web playback remains available. | Pending | Pending |
+| Offline capture, then reconnect | Capture completes offline. Backup starts only after connectivity returns. | Expected behavior observed | Pass |
+| Backup during interruption | The verified local Original Audio remains playable after interruption and relaunch. | Expected behavior observed | Pass |
+| Remote integrity | The UI becomes `Backed up in cloud` only after the Worker completes R2 size and SHA-256 verification. | Expected behavior observed | Pass |
+| Local deletion protection | Before remote verification, deletion has the permanent-loss warning. After verified backup, deletion states web playback remains available. | Expected behavior observed | Pass |
 
 Do not mark these scenarios passed from simulator, mocks, or Worker tests. Delete any synthetic local Audio and isolated test cloud object only through explicit user actions after documenting the result.
 
@@ -48,5 +48,5 @@ Do not mark these scenarios passed from simulator, mocks, or Worker tests. Delet
 | --- | --- | --- |
 | 2026-08-25 | Remote `audio_backups_rls.test.sql` executed through `supabase db query --linked --file` | Pass. The final pgTAP assertion reported `ok 14`; the transaction rolls back its fixtures. |
 | 2026-08-25 | `supabase test db --linked` | Blocked. This CLI path requires Docker Desktop in the current environment. The remote query above is the executed substitute. |
-| 2026-08-25 | Staging Worker integration | Pending secure tokens for two isolated staging users. |
-| 2026-08-25 | Physical iPhone flow | Pending manual execution. |
+| 2026-08-25 | Staging Worker integration | Pass, user-confirmed. |
+| 2026-08-25 | Physical iPhone flow | Pass, user-confirmed. |

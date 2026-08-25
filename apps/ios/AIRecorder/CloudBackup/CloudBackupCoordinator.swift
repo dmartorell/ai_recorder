@@ -15,8 +15,9 @@ struct CloudBackupConfirmedPart: Codable, Equatable, Sendable { let partNumber: 
 struct CloudBackupPartUpload: Codable, Equatable, Sendable { let url: URL; let expiresIn: Int; enum CodingKeys: String, CodingKey { case url; case expiresIn = "expires_in" } }
 
 enum CloudBackupState: String, CaseIterable, Codable, Equatable, Sendable {
-    case notBackedUp, uploading, paused, failed, verifying, backedUp
-    var preventsLocalDeletion: Bool { self == .uploading || self == .paused || self == .verifying }
+    case notBackedUp, uploading, paused, signInToResume, failed, verifying, backedUp
+    var preventsLocalDeletion: Bool { self == .uploading || self == .paused || self == .signInToResume || self == .verifying }
+    var isIncomplete: Bool { preventsLocalDeletion || self == .failed }
     enum CodingKeys: String, CodingKey { case rawValue }
     init(from decoder: Decoder) throws {
         let value = try decoder.singleValueContainer().decode(String.self)
@@ -54,6 +55,8 @@ enum CloudBackupErrorMessage {
     init(_ error: Error) {
         if isNetworkInterruption(error) {
             self = .localized("Cloud backup is paused until a network connection is available.")
+        } else if isAuthenticationFailure(error) {
+            self = .localized("Sign in to resume cloud backup.")
         } else if let authenticationError = error as? CloudAuthenticationError, authenticationError == .notConfigured {
             self = .localized("Cloud backup is not configured on this app.")
         } else {
@@ -64,7 +67,7 @@ enum CloudBackupErrorMessage {
 
 @MainActor
 @Observable
-final class CloudBackupCoordinator {
+final class CloudBackupCoordinator: CloudBackupSessionManaging {
     private let client: any CloudBackupClient
     private let files: AudioFileStore
     private let uploader: any CloudBackupPartUploading
@@ -98,6 +101,8 @@ final class CloudBackupCoordinator {
             uploadStarted = true
             let status = try await client.beginMultipartUpload(id: backup.id)
             try await upload(item: item, fileURL: fileURL, metadata: metadata, backupID: backup.id, status: status)
+        } catch is CancellationError {
+            return
         } catch {
             if uploadStarted { saveFailureState(for: item, error: error) }
             errorMessage = .init(error)
@@ -118,20 +123,31 @@ final class CloudBackupCoordinator {
             let metadata = try await Self.fileMetadata(for: fileURL)
             let status = try await client.multipartStatus(id: backupID)
             try await upload(item: item, fileURL: fileURL, metadata: metadata, backupID: backupID, status: status)
+        } catch is CancellationError {
+            return
         } catch {
             saveFailureState(for: item, error: error)
             errorMessage = .init(error)
         }
     }
 
-    func cancelBackup(for item: AudioItem) async {
-        guard let backupID = item.cloudBackupID, item.cloudBackupState.preventsLocalDeletion else { return }
+    func cancelBackup(for item: AudioItem) async throws {
+        guard let backupID = item.cloudBackupID, item.cloudBackupState.isIncomplete else { return }
+        await uploader.cancelUploads(for: backupID)
         do {
             try await client.cancelMultipartUpload(id: backupID)
             files.removeCloudBackupParts(for: backupID)
-            try persistence.saveBackupState(for: item, state: .notBackedUp)
+            try persistence.clearBackupAssociation(for: item)
         } catch {
             errorMessage = .init(error)
+            throw error
+        }
+    }
+
+    func cancelIncompleteBackupsForSignOut() async throws {
+        let items = try persistence.pendingBackups()
+        for item in items where item.cloudBackupState.isIncomplete {
+            try await cancelBackup(for: item)
         }
     }
 
@@ -158,7 +174,15 @@ final class CloudBackupCoordinator {
     }
 
     private func saveFailureState(for item: AudioItem, error: Error) {
-        try? persistence.saveBackupState(for: item, state: isNetworkInterruption(error) ? .paused : .failed)
+        let state: CloudBackupState
+        if isNetworkInterruption(error) {
+            state = .paused
+        } else if isAuthenticationFailure(error) {
+            state = .signInToResume
+        } else {
+            state = .failed
+        }
+        try? persistence.saveBackupState(for: item, state: state)
     }
 
     private func confirmCompletedParts(backupID: UUID, status: CloudBackupMultipartStatus) async throws -> CloudBackupMultipartStatus {
@@ -226,6 +250,11 @@ private struct CloudBackupFileMetadata: Sendable { let byteCount: Int; let sha25
 private struct CloudBackupFilePart: Sendable { let fileURL: URL; let sha256: String }
 private func hashFile(at url: URL) throws -> CloudBackupFileMetadata { let file = try FileHandle(forReadingFrom: url); defer { try? file.close() }; var hasher = SHA256(); var byteCount = 0; while let data = try file.read(upToCount: 1_048_576), !data.isEmpty { hasher.update(data: data); byteCount += data.count }; guard byteCount > 0 else { throw CloudBackupError.missingOriginalAudio }; return .init(byteCount: byteCount, sha256: hasher.finalize().map { String(format: "%02x", $0) }.joined()) }
 func base64SHA256(_ hexadecimal: String) -> String { Data(stride(from: 0, to: hexadecimal.count, by: 2).compactMap { UInt8(hexadecimal[hexadecimal.index(hexadecimal.startIndex, offsetBy: $0)...hexadecimal.index(hexadecimal.startIndex, offsetBy: $0 + 1)], radix: 16) }).base64EncodedString() }
+
+func isAuthenticationFailure(_ error: Error) -> Bool {
+    if let error = error as? CloudBackupClientError, case .unsuccessfulResponse(statusCode: 401) = error { return true }
+    return false
+}
 
 func isNetworkInterruption(_ error: Error) -> Bool {
     guard let urlError = error as? URLError else { return false }

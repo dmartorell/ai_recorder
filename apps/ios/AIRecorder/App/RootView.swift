@@ -120,12 +120,12 @@ struct RootView: View {
             } message: {
                 Text(deletionError ?? "")
             }
-            .task {
-                cloudBackupRecoveryService.start()
-                await recoveryService.recoverInterruptedItems()
-                await cloudIdentity.restoreSession()
-                guard cloudIdentity.state == .authenticated else { return }
-                await cloudBackupRecoveryService.recoverPendingBackups()
+            .background {
+                CloudBackupLifecycleView(
+                    recoveryService: recoveryService,
+                    cloudBackupRecoveryService: cloudBackupRecoveryService,
+                    cloudIdentity: cloudIdentity
+                )
             }
             .navigationDestination(for: UUID.self) { id in
                 if let item = items.first(where: { $0.id == id }) {
@@ -186,5 +186,27 @@ struct RootView: View {
 
     private func state(_ item: AudioItem) -> LocalizedStringResource {
         libraryAudioStatus(for: item).localizedString
+    }
+}
+
+private struct CloudBackupLifecycleView: View {
+    let recoveryService: RecoveryService
+    let cloudBackupRecoveryService: CloudBackupRecoveryService
+    let cloudIdentity: CloudIdentityCoordinator
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        Color.clear
+            .task {
+                cloudBackupRecoveryService.start()
+                cloudBackupRecoveryService.setAppIsActive(scenePhase == .active)
+                await recoveryService.recoverInterruptedItems()
+                await cloudIdentity.restoreSession()
+                guard cloudIdentity.state == .authenticated else { return }
+                await cloudBackupRecoveryService.recoverPendingBackups()
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                cloudBackupRecoveryService.setAppIsActive(newPhase == .active)
+            }
     }
 }

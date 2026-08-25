@@ -101,6 +101,47 @@ final class CloudBackupCoordinatorTests: XCTestCase {
         XCTAssertEqual(item.cloudBackupState, .paused)
     }
 
+    func testCancelBackupAbortsTransferAndLeavesOriginalAudioUnbacked() async throws {
+        let item = availableAudio()
+        let backupID = UUID()
+        item.cloudBackupID = backupID
+        item.cloudBackupState = .uploading
+        let client = FakeCloudBackupClient()
+        let uploader = FakePartUploader()
+        let coordinator = CloudBackupCoordinator(client: client, files: files, uploader: uploader, persistence: FakeBackupPersistence())
+
+        try await coordinator.cancelBackup(for: item)
+
+        XCTAssertEqual(client.cancelledBackupIDs, [backupID])
+        XCTAssertEqual(uploader.cancelledBackupIDs, [backupID])
+        XCTAssertNil(item.cloudBackupID)
+        XCTAssertEqual(item.cloudBackupState, .notBackedUp)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: files.url(for: item.id).path))
+    }
+
+    func testExplicitlyCancelledUploadDoesNotShowACancellationError() async throws {
+        let item = availableAudio()
+        let uploader = FakePartUploader(uploadError: CancellationError())
+        let coordinator = CloudBackupCoordinator(client: FakeCloudBackupClient(), files: files, uploader: uploader, persistence: FakeBackupPersistence())
+
+        await coordinator.requestBackup(for: item)
+        await coordinator.confirmBackup(for: item)
+
+        XCTAssertNil(coordinator.errorMessage)
+    }
+
+    func testAuthenticationFailureRequiresForegroundSignInToResume() async throws {
+        let item = availableAudio()
+        let client = FakeCloudBackupClient()
+        client.statusError = CloudBackupClientError.unsuccessfulResponse(statusCode: 401)
+        let coordinator = CloudBackupCoordinator(client: client, files: files, uploader: FakePartUploader(), persistence: FakeBackupPersistence())
+
+        await coordinator.requestBackup(for: item)
+        await coordinator.confirmBackup(for: item)
+
+        XCTAssertEqual(item.cloudBackupState, .signInToResume)
+    }
+
     func testLostCompletionResponseVerifiesWithoutUploadingPartsAgain() async throws {
         let item = availableAudio()
         let client = FakeCloudBackupClient()
@@ -134,6 +175,23 @@ final class CloudBackupCoordinatorTests: XCTestCase {
         XCTAssertEqual(item.cloudBackupState, .paused)
     }
 
+    func testBackgroundConnectivityRecoveryDoesNotResumeBackup() async throws {
+        let item = availableAudio()
+        item.cloudBackupID = UUID()
+        item.cloudBackupState = .paused
+        let client = FakeCloudBackupClient()
+        let connectivity = FakeConnectivityMonitor()
+        let persistence = FakeBackupPersistence(pendingItems: [item])
+        let coordinator = CloudBackupCoordinator(client: client, files: files, uploader: FakePartUploader(), persistence: persistence)
+        let service = CloudBackupRecoveryService(persistence: persistence, coordinator: coordinator, connectivity: connectivity)
+
+        service.start()
+        connectivity.connectionBecameAvailable()
+        try await Task.sleep(for: .milliseconds(50))
+
+        XCTAssertTrue(client.statusRequests.isEmpty)
+    }
+
     func testConnectivityRecoveryResumesPausedBackup() async throws {
         let item = availableAudio()
         item.cloudBackupID = UUID()
@@ -147,6 +205,7 @@ final class CloudBackupCoordinatorTests: XCTestCase {
         let service = CloudBackupRecoveryService(persistence: persistence, coordinator: coordinator, connectivity: connectivity)
 
         service.start()
+        service.setAppIsActive(true)
         connectivity.connectionBecameAvailable()
         await fulfillment(of: [completed], timeout: 1)
 
@@ -184,6 +243,7 @@ private final class FakeCloudBackupClient: CloudBackupClient {
 
     func multipartStatus(id: UUID) async throws -> CloudBackupMultipartStatus {
         statusRequests.append(id)
+        if let statusError { throw statusError }
         return status(id: id)
     }
 
@@ -199,13 +259,16 @@ private final class FakeCloudBackupClient: CloudBackupClient {
     private func status(id: UUID) -> CloudBackupMultipartStatus {
         .init(id: id, state: backupState, confirmedParts: serverConfirmedParts.sorted().map { .init(partNumber: $0, byteCount: 15) }, partSize: 8 * 1_024 * 1_024)
     }
+    var cancelledBackupIDs = [UUID]()
+    var statusError: Error?
+
     func completeMultipartUpload(id: UUID) async throws -> CloudBackupUpload {
         backupState = .backedUp
         if let completeError { throw completeError }
         onComplete?()
         return .init(id: id, state: .backedUp)
     }
-    func cancelMultipartUpload(id: UUID) async throws {}
+    func cancelMultipartUpload(id: UUID) async throws { cancelledBackupIDs.append(id) }
 }
 
 private final class FakeBackupPersistence: CloudBackupPersisting {
@@ -218,6 +281,10 @@ private final class FakeBackupPersistence: CloudBackupPersisting {
     func saveBackupAssociation(for item: AudioItem, backupID: UUID, state: CloudBackupState) throws {
         item.cloudBackupID = backupID
         item.cloudBackupState = state
+    }
+    func clearBackupAssociation(for item: AudioItem) throws {
+        item.cloudBackupID = nil
+        item.cloudBackupState = .notBackedUp
     }
     func saveBackupState(for item: AudioItem, state: CloudBackupState) throws { item.cloudBackupState = state }
     func pendingBackups() throws -> [AudioItem] { pendingItems }
@@ -244,6 +311,7 @@ private final class FakePartUploader: CloudBackupPartUploading {
     private var failuresBeforeSuccess: Int
     private let uploadError: Error?
     private(set) var uploadAttempts = 0
+    private(set) var cancelledBackupIDs = [UUID]()
 
     init(completedParts: [CloudBackupCompletedPart] = [], failuresBeforeSuccess: Int = 0, uploadError: Error? = nil) {
         completed = completedParts
@@ -262,4 +330,5 @@ private final class FakePartUploader: CloudBackupPartUploading {
     }
     func completedParts(for backupID: UUID) -> [CloudBackupCompletedPart] { completed }
     func discardCompletedPart(_ partNumber: Int, backupID: UUID) { completed.removeAll { $0.partNumber == partNumber } }
+    func cancelUploads(for backupID: UUID) async { cancelledBackupIDs.append(backupID) }
 }

@@ -2,18 +2,25 @@ import Foundation
 import Observation
 
 @MainActor
+protocol CloudBackupSessionManaging: AnyObject {
+    func cancelIncompleteBackupsForSignOut() async throws
+}
+
+@MainActor
 @Observable
 final class CloudIdentityCoordinator {
     private let authentication: any CloudAuthenticating
     private let ownerStore: CloudLibraryOwnerStore
+    private let backupSession: (any CloudBackupSessionManaging)?
 
     private(set) var identity: CloudIdentity?
     private(set) var state: CloudIdentityState = .signedOut
     private(set) var errorMessage: String?
 
-    init(authentication: any CloudAuthenticating, ownerStore: CloudLibraryOwnerStore = .init()) {
+    init(authentication: any CloudAuthenticating, ownerStore: CloudLibraryOwnerStore = .init(), backupSession: (any CloudBackupSessionManaging)? = nil) {
         self.authentication = authentication
         self.ownerStore = ownerStore
+        self.backupSession = backupSession
     }
 
     func restoreSession() async {
@@ -52,7 +59,13 @@ final class CloudIdentityCoordinator {
     }
 
     func signOut() async {
-        do { try await authentication.signOut() } catch { fail(error); return }
+        do {
+            try await backupSession?.cancelIncompleteBackupsForSignOut()
+            try await authentication.signOut()
+        } catch {
+            fail(error)
+            return
+        }
         identity = nil
         state = .signedOut
     }

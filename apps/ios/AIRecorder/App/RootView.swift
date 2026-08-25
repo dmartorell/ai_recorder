@@ -19,6 +19,7 @@ struct RootView: View {
     @State private var selectedItem: AudioItem?
     @State private var itemPendingDeletion: AudioItem?
     @State private var showingUnbackedDeletionWarning = false
+    @State private var showingBackedUpDeletion = false
     @State private var showingPermanentDeletion = false
     @State private var deletionError: String?
 
@@ -92,6 +93,12 @@ struct RootView: View {
                 AudioDetailView(item: $0, files: coordinator.files, cloudBackup: cloudBackup)
                     .presentationDetents([.large])
             }
+            .alert("Delete local Audio?", isPresented: $showingBackedUpDeletion) {
+                Button("Delete local audio", role: .destructive) { deletePendingAudio() }
+                Button("Cancel", role: .cancel) { itemPendingDeletion = nil }
+            } message: {
+                Text("The verified cloud copy remains available after local deletion.")
+            }
             .alert("Delete local Audio?", isPresented: $showingUnbackedDeletionWarning) {
                 Button("Delete", role: .destructive) {
                     showingPermanentDeletion = true
@@ -147,8 +154,16 @@ struct RootView: View {
     }
 
     private func requestDeletion(_ item: AudioItem) {
+        guard !item.cloudBackupState.preventsLocalDeletion else {
+            deletionError = "Cancel the cloud backup before deleting the local Original Audio."
+            return
+        }
         itemPendingDeletion = item
-        showingUnbackedDeletionWarning = true
+        if item.hasVerifiedCloudAudio {
+            showingBackedUpDeletion = true
+        } else {
+            showingUnbackedDeletionWarning = true
+        }
     }
 
     private func deletePendingAudio() {
@@ -184,9 +199,10 @@ struct RootView: View {
         return String(format: "%02d:%02d", locale: locale, seconds / 60, seconds % 60)
     }
 
-    private func state(_ item: AudioItem) -> LocalizedStringResource {
-        libraryAudioStatus(for: item).localizedString
+    private func state(_ item: AudioItem) -> LibraryAudioStatus {
+        libraryAudioStatus(for: item)
     }
+
 }
 
 private struct CloudBackupLifecycleView: View {

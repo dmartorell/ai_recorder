@@ -15,6 +15,7 @@ final class AudioItem {
     var localStateRawValue: String
     var endedUnexpectedly: Bool
     var hasVerifiedCloudAudio: Bool
+    var localOriginalAudioRemovedAt: Date?
     var cloudBackupStateRawValue: String?
     var cloudBackupID: UUID?
     @Relationship(deleteRule: .cascade, inverse: \Marker.audio) var markers: [Marker]
@@ -29,6 +30,7 @@ final class AudioItem {
         self.localStateRawValue = LocalAudioState.capturing.rawValue
         self.endedUnexpectedly = false
         self.hasVerifiedCloudAudio = false
+        self.localOriginalAudioRemovedAt = nil
         self.cloudBackupStateRawValue = CloudBackupState.notBackedUp.rawValue
         self.cloudBackupID = nil
         self.markers = []
@@ -64,19 +66,18 @@ final class AudioItem {
 
     func displayTitle(locale: Locale = .current, timeZone: TimeZone = .current) -> String {
         if let customTitle, !customTitle.isEmpty { return customTitle }
-        let formatter = DateFormatter()
-        formatter.locale = locale
-        formatter.timeZone = timeZone
-        formatter.setLocalizedDateFormatFromTemplate("dMMMyyyyjm")
-        let formattedStart = formatter.string(from: startedAt)
-        let languageBundle = Bundle(
-            path: Bundle.main.path(forResource: locale.language.languageCode?.identifier, ofType: "lproj") ?? ""
-        ) ?? .main
-        let format = languageBundle.localizedString(
-            forKey: "Audio - %@",
-            value: nil,
-            table: "Localizable"
-        )
-        return String(format: format, locale: locale, formattedStart)
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = locale
+        dateFormatter.timeZone = timeZone
+        dateFormatter.setLocalizedDateFormatFromTemplate("dMMMyyyy")
+
+        let timeFormatter = DateFormatter()
+        timeFormatter.locale = locale
+        timeFormatter.timeZone = timeZone
+        timeFormatter.setLocalizedDateFormatFromTemplate("jm")
+
+        let date = dateFormatter.string(from: startedAt)
+        let time = timeFormatter.string(from: startedAt).replacingOccurrences(of: "\u{202F}", with: " ")
+        return "\(date), \(time)"
     }
 }

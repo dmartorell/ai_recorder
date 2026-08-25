@@ -41,8 +41,8 @@ final class SettingsModelTests: XCTestCase {
         let spanishTitle = item.displayTitle(locale: .init(identifier: "es_ES"), timeZone: .gmt)
         let englishTitle = item.displayTitle(locale: .init(identifier: "en_US"), timeZone: .gmt)
 
-        XCTAssertTrue(spanishTitle.hasPrefix("Audio - "))
-        XCTAssertTrue(englishTitle.hasPrefix("Recording - "))
+        XCTAssertFalse(spanishTitle.contains("Audio -"))
+        XCTAssertFalse(englishTitle.contains("Recording -"))
         XCTAssertNotEqual(spanishTitle, englishTitle)
 
         item.customTitle = "Entrevista de campo"

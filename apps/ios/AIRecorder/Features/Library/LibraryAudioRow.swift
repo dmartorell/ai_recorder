@@ -11,7 +11,7 @@ struct LibraryAudioRow: View {
     let onSelectionDragChanged: (CGPoint, CGPoint) -> Void
     let onSelectionDragEnded: () -> Void
     let duration: (Int) -> String
-    let state: (AudioItem) -> LocalizedStringResource
+    let state: (AudioItem) -> LibraryAudioStatus
 
     var body: some View {
         HStack(spacing: 12) {
@@ -26,18 +26,36 @@ struct LibraryAudioRow: View {
                 VStack(alignment: .leading) {
                     Text(item.displayTitle(locale: locale))
                     HStack {
-                        Text(item.startedAt, format: .dateTime.month(.abbreviated).day().year().hour().minute())
-                        Spacer()
                         Text(duration(item.durationMilliseconds))
-                        Text(state(item))
+                        Text(shortLibraryDate(item.startedAt, locale: locale))
+                        Spacer()
+                        libraryStatus(state(item))
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(.rect)
             }
             .buttonStyle(.plain)
             .accessibilityElement(children: .combine)
+        }
+    }
+
+    @ViewBuilder
+    private func libraryStatus(_ status: LibraryAudioStatus) -> some View {
+        if let symbolNames = status.locationSymbolNames {
+            HStack(spacing: 4) {
+                ForEach(symbolNames, id: \.self) { symbolName in
+                    Image(systemName: symbolName)
+                        .accessibilityHidden(true)
+                }
+            }
+            .symbolRenderingMode(.monochrome)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(status.localizedString))
+        } else {
+            Text(status.localizedString)
         }
     }
 
@@ -60,6 +78,13 @@ struct LibraryAudioRow: View {
             }
         }
     }
+}
+
+func shortLibraryDate(_ date: Date, locale: Locale) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = locale
+    formatter.dateFormat = locale.language.languageCode?.identifier == "es" ? "dd/MM/yy" : "MM/dd/yy"
+    return formatter.string(from: date)
 }
 
 private struct LibrarySelectionControl: UIViewRepresentable {

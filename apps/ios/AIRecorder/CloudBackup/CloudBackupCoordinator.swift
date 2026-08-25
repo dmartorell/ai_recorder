@@ -14,6 +14,12 @@ struct CloudBackupMultipartStatus: Codable, Equatable, Sendable {
 struct CloudBackupConfirmedPart: Codable, Equatable, Sendable { let partNumber: Int; let byteCount: Int; enum CodingKeys: String, CodingKey { case partNumber = "part_number"; case byteCount = "byte_count" } }
 struct CloudBackupPartUpload: Codable, Equatable, Sendable { let url: URL; let expiresIn: Int; enum CodingKeys: String, CodingKey { case url; case expiresIn = "expires_in" } }
 
+struct CloudTranscriptionStatus: Codable, Equatable, Sendable { let state: TranscriptionState }
+
+enum TranscriptionState: String, Codable, Equatable, Sendable {
+    case notStarted = "not_started", queued, processing, complete, failed
+}
+
 enum CloudBackupState: String, CaseIterable, Codable, Equatable, Sendable {
     case notBackedUp, uploading, paused, signInToResume, failed, verifying, backedUp
     var preventsLocalDeletion: Bool { self == .uploading || self == .paused || self == .signInToResume || self == .verifying }
@@ -35,6 +41,7 @@ protocol CloudBackupClient: AnyObject {
     func confirmPart(id: UUID, partNumber: Int, eTag: String) async throws
     func completeMultipartUpload(id: UUID) async throws -> CloudBackupUpload
     func cancelMultipartUpload(id: UUID) async throws
+    func transcriptionStatus(id: UUID) async throws -> CloudTranscriptionStatus
 }
 
 @MainActor
@@ -46,6 +53,7 @@ final class UnavailableCloudBackupClient: CloudBackupClient {
     func confirmPart(id: UUID, partNumber: Int, eTag: String) async throws { throw CloudAuthenticationError.notConfigured }
     func completeMultipartUpload(id: UUID) async throws -> CloudBackupUpload { throw CloudAuthenticationError.notConfigured }
     func cancelMultipartUpload(id: UUID) async throws { throw CloudAuthenticationError.notConfigured }
+    func transcriptionStatus(id: UUID) async throws -> CloudTranscriptionStatus { throw CloudAuthenticationError.notConfigured }
 }
 
 enum CloudBackupErrorMessage {
@@ -142,6 +150,21 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
             errorMessage = .init(error)
             throw error
         }
+    }
+
+    func refreshTranscriptionStatus(for item: AudioItem) async {
+        guard item.cloudBackupState == .backedUp, let backupID = item.cloudBackupID else { return }
+        do {
+            let status = try await client.transcriptionStatus(id: backupID)
+            try persistence.saveTranscriptionState(for: item, state: status.state)
+        } catch {
+            errorMessage = .init(error)
+        }
+    }
+
+    func refreshTranscriptionStatuses() async {
+        guard let items = try? persistence.backedUpAudio() else { return }
+        for item in items { await refreshTranscriptionStatus(for: item) }
     }
 
     func cancelIncompleteBackupsForSignOut() async throws {

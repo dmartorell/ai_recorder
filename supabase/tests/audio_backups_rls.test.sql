@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(14);
+select plan(21);
 
 insert into auth.users (id, email)
 values
@@ -145,6 +145,55 @@ select throws_ok(
   '42501',
   null,
   'the owner cannot delete another user backup'
+);
+
+reset role;
+
+select results_eq(
+  $$ select count(*)::integer from enqueue_transcription_job('cccccccc-cccc-cccc-cccc-cccccccccccc') $$,
+  array[1],
+  'a verified backup creates one transcription job'
+);
+
+select results_eq(
+  $$ select count(*)::integer from enqueue_transcription_job('cccccccc-cccc-cccc-cccc-cccccccccccc') $$,
+  array[1],
+  'a duplicate trigger reuses the transcription job'
+);
+
+select results_eq(
+  $$ select count(*)::integer from public.transcription_jobs where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc' $$,
+  array[1],
+  'only one transcription job exists per backup'
+);
+
+select throws_ok(
+  $$ select * from enqueue_transcription_job('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') $$,
+  'P0001',
+  'audio backup is not verified',
+  'an unverified backup cannot create a transcription job'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select results_eq(
+  $$ select state from public.transcription_jobs $$,
+  array['queued'],
+  'the owner can read its queued transcription job'
+);
+
+set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select is_empty(
+  $$ select * from public.transcription_jobs $$,
+  'another user cannot read the transcription job'
+);
+
+select throws_ok(
+  $$ insert into public.transcription_jobs (backup_id, owner_id)
+     values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111') $$,
+  '42501',
+  null,
+  'an authenticated user cannot create a transcription job directly'
 );
 
 select * from finish();

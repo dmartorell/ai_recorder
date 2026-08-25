@@ -101,6 +101,20 @@ final class CloudBackupCoordinatorTests: XCTestCase {
         XCTAssertEqual(item.cloudBackupState, .paused)
     }
 
+    func testRefreshesQueuedTranscriptionWithoutChangingBackupState() async throws {
+        let item = availableAudio()
+        item.cloudBackupID = UUID()
+        item.cloudBackupState = .backedUp
+        let client = FakeCloudBackupClient()
+        client.returnedTranscriptionStatus = .init(state: .queued)
+        let coordinator = CloudBackupCoordinator(client: client, files: files, uploader: FakePartUploader(), persistence: FakeBackupPersistence())
+
+        await coordinator.refreshTranscriptionStatus(for: item)
+
+        XCTAssertEqual(item.cloudBackupState, .backedUp)
+        XCTAssertEqual(item.transcriptionState, .queued)
+    }
+
     func testCancelBackupAbortsTransferAndLeavesOriginalAudioUnbacked() async throws {
         let item = availableAudio()
         let backupID = UUID()
@@ -230,6 +244,7 @@ private final class FakeCloudBackupClient: CloudBackupClient {
     private let backupID = UUID()
     private var backupState: CloudBackupState = .uploading
     var completeError: Error?
+    var returnedTranscriptionStatus = CloudTranscriptionStatus(state: .notStarted)
     var onComplete: (() -> Void)?
 
     func beginBackup(_ request: CloudBackupRequest) async throws -> CloudBackupUpload {
@@ -269,6 +284,7 @@ private final class FakeCloudBackupClient: CloudBackupClient {
         return .init(id: id, state: .backedUp)
     }
     func cancelMultipartUpload(id: UUID) async throws { cancelledBackupIDs.append(id) }
+    func transcriptionStatus(id: UUID) async throws -> CloudTranscriptionStatus { returnedTranscriptionStatus }
 }
 
 private final class FakeBackupPersistence: CloudBackupPersisting {
@@ -287,7 +303,9 @@ private final class FakeBackupPersistence: CloudBackupPersisting {
         item.cloudBackupState = .notBackedUp
     }
     func saveBackupState(for item: AudioItem, state: CloudBackupState) throws { item.cloudBackupState = state }
+    func saveTranscriptionState(for item: AudioItem, state: TranscriptionState) throws { item.transcriptionState = state }
     func pendingBackups() throws -> [AudioItem] { pendingItems }
+    func backedUpAudio() throws -> [AudioItem] { pendingItems.filter { $0.cloudBackupState == .backedUp } }
 }
 
 private final class FakeConnectivityMonitor: CloudBackupConnectivityMonitoring {

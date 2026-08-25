@@ -16,7 +16,15 @@
           "binding": "ORIGINAL_AUDIO",
           "bucket_name": "ai-recorder-original-audio"
         }
-      ]
+      ],
+      "queues": {
+        "producers": [
+          {
+            "binding": "TRANSCRIPTION_JOBS",
+            "queue": "ai-recorder-transcription-jobs-staging"
+          }
+        ]
+      }
     }
   }
 }

@@ -18,6 +18,7 @@ final class AudioItem {
     var localOriginalAudioRemovedAt: Date?
     var cloudBackupStateRawValue: String?
     var cloudBackupID: UUID?
+    var transcriptionStateRawValue: String?
     @Relationship(deleteRule: .cascade, inverse: \Marker.audio) var markers: [Marker]
     @Relationship(deleteRule: .cascade, inverse: \CaptureEventRecord.audio) var events: [CaptureEventRecord]
 
@@ -33,6 +34,7 @@ final class AudioItem {
         self.localOriginalAudioRemovedAt = nil
         self.cloudBackupStateRawValue = CloudBackupState.notBackedUp.rawValue
         self.cloudBackupID = nil
+        self.transcriptionStateRawValue = TranscriptionState.notStarted.rawValue
         self.markers = []
         self.events = []
     }
@@ -48,6 +50,11 @@ final class AudioItem {
             cloudBackupStateRawValue = newValue.rawValue
             hasVerifiedCloudAudio = newValue == .backedUp
         }
+    }
+
+    var transcriptionState: TranscriptionState {
+        get { TranscriptionState(rawValue: transcriptionStateRawValue ?? "") ?? .notStarted }
+        set { transcriptionStateRawValue = newValue.rawValue }
     }
 
     var captureEndedByInterruption: Bool {

@@ -77,7 +77,9 @@ struct AudioDetailView: View {
             Text("This uploads a private cloud copy. The local Original Audio stays on this iPhone.")
         }
         .confirmationDialog("Cancel cloud backup?", isPresented: $showingBackupCancellation) {
-            Button("Cancel upload", role: .destructive) { Task { await cloudBackup.cancelBackup(for: item) } }
+            Button("Cancel upload", role: .destructive) {
+                Task { try? await cloudBackup.cancelBackup(for: item) }
+            }
             Button("Keep uploading", role: .cancel) { }
         } message: {
             Text("The local Original Audio stays on this iPhone.")
@@ -216,6 +218,7 @@ private struct CloudBackupSection: View {
         case .notBackedUp: "Not backed up"
         case .uploading: "Uploading"
         case .paused: "Upload paused"
+        case .signInToResume: "Sign in to resume"
         case .failed: "Upload failed"
         case .verifying: "Verifying backup"
         case .backedUp: "Backed up"

@@ -2103,6 +2103,40 @@
         }
       }
     },
+    "Sign in to resume" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to resume"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para reanudar"
+          }
+        }
+      }
+    },
+    "Sign in to resume cloud backup." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to resume cloud backup."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia sesión para reanudar la copia de seguridad en la nube."
+          }
+        }
+      }
+    },
     "Sign in with an email magic link without affecting local Audio" : {
       "extractionState" : "stale",
       "localizations" : {

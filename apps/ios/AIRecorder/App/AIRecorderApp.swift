@@ -42,15 +42,15 @@ struct AIRecorderApp: App {
             let storageMonitor: (any StorageMonitoring)? = isUITesting ? UITestStorageMonitor() : nil
             _coordinator = State(initialValue: CaptureCoordinator(repository: AudioRepository(context: container.mainContext, files: files), recorder: recorder, inspector: inspector, storageMonitor: storageMonitor, permissionProvider: { isUITesting || AVAudioApplication.shared.recordPermission == .granted }))
             recoveryService = RecoveryService(context: container.mainContext, files: files, inspector: inspector)
-            let cloudConfiguration = SupabaseConfiguration.load()
+            let cloudConfiguration = isUITesting ? nil : SupabaseConfiguration.load()
             let authentication: any CloudAuthenticating = cloudConfiguration.map(SupabaseCloudAuthentication.init) ?? UnavailableCloudAuthentication()
-            _cloudIdentity = State(initialValue: CloudIdentityCoordinator(authentication: authentication))
             let backupClient: any CloudBackupClient = cloudConfiguration?.cloudBackupWorkerURL.map {
                 WorkerCloudBackupClient(baseURL: $0, authentication: authentication)
             } ?? UnavailableCloudBackupClient()
             let backupPersistence = SwiftDataCloudBackupPersistence(context: container.mainContext)
             let backupCoordinator = CloudBackupCoordinator(client: backupClient, files: files, persistence: backupPersistence)
             _cloudBackup = State(initialValue: backupCoordinator)
+            _cloudIdentity = State(initialValue: CloudIdentityCoordinator(authentication: authentication, backupSession: backupCoordinator))
             cloudBackupRecoveryService = CloudBackupRecoveryService(persistence: backupPersistence, coordinator: backupCoordinator)
         } catch {
             fatalError("Unable to initialize local storage: \(error)")

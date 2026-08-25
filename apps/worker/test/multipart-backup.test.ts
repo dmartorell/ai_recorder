@@ -55,6 +55,19 @@ describe("multipart audio backup", () => {
     expect(backups.backup.r2_upload_claim).toBeNull();
   });
 
+  it("aborts an incomplete upload when the owner cancels it", async () => {
+    const backups = new MemoryStore();
+    const multipart = new StubMultipart();
+    const worker = createWorker({ authentication: new Authenticator(), backups, multipart });
+    await request(worker, `/${id}/multipart`, "POST");
+
+    const response = await request(worker, `/${id}/cancel`, "POST");
+
+    expect(response.status).toBe(204);
+    expect(multipart.abortCount).toBe(1);
+    expect(backups.backup.state).toBe("cancelled");
+  });
+
   it("does not persist a part whose ETag R2 did not confirm", async () => {
     const backups = new MemoryStore();
     const worker = createWorker({ authentication: new Authenticator(), backups, multipart: new StubMultipart() });

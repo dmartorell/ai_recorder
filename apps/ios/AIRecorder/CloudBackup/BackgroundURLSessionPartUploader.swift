@@ -16,12 +16,14 @@ protocol CloudBackupPartUploading: AnyObject {
     func upload(fileURL: URL, to url: URL, sha256: String, context: CloudBackupPartContext) async throws -> String
     func completedParts(for backupID: UUID) -> [CloudBackupCompletedPart]
     func discardCompletedPart(_ partNumber: Int, backupID: UUID)
+    func cancelUploads(for backupID: UUID) async
 }
 
 @MainActor
 extension CloudBackupPartUploading {
     func completedParts(for backupID: UUID) -> [CloudBackupCompletedPart] { [] }
     func discardCompletedPart(_ partNumber: Int, backupID: UUID) { }
+    func cancelUploads(for backupID: UUID) async { }
 }
 
 @MainActor
@@ -75,6 +77,22 @@ final class BackgroundURLSessionPartUploader: NSObject, CloudBackupPartUploading
 
     func discardCompletedPart(_ partNumber: Int, backupID: UUID) {
         taskStore.remove(backupID: backupID, partNumber: partNumber)
+    }
+
+    func cancelUploads(for backupID: UUID) async {
+        await restoreTasksIfNeeded()
+        let activeContexts = activeTasks.keys.filter { $0.backupID == backupID }
+        for context in activeContexts {
+            activeTasks.removeValue(forKey: context)?.cancel()
+            continuations.removeValue(forKey: context)?.resume(throwing: CancellationError())
+            taskStore.remove(backupID: backupID, partNumber: context.partNumber)
+        }
+        for task in await session.allTasks where context(for: task)?.backupID == backupID {
+            task.cancel()
+        }
+        for record in taskStore.records(for: backupID) {
+            taskStore.remove(backupID: backupID, partNumber: record.context.partNumber)
+        }
     }
 
     func handleEventsForBackgroundURLSession(completionHandler: @escaping () -> Void) {

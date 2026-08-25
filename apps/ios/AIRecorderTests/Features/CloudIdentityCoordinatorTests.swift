@@ -85,6 +85,21 @@ final class CloudIdentityCoordinatorTests: XCTestCase {
         XCTAssertNil(coordinator.identity)
     }
 
+    func testSignOutCancelsIncompleteBackupsBeforeEndingSession() async {
+        let authentication = FakeCloudAuthentication()
+        let backupSession = FakeCloudBackupSession()
+        let coordinator = CloudIdentityCoordinator(
+            authentication: authentication,
+            ownerStore: CloudLibraryOwnerStore(defaults: defaults),
+            backupSession: backupSession
+        )
+
+        await coordinator.signOut()
+
+        XCTAssertTrue(backupSession.didCancel)
+        XCTAssertTrue(authentication.didSignOut)
+    }
+
     func testMagicLinkCompletionBindsAccount() async {
         let account = CloudIdentity(id: UUID(), email: "journalist@example.test")
         let authentication = FakeCloudAuthentication(completedIdentity: account)
@@ -105,6 +120,7 @@ private final class FakeCloudAuthentication: CloudAuthenticating {
     var restoredIdentity: CloudIdentity?
     var completedIdentity: CloudIdentity?
     var requestedEmail: String?
+    var didSignOut = false
 
     init(restoredIdentity: CloudIdentity? = nil, completedIdentity: CloudIdentity? = nil) {
         self.restoredIdentity = restoredIdentity
@@ -119,5 +135,17 @@ private final class FakeCloudAuthentication: CloudAuthenticating {
 
     func completeMagicLink(_ url: URL) async throws -> CloudIdentity? { completedIdentity }
 
-    func signOut() async throws { restoredIdentity = nil }
+    func signOut() async throws {
+        didSignOut = true
+        restoredIdentity = nil
+    }
+}
+
+@MainActor
+private final class FakeCloudBackupSession: CloudBackupSessionManaging {
+    private(set) var didCancel = false
+
+    func cancelIncompleteBackupsForSignOut() async throws {
+        didCancel = true
+    }
 }

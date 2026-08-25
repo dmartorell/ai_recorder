@@ -5,6 +5,7 @@ import SwiftData
 @MainActor
 protocol CloudBackupPersisting: AnyObject {
     func saveBackupAssociation(for item: AudioItem, backupID: UUID, state: CloudBackupState) throws
+    func clearBackupAssociation(for item: AudioItem) throws
     func saveBackupState(for item: AudioItem, state: CloudBackupState) throws
     func pendingBackups() throws -> [AudioItem]
 }
@@ -23,13 +24,19 @@ final class SwiftDataCloudBackupPersistence: CloudBackupPersisting {
         try context.save()
     }
 
+    func clearBackupAssociation(for item: AudioItem) throws {
+        item.cloudBackupID = nil
+        item.cloudBackupState = .notBackedUp
+        try context.save()
+    }
+
     func saveBackupState(for item: AudioItem, state: CloudBackupState) throws {
         item.cloudBackupState = state
         try context.save()
     }
 
     func pendingBackups() throws -> [AudioItem] {
-        try context.fetch(FetchDescriptor<AudioItem>()).filter { $0.cloudBackupState.preventsLocalDeletion }
+        try context.fetch(FetchDescriptor<AudioItem>()).filter { $0.cloudBackupState.isIncomplete }
     }
 }
 
@@ -59,6 +66,7 @@ final class CloudBackupRecoveryService {
     private let coordinator: CloudBackupCoordinator
     private let connectivity: any CloudBackupConnectivityMonitoring
     private var isRecovering = false
+    private var isAppActive = false
 
     init(persistence: any CloudBackupPersisting, coordinator: CloudBackupCoordinator, connectivity: any CloudBackupConnectivityMonitoring = NetworkCloudBackupConnectivityMonitor()) {
         self.persistence = persistence
@@ -69,17 +77,23 @@ final class CloudBackupRecoveryService {
     func start() {
         connectivity.start { [weak self] isConnected in
             guard let self else { return }
-            if isConnected {
+            if isConnected, self.isAppActive {
                 Task { @MainActor in await self.recoverPendingBackups() }
-            } else {
+            } else if !isConnected {
                 self.handleConnectivityLoss()
             }
         }
     }
 
+    func setAppIsActive(_ isActive: Bool) {
+        isAppActive = isActive
+        guard isActive else { return }
+        Task { @MainActor in await recoverPendingBackups() }
+    }
+
     func handleConnectivityLoss() {
         guard let items = try? persistence.pendingBackups() else { return }
-        for item in items where item.cloudBackupState != .paused {
+        for item in items where item.cloudBackupState.preventsLocalDeletion && item.cloudBackupState != .paused {
             try? persistence.saveBackupState(for: item, state: .paused)
         }
     }
@@ -88,7 +102,7 @@ final class CloudBackupRecoveryService {
         guard !isRecovering, let items = try? persistence.pendingBackups() else { return }
         isRecovering = true
         defer { isRecovering = false }
-        for item in items {
+        for item in items where item.cloudBackupState != .signInToResume {
             await coordinator.resumeBackup(for: item)
         }
     }

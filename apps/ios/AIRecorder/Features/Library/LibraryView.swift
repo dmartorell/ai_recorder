@@ -24,7 +24,7 @@ struct LibraryView: View {
     let onRequestSingleDeletion: (AudioItem) -> Void
     let onDeleteSelected: (Set<UUID>) -> Set<UUID>
     let duration: (Int) -> String
-    let state: (AudioItem) -> LocalizedStringResource
+    let state: (AudioItem) -> LibraryAudioStatus
 
     @State private var selectionControlFrames = [UUID: CGRect]()
     @State private var viewportFrame = CGRect.zero
@@ -52,7 +52,7 @@ struct LibraryView: View {
                     state: state
                 )
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    if !selection.isSelecting {
+                    if !selection.isSelecting, item.localOriginalAudioRemovedAt == nil {
                         Button("Delete", role: .destructive) {
                             onRequestSingleDeletion(item)
                         }
@@ -111,7 +111,18 @@ struct LibraryView: View {
 
     private var bulkDeleteToolbar: some View {
         HStack {
-            Text("\(selection.selectedIDs.count) selected")
+            VStack(alignment: .leading) {
+                Text("\(selection.selectedIDs.count) selected")
+                if selectedItemsContainActiveBackup {
+                    Text("Cancel cloud backup before deleting local Audio.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if selectedItemsContainCloudOnlyAudio {
+                    Text("Cloud-only Audio has no local copy to delete.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
             Spacer()
             Button(role: .destructive) {
                 showingBulkDeletionWarning = true
@@ -120,10 +131,27 @@ struct LibraryView: View {
                     .labelStyle(.iconOnly)
             }
             .accessibilityLabel("Delete \(selection.selectedIDs.count) selected Audio items")
+            .disabled(selectedItemsCannotBeDeleted)
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
         .background(.bar)
+    }
+
+    private var selectedItemsCannotBeDeleted: Bool {
+        selectedItemsContainActiveBackup || selectedItemsContainCloudOnlyAudio
+    }
+
+    private var selectedItemsContainActiveBackup: Bool {
+        items.contains {
+            selection.selectedIDs.contains($0.id) && $0.cloudBackupState.preventsLocalDeletion
+        }
+    }
+
+    private var selectedItemsContainCloudOnlyAudio: Bool {
+        items.contains {
+            selection.selectedIDs.contains($0.id) && $0.localOriginalAudioRemovedAt != nil
+        }
     }
 
     private func selectionDragChanged(

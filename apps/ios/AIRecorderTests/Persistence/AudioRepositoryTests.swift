@@ -54,7 +54,25 @@ final class AudioRepositoryTests: XCTestCase {
         try fixture.repository.save()
 
         XCTAssertEqual(item.fileName, fileName)
-        XCTAssertTrue(item.displayTitle().hasPrefix("Audio - "))
+        XCTAssertFalse(item.displayTitle().contains("Audio -"))
+        XCTAssertFalse(item.displayTitle().contains("Recording -"))
+    }
+
+    func testFallbackTitleContainsOnlyLocalizedDateAndTime() {
+        let item = AudioItem(
+            startedAt: Date(timeIntervalSince1970: 1_787_560_320),
+            fileName: "source.m4a"
+        )
+        let madrid = TimeZone(secondsFromGMT: 2 * 60 * 60)!
+
+        XCTAssertEqual(
+            item.displayTitle(locale: Locale(identifier: "es_ES"), timeZone: madrid),
+            "24 ago 2026, 10:32"
+        )
+        XCTAssertEqual(
+            item.displayTitle(locale: Locale(identifier: "en_US"), timeZone: madrid),
+            "Aug 24, 2026, 10:32 AM"
+        )
     }
 
     func testPermanentDeletionRemovesOriginalAudioBeforeMetadata() throws {
@@ -68,6 +86,22 @@ final class AudioRepositoryTests: XCTestCase {
 
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
         XCTAssertTrue(try fixture.context.fetch(FetchDescriptor<AudioItem>()).isEmpty)
+    }
+
+    func testVerifiedCloudBackupDeletionRetainsTheCloudOnlyAudioRecord() throws {
+        let fixture = try Fixture()
+        let item = try fixture.repository.beginCapture()
+        let url = fixture.files.url(for: item.id)
+        try Data("audio".utf8).write(to: url)
+        item.cloudBackupState = .backedUp
+
+        let confirmation = fixture.repository.confirmationForPermanentDeletion(of: item)
+        try fixture.repository.delete(item, confirmation: confirmation)
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+        XCTAssertNotNil(item.localOriginalAudioRemovedAt)
+        XCTAssertEqual(try fixture.context.fetch(FetchDescriptor<AudioItem>()).map(\.id), [item.id])
+        XCTAssertEqual(item.cloudBackupState, .backedUp)
     }
 
     func testPermanentDeletionIsBlockedWhileCloudBackupIsInProgress() throws {

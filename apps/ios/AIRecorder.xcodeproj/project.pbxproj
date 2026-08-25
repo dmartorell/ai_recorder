@@ -51,6 +51,7 @@
 		C093D1215FB6E404E32A4BFF /* OriginalAudioInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411D81D5CBC544E328FDA159 /* OriginalAudioInspector.swift */; };
 		C1C954FD6419180BA1542D7A /* AudioSelectionModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC265222077C97CE75A56BF /* AudioSelectionModelTests.swift */; };
 		C4816B26E9AC38AEFFE941D8 /* AudioVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 676E57AAEE37657E016A8E0A /* AudioVerifier.swift */; };
+		C88833DF599468796A21B94B /* LibraryRowMetadataTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BDBFD3011264A23E0CAEF00 /* LibraryRowMetadataTests.swift */; };
 		C99A26C853EE3BFDED0D1A08 /* SupabaseCloudAuthentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E22F72593A77535F990479 /* SupabaseCloudAuthentication.swift */; };
 		CA0ACA3894B5DFECE6E85493 /* RecoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52F8BFF45583184FED28C58 /* RecoveryService.swift */; };
 		CB2CFB0462948499C5CAFE00 /* LocalPlaybackModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDD8DD8A2DF5D7BC098A275A /* LocalPlaybackModel.swift */; };
@@ -115,6 +116,7 @@
 		32CF9B1E17DA1DFB44591EAF /* OriginalAudioInspectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginalAudioInspectorTests.swift; sourceTree = "<group>"; };
 		3562C31328C7C623D07A8585 /* WorkerCloudBackupClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerCloudBackupClient.swift; sourceTree = "<group>"; };
 		37C36C9B9F608B7ADB2AEB8D /* CloudLibraryOwnerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryOwnerStore.swift; sourceTree = "<group>"; };
+		3BDBFD3011264A23E0CAEF00 /* LibraryRowMetadataTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRowMetadataTests.swift; sourceTree = "<group>"; };
 		4024D44758FD4FBF6F5A2887 /* SettingsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsModel.swift; sourceTree = "<group>"; };
 		4039331EB02D2E501D862C2B /* AppConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigurationTests.swift; sourceTree = "<group>"; };
 		411D81D5CBC544E328FDA159 /* OriginalAudioInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginalAudioInspector.swift; sourceTree = "<group>"; };
@@ -405,6 +407,7 @@
 				52B7474B846A45B908635C2D /* CloudBackupCoordinatorTests.swift */,
 				6A9997B46298679BEC370736 /* CloudIdentityCoordinatorTests.swift */,
 				CF3D51C34656CAF16E071A32 /* LibraryAudioStatusTests.swift */,
+				3BDBFD3011264A23E0CAEF00 /* LibraryRowMetadataTests.swift */,
 				5BE5993A1C97D5BB42DF4F4F /* LocalPlaybackModelTests.swift */,
 				5B399DE5D1E84413424BE979 /* SettingsModelTests.swift */,
 				0F9904EC180A76F9AB90BFFF /* WorkerCloudBackupClientTests.swift */,
@@ -665,6 +668,7 @@
 				EEDCC319AA72A7A6075E1931 /* CloudBackupCoordinatorTests.swift in Sources */,
 				2DC251A4ABF35236AED13379 /* CloudIdentityCoordinatorTests.swift in Sources */,
 				A9251C457D6A5ED31E21895C /* LibraryAudioStatusTests.swift in Sources */,
+				C88833DF599468796A21B94B /* LibraryRowMetadataTests.swift in Sources */,
 				1E35747E79B51CE62D1352FA /* LocalPlaybackModelTests.swift in Sources */,
 				A5EDC2F7911518DE03A5CCAF /* MarkerTests.swift in Sources */,
 				6FB8D53C5B1BDC3BC34D001F /* OriginalAudioInspectorTests.swift in Sources */,

@@ -3,9 +3,15 @@ import SwiftData
 
 enum AudioDeletionError: LocalizedError, Equatable {
     case cloudBackupInProgress
+    case localAudioUnavailable
 
     var errorDescription: String? {
-        "Cancel the cloud backup before deleting the local Original Audio."
+        switch self {
+        case .cloudBackupInProgress:
+            "Cancel the cloud backup before deleting the local Original Audio."
+        case .localAudioUnavailable:
+            "The local Original Audio is unavailable."
+        }
     }
 }
 
@@ -100,9 +106,15 @@ final class AudioRepository {
     }
 
     func delete(_ item: AudioItem, confirmation: PermanentDeletionConfirmation) throws {
+        guard item.localOriginalAudioRemovedAt == nil else { throw AudioDeletionError.localAudioUnavailable }
         guard !item.cloudBackupState.preventsLocalDeletion else { throw AudioDeletionError.cloudBackupInProgress }
         try files.delete(item.id, confirmation: confirmation)
-        context.delete(item)
+
+        if item.hasVerifiedCloudAudio {
+            item.localOriginalAudioRemovedAt = .now
+        } else {
+            context.delete(item)
+        }
         try context.save()
     }
 }

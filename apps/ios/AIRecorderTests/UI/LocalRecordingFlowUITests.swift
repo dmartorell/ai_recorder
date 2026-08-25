@@ -44,7 +44,7 @@ final class LocalRecordingFlowUITests: XCTestCase {
         app.launchArguments = ["-ui-testing", "-local-audio-fixture", "-app-language", "en"]
         app.launch()
 
-        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Recording -'")).firstMatch
+        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] '00:02'")).firstMatch
         XCTAssertTrue(audioRow.waitForExistence(timeout: 5))
         audioRow.tap()
         XCTAssertTrue(app.navigationBars["Recording"].waitForExistence(timeout: 5))
@@ -82,17 +82,53 @@ final class LocalRecordingFlowUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Local source"].exists)
     }
 
+    func testVerifiedCloudBackupAllowsNormalLocalDeletionAndKeepsCloudOnlyRow() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-cloud-backed-local-audio-fixture", "-app-language", "en"]
+        app.launch()
+
+        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] '00:02'")).firstMatch
+        XCTAssertTrue(audioRow.waitForExistence(timeout: 5))
+        audioRow.tap()
+        XCTAssertTrue(app.staticTexts["Local audio"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Cloud audio"].exists)
+        XCTAssertTrue(app.staticTexts["Processing"].exists)
+
+        app.swipeUp()
+        app.buttons["Delete"].tap()
+        XCTAssertTrue(app.alerts["Delete local Recording?"].waitForExistence(timeout: 5))
+        app.alerts["Delete local Recording?"].buttons["Delete local audio"].tap()
+
+        XCTAssertTrue(app.navigationBars["Recording"].waitForExistence(timeout: 5))
+        XCTAssertTrue(audioRow.exists)
+        XCTAssertTrue(audioRow.label.contains("Cloud only"))
+        XCTAssertFalse(app.staticTexts["Local audio"].exists)
+        XCTAssertFalse(app.staticTexts["Processing"].exists)
+    }
+
+    func testTappingTrailingLibraryRowAreaOpensDetail() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing", "-cloud-backed-local-audio-fixture", "-app-language", "en"]
+        app.launch()
+
+        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] '00:02'")).firstMatch
+        XCTAssertTrue(audioRow.waitForExistence(timeout: 5))
+        audioRow.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5)).tap()
+
+        XCTAssertTrue(app.navigationBars["Recording"].waitForExistence(timeout: 5))
+    }
+
     func testLibrarySwipeDeletionRequiresBothConfirmations() {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing", "-local-audio-fixture", "-app-language", "en"]
         app.launch()
 
-        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Recording -'")).firstMatch
+        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] '00:02'")).firstMatch
         XCTAssertTrue(audioRow.waitForExistence(timeout: 5))
         audioRow.swipeLeft()
 
         let deleteButton = app.buttons.matching(
-            NSPredicate(format: "label BEGINSWITH[c] 'Delete Recording -'")
+            NSPredicate(format: "label BEGINSWITH[c] 'Delete '")
         ).firstMatch
         XCTAssertTrue(deleteButton.waitForExistence(timeout: 5))
         deleteButton.tap()
@@ -161,7 +197,7 @@ final class LocalRecordingFlowUITests: XCTestCase {
         app.alerts["Delete 2 Recording items permanently?"].buttons["Delete permanently"].tap()
 
         let remainingAudioRows = app.buttons.matching(
-            NSPredicate(format: "label BEGINSWITH 'Recording -'")
+            NSPredicate(format: "label CONTAINS '00:02'")
         )
         XCTAssertEqual(remainingAudioRows.count, 1)
     }
@@ -171,7 +207,7 @@ final class LocalRecordingFlowUITests: XCTestCase {
         app.launchArguments = ["-ui-testing", "-local-audio-fixture", "-app-language", "en"]
         app.launch()
 
-        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Recording -'")).firstMatch
+        let audioRow = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] '00:02'")).firstMatch
         XCTAssertTrue(audioRow.waitForExistence(timeout: 5))
         audioRow.tap()
 

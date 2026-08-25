@@ -148,23 +148,6 @@
         }
       }
     },
-    "Audio - %@" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recording - %@"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Audio - %@"
-          }
-        }
-      }
-    },
     "Audio interruption ended this Capture. Finalizing playable audio…" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2485,6 +2468,66 @@
             "value" : "Verificando Cloud backup"
           }
         }
+      }
+    },
+    "Cancel cloud backup before deleting local Audio." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel cloud backup before deleting local Audio." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cancela la copia de seguridad en la nube antes de eliminar el audio local." } }
+      }
+    },
+    "Cancel the cloud backup before deleting the local Original Audio." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cancel the cloud backup before deleting the local Original Audio." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Cancela la copia de seguridad en la nube antes de eliminar el audio original local." } }
+      }
+    },
+    "Cloud-only Audio has no local copy to delete." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cloud-only Audio has no local copy to delete." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El audio solo en la nube no tiene una copia local que eliminar." } }
+      }
+    },
+    "Cloud only" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Cloud only" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Solo en la nube" } }
+      }
+    },
+    "Delete local audio" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete local audio" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminar audio local" } }
+      }
+    },
+    "Local Original Audio was removed. Cloud playback is available on the web." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Local Original Audio was removed. Cloud playback is available on the web." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "El audio original local se eliminó. La reproducción en la nube está disponible en la web." } }
+      }
+    },
+    "Not started" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not started" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin iniciar" } }
+      }
+    },
+    "Processing" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Processing" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Procesamiento" } }
+      }
+    },
+    "Removed from this iPhone" : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Removed from this iPhone" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Eliminado de este iPhone" } }
+      }
+    },
+    "The verified cloud copy remains available after local deletion." : {
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The verified cloud copy remains available after local deletion." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La copia verificada en la nube permanece disponible tras eliminar el audio local." } }
       }
     }
   },

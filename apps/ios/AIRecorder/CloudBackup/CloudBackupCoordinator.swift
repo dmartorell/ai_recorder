@@ -2,7 +2,23 @@ import CryptoKit
 import Foundation
 import Observation
 
-struct CloudBackupRequest: Equatable, Sendable { let localAudioID: UUID; let byteCount: Int; let sha256: String }
+struct CloudBackupRequest: Equatable, Sendable {
+    let localAudioID: UUID
+    let byteCount: Int
+    let sha256: String
+    let transcriptionLanguage: TranscriptionLanguage
+
+    init(localAudioID: UUID, byteCount: Int, sha256: String, transcriptionLanguage: TranscriptionLanguage = .spanishEnglish) {
+        self.localAudioID = localAudioID
+        self.byteCount = byteCount
+        self.sha256 = sha256
+        self.transcriptionLanguage = transcriptionLanguage
+    }
+}
+
+enum TranscriptionLanguage: String, CaseIterable, Codable, Equatable, Sendable {
+    case spanish, english, spanishEnglish = "spanish_english"
+}
 struct CloudBackupUpload: Codable, Equatable, Sendable { let id: UUID; let state: CloudBackupState }
 struct CloudBackupMultipartStatus: Codable, Equatable, Sendable {
     let id: UUID
@@ -104,7 +120,7 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
         do {
             let fileURL = files.url(for: item.id)
             let metadata = try await Self.fileMetadata(for: fileURL)
-            let backup = try await client.beginBackup(.init(localAudioID: item.id, byteCount: metadata.byteCount, sha256: metadata.sha256))
+            let backup = try await client.beginBackup(.init(localAudioID: item.id, byteCount: metadata.byteCount, sha256: metadata.sha256, transcriptionLanguage: item.transcriptionLanguage))
             try persistence.saveBackupAssociation(for: item, backupID: backup.id, state: .uploading)
             uploadStarted = true
             let status = try await client.beginMultipartUpload(id: backup.id)

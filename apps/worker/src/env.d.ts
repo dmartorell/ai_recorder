@@ -3,4 +3,5 @@ interface Env {
   R2_ACCESS_KEY_ID: string;
   R2_SECRET_ACCESS_KEY: string;
   TRANSCRIPTION_JOBS: Queue;
+  SPEECHMATICS_API_KEY: string;
 }

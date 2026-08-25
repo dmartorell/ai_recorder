@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(21);
+select plan(26);
 
 insert into auth.users (id, email)
 values
@@ -194,6 +194,47 @@ select throws_ok(
   '42501',
   null,
   'an authenticated user cannot create a transcription job directly'
+);
+
+select throws_ok(
+  $$ update public.transcription_jobs set state = 'processing' $$,
+  '42501',
+  null,
+  'an authenticated user cannot update a transcription job directly'
+);
+
+reset role;
+
+select results_eq(
+  $$ select transcription_language from public.transcription_jobs
+     where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc' $$,
+  array['spanish_english'],
+  'a transcription job preserves the backup language'
+);
+
+select results_eq(
+  $$ select count(distinct provider_reference)::integer from public.transcription_jobs
+     where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc' $$,
+  array[1],
+  'the transcription job has one stable provider reference'
+);
+
+select results_eq(
+  $$ select submission_claim from claim_transcription_submission(
+       (select id from public.transcription_jobs where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'
+     ) $$,
+  array['eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee'::uuid],
+  'claiming a queued job records an opaque submission claim'
+);
+
+select results_eq(
+  $$ select state || ':' || provider_job_id from record_transcription_submission(
+       (select id from public.transcription_jobs where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'speechmatics-job'
+     ) $$,
+  array['processing:speechmatics-job'],
+  'recording provider acceptance moves the job from queued to processing'
 );
 
 select * from finish();

@@ -35,7 +35,8 @@ describe("POST /v1/audio-backups", () => {
       ownerID: "journalist-id",
       localAudioID: "b5f1799a-92ab-43d1-951d-8e1dac1b67d5",
       byteCount: 1024,
-      sha256: "bf639d89a3de0c2e761d336fc7bf954cd615c5a65aad89915421e9e95179507e"
+      sha256: "bf639d89a3de0c2e761d336fc7bf954cd615c5a65aad89915421e9e95179507e",
+      transcriptionLanguage: "spanish_english"
     });
   });
 

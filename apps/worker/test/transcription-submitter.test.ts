@@ -8,13 +8,13 @@ describe("TranscriptionSubmitter", () => {
     const jobs = new FakeJobs();
     const source = new FakeSource();
     const provider = new FakeProvider();
-    const submitter = new TranscriptionSubmitter({ jobs, source, provider, callbackBaseURL: "https://worker.example.test", claimID: () => "claim-1" });
+    const submitter = new TranscriptionSubmitter({ jobs, source, provider, claimID: () => "claim-1" });
 
     await submitter.submit(job.id);
     await submitter.submit(job.id);
 
     expect(source.keys).toEqual(["original-audio/opaque"]);
-    expect(provider.submissions).toEqual([{ sourceURL: "https://r2.example.test/scoped", callbackURL: "https://worker.example.test/v1/transcription-callbacks/dddddddd-dddd-dddd-dddd-dddddddddddd", language: "spanish_english", reference: job.provider_reference }]);
+    expect(provider.submissions).toEqual([{ sourceURL: "https://r2.example.test/scoped", language: "spanish_english", reference: job.provider_reference }]);
     expect(jobs.recorded).toEqual(["provider-job"]);
   });
 
@@ -22,7 +22,7 @@ describe("TranscriptionSubmitter", () => {
     const jobs = new FakeJobs();
     const source = new FakeSource();
     const provider = new FakeProvider("existing-provider-job");
-    const submitter = new TranscriptionSubmitter({ jobs, source, provider, callbackBaseURL: "https://worker.example.test", claimID: () => "claim-1" });
+    const submitter = new TranscriptionSubmitter({ jobs, source, provider, claimID: () => "claim-1" });
 
     await submitter.submit(job.id);
 
@@ -34,7 +34,7 @@ describe("TranscriptionSubmitter", () => {
   it("does not submit when another delivery owns the unresolved provider request", async () => {
     const jobs = new FakeJobs({ ...job, submission_claim: "another-claim" });
     const provider = new FakeProvider();
-    const submitter = new TranscriptionSubmitter({ jobs, source: new FakeSource(), provider, callbackBaseURL: "https://worker.example.test", claimID: () => "claim-1" });
+    const submitter = new TranscriptionSubmitter({ jobs, source: new FakeSource(), provider, claimID: () => "claim-1" });
 
     await expect(submitter.submit(job.id)).rejects.toThrow("unresolved");
     expect(provider.submissions).toEqual([]);
@@ -43,7 +43,7 @@ describe("TranscriptionSubmitter", () => {
   it("does not submit when the verified audio backup is missing", async () => {
     const jobs = new FakeJobs();
     const provider = new FakeProvider();
-    const submitter = new TranscriptionSubmitter({ jobs, source: new FakeSource(), provider, callbackBaseURL: "https://worker.example.test", claimID: () => "claim-1" });
+    const submitter = new TranscriptionSubmitter({ jobs, source: new FakeSource(), provider, claimID: () => "claim-1" });
     jobs.backupResult = undefined;
 
     await expect(submitter.submit(job.id)).rejects.toThrow("Verified audio backup was not found");
@@ -54,7 +54,7 @@ describe("TranscriptionSubmitter", () => {
     const jobs = new FakeJobs();
     const provider = new FakeProvider();
     provider.error = new Error("provider unavailable");
-    const submitter = new TranscriptionSubmitter({ jobs, source: new FakeSource(), provider, callbackBaseURL: "https://worker.example.test", claimID: () => "claim-1" });
+    const submitter = new TranscriptionSubmitter({ jobs, source: new FakeSource(), provider, claimID: () => "claim-1" });
 
     await expect(submitter.submit(job.id)).rejects.toThrow("provider unavailable");
     expect(jobs.recorded).toEqual([]);

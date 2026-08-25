@@ -14,7 +14,6 @@ describe("SpeechmaticsBatchClient", () => {
 
     await expect(client.submit({
       sourceURL: "https://worker.example.test/v1/transcription-source/opaque-capability",
-      callbackURL: "https://worker.example.test/v1/transcription-callbacks/opaque-callback",
       language: "spanish_english",
       reference: "stable-job-reference"
     })).resolves.toBe("provider-job");
@@ -24,7 +23,6 @@ describe("SpeechmaticsBatchClient", () => {
       type: "transcription",
       fetch_data: { url: "https://worker.example.test/v1/transcription-source/opaque-capability" },
       transcription_config: { model: "melia-1", language: "multi", language_hints: ["es", "en"], diarization: "speaker" },
-      notification_config: [{ url: "https://worker.example.test/v1/transcription-callbacks/opaque-callback", contents: ["jobinfo"], method: "post" }],
       tracking: { reference: "stable-job-reference" }
     });
   });
@@ -63,7 +61,7 @@ describe("SpeechmaticsBatchClient", () => {
       return Response.json({ id: "provider-job" }, { status: 201 });
     } });
 
-    await client.submit({ sourceURL: "https://worker.example.test/source", callbackURL: "https://worker.example.test/callback", language, reference: "reference" });
+    await client.submit({ sourceURL: "https://worker.example.test/source", language, reference: "reference" });
     await expect(request?.json()).resolves.toMatchObject({ transcription_config: transcriptionConfig });
   });
 });

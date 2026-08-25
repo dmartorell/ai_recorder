@@ -21,7 +21,7 @@ export interface SubmissionJobStore {
 export interface PrivateAudioSource { signedReadURL(key: string): Promise<string>; }
 
 export class TranscriptionSubmitter {
-  constructor(private readonly dependencies: { jobs: SubmissionJobStore; source: PrivateAudioSource; provider: SpeechmaticsClient; callbackBaseURL: string; claimID?: () => string }) {}
+  constructor(private readonly dependencies: { jobs: SubmissionJobStore; source: PrivateAudioSource; provider: SpeechmaticsClient; claimID?: () => string }) {}
 
   async submit(jobID: string): Promise<void> {
     const claimID = this.dependencies.claimID?.() ?? crypto.randomUUID();
@@ -40,7 +40,6 @@ export class TranscriptionSubmitter {
       if (!backup) throw new Error("Verified audio backup was not found");
       submission = {
         sourceURL: await this.dependencies.source.signedReadURL(backup.object_key),
-        callbackURL: new URL(`/v1/transcription-callbacks/${job.provider_reference}`, this.dependencies.callbackBaseURL).toString(),
         language: job.transcription_language,
         reference: job.provider_reference
       };

@@ -13,15 +13,14 @@ npx wrangler queues create ai-recorder-transcription-jobs-staging
 
 The queue carries only the opaque Transcription Job UUID.
 
-Issue #46 adds the consumer. Before deploying that Worker configuration, an operator must explicitly set these staging Worker secrets interactively. Do not place their values in a shell command, file, or this repository:
+Issue #46 adds the consumer. Before deploying that Worker configuration, an operator must explicitly set the staging Worker secret interactively. Do not place its value in a shell command, file, or this repository:
 
 ```sh
 cd apps/worker
 npx wrangler secret put SPEECHMATICS_API_KEY --env staging
-npx wrangler secret put TRANSCRIPTION_CALLBACK_BASE_URL --env staging
 ```
 
-`TRANSCRIPTION_CALLBACK_BASE_URL` is the HTTPS Worker origin. The consumer signs each private R2 read URL for 900 seconds, reconciles an unresolved provider request by stable tracking reference before another provider submission, and sends Speechmatics only that scoped URL. Do not deploy, create the queue, or set either secret without explicit approval.
+The consumer signs each private R2 read URL for 900 seconds, reconciles an unresolved provider request by stable tracking reference before another provider submission, and sends Speechmatics only that scoped URL. It does not register a completion callback. Do not deploy, create the queue, or set the secret without explicit approval.
 
 ## Automated staging integration
 

@@ -11,15 +11,14 @@ export default {
   },
   async queue(batch, env) {
     const multipart = gateway(env);
-    if (!multipart || !env.SUPABASE_SERVICE_ROLE_KEY || !env.SPEECHMATICS_API_KEY || !env.TRANSCRIPTION_CALLBACK_BASE_URL) {
+    if (!multipart || !env.SUPABASE_SERVICE_ROLE_KEY || !env.SPEECHMATICS_API_KEY) {
       for (const message of batch.messages) message.retry();
       return;
     }
     const submitter = new TranscriptionSubmitter({
       jobs: new SupabaseTranscriptionSubmissionStore({ supabaseURL: env.SUPABASE_URL ?? "https://unconfigured.invalid", serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY }),
       source: multipart,
-      provider: new SpeechmaticsBatchClient({ apiKey: env.SPEECHMATICS_API_KEY }),
-      callbackBaseURL: env.TRANSCRIPTION_CALLBACK_BASE_URL
+      provider: new SpeechmaticsBatchClient({ apiKey: env.SPEECHMATICS_API_KEY })
     });
     for (const message of batch.messages) {
       const body = message.body as { transcription_job_id?: unknown };

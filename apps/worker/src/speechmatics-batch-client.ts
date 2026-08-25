@@ -2,7 +2,6 @@ export type TranscriptionLanguage = "spanish" | "english" | "spanish_english";
 
 export interface SpeechmaticsSubmission {
   sourceURL: string;
-  callbackURL: string;
   language: TranscriptionLanguage;
   reference: string;
 }
@@ -31,7 +30,6 @@ export class SpeechmaticsBatchClient implements SpeechmaticsClient {
         type: "transcription",
         fetch_data: { url: submission.sourceURL },
         transcription_config: transcriptionConfig(submission.language),
-        notification_config: [{ url: submission.callbackURL, contents: ["jobinfo"], method: "post" }],
         tracking: { reference: submission.reference }
       })
     });

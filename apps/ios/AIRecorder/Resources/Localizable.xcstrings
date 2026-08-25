@@ -318,6 +318,23 @@
         }
       }
     },
+    "Backed up in cloud" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Backed up in cloud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Cluoud backup"
+          }
+        }
+      }
+    },
     "Backup eligibility" : {
       "extractionState" : "stale",
       "localizations" : {

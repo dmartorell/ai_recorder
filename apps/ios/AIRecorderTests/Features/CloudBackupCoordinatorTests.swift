@@ -77,6 +77,82 @@ final class CloudBackupCoordinatorTests: XCTestCase {
         XCTAssertEqual(item.cloudBackupState, .backedUp)
     }
 
+    func testTransientPartFailureRetriesAtMostThreeTimes() async throws {
+        let item = availableAudio()
+        let uploader = FakePartUploader(failuresBeforeSuccess: 3)
+        let coordinator = CloudBackupCoordinator(client: FakeCloudBackupClient(), files: files, uploader: uploader, persistence: FakeBackupPersistence())
+
+        await coordinator.requestBackup(for: item)
+        await coordinator.confirmBackup(for: item)
+
+        XCTAssertEqual(uploader.uploadAttempts, 4)
+        XCTAssertEqual(item.cloudBackupState, .backedUp)
+    }
+
+    func testNetworkInterruptionPausesBackupForLaterRecovery() async throws {
+        let item = availableAudio()
+        let uploader = FakePartUploader(uploadError: URLError(.networkConnectionLost))
+        let coordinator = CloudBackupCoordinator(client: FakeCloudBackupClient(), files: files, uploader: uploader, persistence: FakeBackupPersistence())
+
+        await coordinator.requestBackup(for: item)
+        await coordinator.confirmBackup(for: item)
+
+        XCTAssertEqual(uploader.uploadAttempts, 1)
+        XCTAssertEqual(item.cloudBackupState, .paused)
+    }
+
+    func testLostCompletionResponseVerifiesWithoutUploadingPartsAgain() async throws {
+        let item = availableAudio()
+        let client = FakeCloudBackupClient()
+        client.completeError = URLError(.networkConnectionLost)
+        let coordinator = CloudBackupCoordinator(client: client, files: files, uploader: FakePartUploader(), persistence: FakeBackupPersistence())
+
+        await coordinator.requestBackup(for: item)
+        await coordinator.confirmBackup(for: item)
+        XCTAssertEqual(item.cloudBackupState, .paused)
+        XCTAssertEqual(client.signedPartNumbers, [1])
+
+        client.completeError = nil
+        await coordinator.resumeBackup(for: item)
+
+        XCTAssertEqual(item.cloudBackupState, .backedUp)
+        XCTAssertEqual(client.signedPartNumbers, [1])
+    }
+
+    func testConnectivityLossMarksPendingBackupPaused() throws {
+        let item = availableAudio()
+        item.cloudBackupID = UUID()
+        item.cloudBackupState = .uploading
+        let persistence = FakeBackupPersistence(pendingItems: [item])
+        let coordinator = CloudBackupCoordinator(client: FakeCloudBackupClient(), files: files, uploader: FakePartUploader(), persistence: persistence)
+        let connectivity = FakeConnectivityMonitor()
+        let service = CloudBackupRecoveryService(persistence: persistence, coordinator: coordinator, connectivity: connectivity)
+
+        service.start()
+        connectivity.connectionWasLost()
+
+        XCTAssertEqual(item.cloudBackupState, .paused)
+    }
+
+    func testConnectivityRecoveryResumesPausedBackup() async throws {
+        let item = availableAudio()
+        item.cloudBackupID = UUID()
+        item.cloudBackupState = .paused
+        let client = FakeCloudBackupClient()
+        let completed = expectation(description: "backup completed")
+        client.onComplete = { completed.fulfill() }
+        let connectivity = FakeConnectivityMonitor()
+        let persistence = FakeBackupPersistence(pendingItems: [item])
+        let coordinator = CloudBackupCoordinator(client: client, files: files, uploader: FakePartUploader(), persistence: persistence)
+        let service = CloudBackupRecoveryService(persistence: persistence, coordinator: coordinator, connectivity: connectivity)
+
+        service.start()
+        connectivity.connectionBecameAvailable()
+        await fulfillment(of: [completed], timeout: 1)
+
+        XCTAssertEqual(item.cloudBackupState, .backedUp)
+    }
+
     private func availableAudio() -> AudioItem {
         let item = AudioItem(fileName: "source.m4a")
         item.localState = .available
@@ -93,6 +169,9 @@ private final class FakeCloudBackupClient: CloudBackupClient {
     var statusRequests = [UUID?]()
     private var serverConfirmedParts = Set<Int>()
     private let backupID = UUID()
+    private var backupState: CloudBackupState = .uploading
+    var completeError: Error?
+    var onComplete: (() -> Void)?
 
     func beginBackup(_ request: CloudBackupRequest) async throws -> CloudBackupUpload {
         requests.append(request)
@@ -118,9 +197,14 @@ private final class FakeCloudBackupClient: CloudBackupClient {
         serverConfirmedParts.insert(partNumber)
     }
     private func status(id: UUID) -> CloudBackupMultipartStatus {
-        .init(id: id, state: .uploading, confirmedParts: serverConfirmedParts.sorted().map { .init(partNumber: $0, byteCount: 15) }, partSize: 8 * 1_024 * 1_024)
+        .init(id: id, state: backupState, confirmedParts: serverConfirmedParts.sorted().map { .init(partNumber: $0, byteCount: 15) }, partSize: 8 * 1_024 * 1_024)
     }
-    func completeMultipartUpload(id: UUID) async throws -> CloudBackupUpload { .init(id: id, state: .backedUp) }
+    func completeMultipartUpload(id: UUID) async throws -> CloudBackupUpload {
+        backupState = .backedUp
+        if let completeError { throw completeError }
+        onComplete?()
+        return .init(id: id, state: .backedUp)
+    }
     func cancelMultipartUpload(id: UUID) async throws {}
 }
 
@@ -139,14 +223,43 @@ private final class FakeBackupPersistence: CloudBackupPersisting {
     func pendingBackups() throws -> [AudioItem] { pendingItems }
 }
 
-private final class FakePartUploader: CloudBackupPartUploading {
-    private var completed: [CloudBackupCompletedPart]
+private final class FakeConnectivityMonitor: CloudBackupConnectivityMonitoring {
+    private var onConnectivityChanged: (@MainActor (Bool) -> Void)?
 
-    init(completedParts: [CloudBackupCompletedPart] = []) {
-        completed = completedParts
+    func start(onConnectivityChanged: @escaping @MainActor (Bool) -> Void) {
+        self.onConnectivityChanged = onConnectivityChanged
     }
 
-    func upload(fileURL: URL, to url: URL, sha256: String, context: CloudBackupPartContext) async throws -> String { "etag" }
+    func connectionBecameAvailable() {
+        onConnectivityChanged?(true)
+    }
+
+    func connectionWasLost() {
+        onConnectivityChanged?(false)
+    }
+}
+
+private final class FakePartUploader: CloudBackupPartUploading {
+    private var completed: [CloudBackupCompletedPart]
+    private var failuresBeforeSuccess: Int
+    private let uploadError: Error?
+    private(set) var uploadAttempts = 0
+
+    init(completedParts: [CloudBackupCompletedPart] = [], failuresBeforeSuccess: Int = 0, uploadError: Error? = nil) {
+        completed = completedParts
+        self.failuresBeforeSuccess = failuresBeforeSuccess
+        self.uploadError = uploadError
+    }
+
+    func upload(fileURL: URL, to url: URL, sha256: String, context: CloudBackupPartContext) async throws -> String {
+        uploadAttempts += 1
+        if let uploadError { throw uploadError }
+        if failuresBeforeSuccess > 0 {
+            failuresBeforeSuccess -= 1
+            throw CloudBackupError.partUploadFailed
+        }
+        return "etag"
+    }
     func completedParts(for backupID: UUID) -> [CloudBackupCompletedPart] { completed }
     func discardCompletedPart(_ partNumber: Int, backupID: UUID) { completed.removeAll { $0.partNumber == partNumber } }
 }

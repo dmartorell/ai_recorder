@@ -121,6 +121,7 @@ struct RootView: View {
                 Text(deletionError ?? "")
             }
             .task {
+                cloudBackupRecoveryService.start()
                 await recoveryService.recoverInterruptedItems()
                 await cloudIdentity.restoreSession()
                 guard cloudIdentity.state == .authenticated else { return }
@@ -184,14 +185,6 @@ struct RootView: View {
     }
 
     private func state(_ item: AudioItem) -> LocalizedStringResource {
-        if item.captureEndedByInterruption { return "Ended by interruption" }
-        if item.captureEndedByUnavailableInput { return "Ended: input unavailable" }
-        switch item.localState {
-        case .available: return "Only on this iPhone"
-        case .needsRecovery: return "Needs recovery"
-        case .capturing: return "Capturing"
-        case .finalizing: return "Finalizing"
-        case .recovered: return "Recovered"
-        }
+        libraryAudioStatus(for: item).localizedString
     }
 }

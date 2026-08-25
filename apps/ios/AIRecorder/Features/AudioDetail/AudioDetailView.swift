@@ -176,7 +176,11 @@ private struct CloudBackupSection: View {
             LabeledContent("Local audio") { Text(localAudioStatus) }
             LabeledContent("Cloud audio") { Text(cloudAudioStatus) }
 
-            if canRequestBackup {
+            if item.cloudBackupState == .failed {
+                Button("Retry upload") { Task { await coordinator.resumeBackup(for: item) } }
+                    .accessibilityHint("Retries this cloud backup without creating another Original Audio.")
+                    .accessibilityIdentifier("cloud-backup-retry")
+            } else if canRequestBackup {
                 Button("Back up Original Audio", action: requestBackup)
                     .accessibilityHint("Uploads a private cloud copy. The local Original Audio stays on this iPhone.")
                     .accessibilityIdentifier("cloud-backup-request")
@@ -194,7 +198,7 @@ private struct CloudBackupSection: View {
     }
 
     private var canRequestBackup: Bool {
-        eligibility == .eligible && !item.cloudBackupState.preventsLocalDeletion && item.cloudBackupState != .backedUp
+        eligibility == .eligible && item.cloudBackupID == nil && item.cloudBackupState != .backedUp
     }
 
     private var localAudioStatus: LocalizedStringResource {

@@ -6,6 +6,7 @@ import SwiftUI
 struct AudioDetailView: View {
     let item: AudioItem
     let files: AudioFileStore
+    let cloudBackup: CloudBackupCoordinator
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
@@ -16,10 +17,13 @@ struct AudioDetailView: View {
     @State private var showingPermanentDeletion = false
     @State private var playbackError: String?
     @State private var deletionError: String?
+    @State private var showingBackupConfirmation = false
+    @State private var showingBackupCancellation = false
 
-    init(item: AudioItem, files: AudioFileStore) {
+    init(item: AudioItem, files: AudioFileStore, cloudBackup: CloudBackupCoordinator) {
         self.item = item
         self.files = files
+        self.cloudBackup = cloudBackup
         _playback = State(initialValue: LocalPlaybackModel(
             player: AVPlayerPlaybackPlayer(url: files.url(for: item.id)),
             durationSeconds: Double(item.durationMilliseconds) / 1_000
@@ -29,7 +33,13 @@ struct AudioDetailView: View {
     var body: some View {
         Form {
             AudioInformationSection(item: item, state: state, locale: locale)
-            CloudBackupEligibilitySection(eligibility: BackupEligibility.forBackup(of: item, files: files))
+            CloudBackupSection(
+                item: item,
+                eligibility: BackupEligibility.forBackup(of: item, files: files),
+                coordinator: cloudBackup,
+                requestBackup: requestBackup,
+                requestCancellation: { showingBackupCancellation = true }
+            )
             PlaybackSection(playback: playback, durationSeconds: durationSeconds)
 
             if !item.markers.isEmpty {
@@ -41,6 +51,7 @@ struct AudioDetailView: View {
                 Button("Delete", role: .destructive) {
                     showingUnbackedDeletionWarning = true
                 }
+                .accessibilityHint("Deletes the local Original Audio after confirmation.")
             }
 
             if let playbackError {
@@ -58,6 +69,18 @@ struct AudioDetailView: View {
         }
         .sheet(item: $metadataItem) { editableItem in
             AudioMetadataEditor(item: editableItem, files: files)
+        }
+        .confirmationDialog("Back up Original Audio?", isPresented: $showingBackupConfirmation) {
+            Button("Back up") { Task { await cloudBackup.confirmBackup(for: item) } }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This uploads a private cloud copy. The local Original Audio stays on this iPhone.")
+        }
+        .confirmationDialog("Cancel cloud backup?", isPresented: $showingBackupCancellation) {
+            Button("Cancel upload", role: .destructive) { Task { await cloudBackup.cancelBackup(for: item) } }
+            Button("Keep uploading", role: .cancel) { }
+        } message: {
+            Text("The local Original Audio stays on this iPhone.")
         }
         .alert("Delete local Audio?", isPresented: $showingUnbackedDeletionWarning) {
             Button("Delete", role: .destructive) {
@@ -77,7 +100,12 @@ struct AudioDetailView: View {
             playback.tearDown()
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         }
-        .task { configurePlaybackSession() }
+        .task(id: item.cloudBackupID) {
+            configurePlaybackSession()
+            if item.cloudBackupState.preventsLocalDeletion {
+                await cloudBackup.resumeBackup(for: item)
+            }
+        }
     }
 
     private var durationSeconds: Double {
@@ -88,6 +116,13 @@ struct AudioDetailView: View {
         if item.captureEndedByInterruption { return "Ended by interruption" }
         if item.captureEndedByUnavailableInput { return "Ended: input unavailable" }
         return item.localState == .needsRecovery ? "Needs recovery" : "Only on this iPhone"
+    }
+
+    private func requestBackup() {
+        Task {
+            await cloudBackup.requestBackup(for: item)
+            showingBackupConfirmation = cloudBackup.pendingConfirmationAudioID == item.id
+        }
     }
 
     private func configurePlaybackSession() {
@@ -129,22 +164,68 @@ private struct AudioInformationSection: View {
     }
 }
 
-private struct CloudBackupEligibilitySection: View {
+private struct CloudBackupSection: View {
+    let item: AudioItem
     let eligibility: BackupEligibility
+    let coordinator: CloudBackupCoordinator
+    let requestBackup: () -> Void
+    let requestCancellation: () -> Void
 
     var body: some View {
         Section("Cloud backup") {
-            LabeledContent("Backup eligibility") { Text(status) }
+            LabeledContent("Local audio") { Text(localAudioStatus) }
+            LabeledContent("Cloud audio") { Text(cloudAudioStatus) }
+
+            if canRequestBackup {
+                Button("Back up Original Audio", action: requestBackup)
+                    .accessibilityHint("Uploads a private cloud copy. The local Original Audio stays on this iPhone.")
+                    .accessibilityIdentifier("cloud-backup-request")
+            }
+            if item.cloudBackupState.preventsLocalDeletion {
+                Button("Cancel cloud backup", role: .destructive, action: requestCancellation)
+                    .accessibilityHint("Keeps the local Original Audio and stops this upload.")
+                    .accessibilityIdentifier("cloud-backup-cancel")
+            }
+            if let errorMessage = coordinator.errorMessage {
+                CloudBackupErrorText(message: errorMessage)
+                    .foregroundStyle(.red)
+            }
         }
     }
 
-    private var status: LocalizedStringResource {
+    private var canRequestBackup: Bool {
+        eligibility == .eligible && !item.cloudBackupState.preventsLocalDeletion && item.cloudBackupState != .backedUp
+    }
+
+    private var localAudioStatus: LocalizedStringResource {
         switch eligibility {
-        case .eligible: "Ready for cloud backup"
-        case .captureIsActive: "Available after Capture finishes"
-        case .originalAudioIsUnverified: "Original Audio needs recovery"
-        case .originalAudioIsMissing: "Original Audio is missing"
-        case .originalAudioIsEmpty: "Original Audio is empty"
+        case .eligible: "Available"
+        case .captureIsActive: "Capture in progress"
+        case .originalAudioIsUnverified: "Needs recovery"
+        case .originalAudioIsMissing: "Missing"
+        case .originalAudioIsEmpty: "Empty"
+        }
+    }
+
+    private var cloudAudioStatus: LocalizedStringResource {
+        switch item.cloudBackupState {
+        case .notBackedUp: "Not backed up"
+        case .uploading: "Uploading"
+        case .paused: "Upload paused"
+        case .failed: "Upload failed"
+        case .verifying: "Verifying backup"
+        case .backedUp: "Backed up"
+        }
+    }
+}
+
+private struct CloudBackupErrorText: View {
+    let message: CloudBackupErrorMessage
+
+    var body: some View {
+        switch message {
+        case let .localized(resource): Text(resource)
+        case let .text(text): Text(text)
         }
     }
 }

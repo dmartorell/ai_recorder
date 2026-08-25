@@ -32,6 +32,15 @@ final class CloudIdentityCoordinatorTests: XCTestCase {
         XCTAssertFalse(SupabaseCloudAuthentication.usesImplicitGrantRedirect(callback))
     }
 
+    func testUnavailableAuthenticationDoesNotProvideAnAccessToken() async {
+        do {
+            _ = try await UnavailableCloudAuthentication().accessToken()
+            XCTFail("Expected an unavailable authentication error")
+        } catch {
+            XCTAssertEqual(error.localizedDescription, "Cloud backup is not configured on this app.")
+        }
+    }
+
     func testFirstRestoredAccountBindsLocalLibrary() async {
         let account = CloudIdentity(id: UUID(), email: "journalist@example.test")
         let authentication = FakeCloudAuthentication(restoredIdentity: account)
@@ -101,6 +110,8 @@ private final class FakeCloudAuthentication: CloudAuthenticating {
         self.restoredIdentity = restoredIdentity
         self.completedIdentity = completedIdentity
     }
+
+    func accessToken() async throws -> String { "test-access-token" }
 
     func restoreIdentity() async throws -> CloudIdentity? { restoredIdentity }
 

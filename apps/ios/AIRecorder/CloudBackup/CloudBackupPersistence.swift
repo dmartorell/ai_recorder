@@ -7,7 +7,9 @@ protocol CloudBackupPersisting: AnyObject {
     func saveBackupAssociation(for item: AudioItem, backupID: UUID, state: CloudBackupState) throws
     func clearBackupAssociation(for item: AudioItem) throws
     func saveBackupState(for item: AudioItem, state: CloudBackupState) throws
+    func saveTranscriptionState(for item: AudioItem, state: TranscriptionState) throws
     func pendingBackups() throws -> [AudioItem]
+    func backedUpAudio() throws -> [AudioItem]
 }
 
 @MainActor
@@ -35,8 +37,17 @@ final class SwiftDataCloudBackupPersistence: CloudBackupPersisting {
         try context.save()
     }
 
+    func saveTranscriptionState(for item: AudioItem, state: TranscriptionState) throws {
+        item.transcriptionState = state
+        try context.save()
+    }
+
     func pendingBackups() throws -> [AudioItem] {
         try context.fetch(FetchDescriptor<AudioItem>()).filter { $0.cloudBackupState.isIncomplete }
+    }
+
+    func backedUpAudio() throws -> [AudioItem] {
+        try context.fetch(FetchDescriptor<AudioItem>()).filter { $0.cloudBackupState == .backedUp }
     }
 }
 

@@ -93,7 +93,21 @@ enum CloudAudioPresentation: Equatable {
     }
 }
 
-enum AudioProcessingPresentation: Equatable {
+enum TranscriptionPresentation: Equatable {
+    case notStarted, queued, processing, complete, failed
+
+    var localizedString: LocalizedStringResource {
+        switch self {
+        case .notStarted: "Not started"
+        case .queued: "Queued"
+        case .processing: "Processing"
+        case .complete: "Complete"
+        case .failed: "Failed"
+        }
+    }
+}
+
+enum SummaryPresentation: Equatable {
     case notStarted
 
     var localizedString: LocalizedStringResource { "Not started" }
@@ -102,7 +116,8 @@ enum AudioProcessingPresentation: Equatable {
 struct AudioStatePresentation: Equatable {
     let localAudio: LocalAudioPresentation
     let cloudAudio: CloudAudioPresentation
-    let processing: AudioProcessingPresentation
+    let transcription: TranscriptionPresentation
+    let summary: SummaryPresentation
 }
 
 func audioStatePresentation(for item: AudioItem) -> AudioStatePresentation {
@@ -133,7 +148,16 @@ func audioStatePresentation(for item: AudioItem) -> AudioStatePresentation {
     case .backedUp: cloudAudio = .backedUp
     }
 
-    return .init(localAudio: localAudio, cloudAudio: cloudAudio, processing: .notStarted)
+    let transcription: TranscriptionPresentation
+    switch item.transcriptionState {
+    case .notStarted: transcription = .notStarted
+    case .queued: transcription = .queued
+    case .processing: transcription = .processing
+    case .complete: transcription = .complete
+    case .failed: transcription = .failed
+    }
+
+    return .init(localAudio: localAudio, cloudAudio: cloudAudio, transcription: transcription, summary: .notStarted)
 }
 
 func libraryAudioStatus(for item: AudioItem) -> LibraryAudioStatus {

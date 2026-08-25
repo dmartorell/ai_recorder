@@ -52,6 +52,7 @@ final class LocalRecordingFlowUITests: XCTestCase {
         XCTAssertTrue(app.buttons["playback-toggle"].exists)
         XCTAssertTrue(app.buttons["playback-forward-10"].exists)
 
+        app.swipeUp()
         app.buttons["Edit metadata"].tap()
         XCTAssertTrue(app.navigationBars["Edit Metadata"].waitForExistence(timeout: 5))
         app.textFields["metadata-title"].tap()
@@ -92,7 +93,8 @@ final class LocalRecordingFlowUITests: XCTestCase {
         audioRow.tap()
         XCTAssertTrue(app.staticTexts["Local audio"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Cloud audio"].exists)
-        XCTAssertTrue(app.staticTexts["Processing"].exists)
+        XCTAssertTrue(app.staticTexts["Transcription"].exists)
+        XCTAssertTrue(app.staticTexts["Summary"].exists)
 
         app.swipeUp()
         app.buttons["Delete"].tap()
@@ -103,7 +105,8 @@ final class LocalRecordingFlowUITests: XCTestCase {
         XCTAssertTrue(audioRow.exists)
         XCTAssertTrue(audioRow.label.contains("Cloud only"))
         XCTAssertFalse(app.staticTexts["Local audio"].exists)
-        XCTAssertFalse(app.staticTexts["Processing"].exists)
+        XCTAssertFalse(app.staticTexts["Transcription"].exists)
+        XCTAssertFalse(app.staticTexts["Summary"].exists)
     }
 
     func testTappingTrailingLibraryRowAreaOpensDetail() {

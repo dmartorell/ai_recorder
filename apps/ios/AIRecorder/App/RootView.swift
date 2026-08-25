@@ -131,7 +131,8 @@ struct RootView: View {
                 CloudBackupLifecycleView(
                     recoveryService: recoveryService,
                     cloudBackupRecoveryService: cloudBackupRecoveryService,
-                    cloudIdentity: cloudIdentity
+                    cloudIdentity: cloudIdentity,
+                    cloudBackup: cloudBackup
                 )
             }
             .navigationDestination(for: UUID.self) { id in
@@ -209,6 +210,7 @@ private struct CloudBackupLifecycleView: View {
     let recoveryService: RecoveryService
     let cloudBackupRecoveryService: CloudBackupRecoveryService
     let cloudIdentity: CloudIdentityCoordinator
+    let cloudBackup: CloudBackupCoordinator
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -220,9 +222,12 @@ private struct CloudBackupLifecycleView: View {
                 await cloudIdentity.restoreSession()
                 guard cloudIdentity.state == .authenticated else { return }
                 await cloudBackupRecoveryService.recoverPendingBackups()
+                await cloudBackup.refreshTranscriptionStatuses()
             }
             .onChange(of: scenePhase) { _, newPhase in
                 cloudBackupRecoveryService.setAppIsActive(newPhase == .active)
+                guard newPhase == .active, cloudIdentity.state == .authenticated else { return }
+                Task { await cloudBackup.refreshTranscriptionStatuses() }
             }
     }
 }

@@ -126,6 +126,7 @@ struct AudioDetailView: View {
             if item.cloudBackupState.preventsLocalDeletion {
                 await cloudBackup.resumeBackup(for: item)
             }
+            await cloudBackup.refreshTranscriptionStatus(for: item)
         }
     }
 
@@ -202,7 +203,8 @@ private struct CloudBackupSection: View {
         Section("Cloud backup") {
             LabeledContent("Local audio") { Text(audioStatePresentation(for: item).localAudio.localizedString) }
             LabeledContent("Cloud audio") { Text(audioStatePresentation(for: item).cloudAudio.localizedString) }
-            LabeledContent("Processing") { Text(audioStatePresentation(for: item).processing.localizedString) }
+            LabeledContent("Transcription") { Text(audioStatePresentation(for: item).transcription.localizedString) }
+            LabeledContent("Summary") { Text(audioStatePresentation(for: item).summary.localizedString) }
 
             if item.cloudBackupState == .failed {
                 Button("Retry upload") { Task { await coordinator.resumeBackup(for: item) } }

@@ -62,7 +62,20 @@ final class LibraryAudioStatusTests: XCTestCase {
 
         XCTAssertEqual(audioStatePresentation(for: item).localAudio, .available)
         XCTAssertEqual(audioStatePresentation(for: item).cloudAudio, .paused)
-        XCTAssertEqual(audioStatePresentation(for: item).processing, .notStarted)
+        XCTAssertEqual(audioStatePresentation(for: item).transcription, .notStarted)
+        XCTAssertEqual(audioStatePresentation(for: item).summary, .notStarted)
+    }
+
+    func testStatePresentationShowsQueuedTranscriptionIndependently() {
+        let item = AudioItem(fileName: "source.m4a")
+        item.localState = .available
+        item.cloudBackupState = .backedUp
+        item.transcriptionState = .queued
+
+        XCTAssertEqual(audioStatePresentation(for: item).localAudio, .available)
+        XCTAssertEqual(audioStatePresentation(for: item).cloudAudio, .backedUp)
+        XCTAssertEqual(audioStatePresentation(for: item).transcription, .queued)
+        XCTAssertEqual(audioStatePresentation(for: item).summary, .notStarted)
     }
 
     func testStatePresentationShowsCloudOnlyAfterVerifiedLocalDeletion() {

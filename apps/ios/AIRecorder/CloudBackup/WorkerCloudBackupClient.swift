@@ -58,6 +58,10 @@ final class WorkerCloudBackupClient: CloudBackupClient {
         try await sendEmpty(path: "v1/audio-backups/\(id.uuidString)/cancel", method: "POST", body: Optional<EmptyBody>.none)
     }
 
+    func transcriptionStatus(id: UUID) async throws -> CloudTranscriptionStatus {
+        try await send(path: "v1/audio-backups/\(id.uuidString)/transcription", method: "GET", body: Optional<EmptyBody>.none)
+    }
+
     private func send<Response: Decodable, Body: Encodable>(path: String, method: String, body: Body? = nil) async throws -> Response {
         let request = try await authenticatedRequest(path: path, method: method, body: body)
         let (data, response) = try await transport.data(for: request)

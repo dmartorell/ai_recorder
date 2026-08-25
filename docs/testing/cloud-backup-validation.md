@@ -2,6 +2,17 @@
 
 This evidence validates Issue #37 against isolated staging services. Use synthetic bytes only. Do not record or retain audio, transcript content, credentials, emails, bearer tokens, backup IDs, object keys, or signed URLs.
 
+## Transcription queue provisioning
+
+Issue #45 adds the staging producer binding `TRANSCRIPTION_JOBS`. Before deploying its Worker configuration, create the named queue in the authenticated Cloudflare staging account:
+
+```sh
+cd apps/worker
+npx wrangler queues create ai-recorder-transcription-jobs-staging
+```
+
+This ticket does not configure a Queue consumer and does not require a Speechmatics account or credential. The queue carries only the opaque Transcription Job UUID. Issue #44 will add the consumer and provider integration.
+
 ## Automated staging integration
 
 `apps/worker/test/staging-backup.integration.test.ts` exercises the deployed Worker, Supabase, and private R2 bucket with two pre-provisioned staging users. It verifies:
@@ -48,5 +59,6 @@ Do not mark these scenarios passed from simulator, mocks, or Worker tests. Delet
 | --- | --- | --- |
 | 2026-08-25 | Remote `audio_backups_rls.test.sql` executed through `supabase db query --linked --file` | Pass. The final pgTAP assertion reported `ok 14`; the transaction rolls back its fixtures. |
 | 2026-08-25 | `supabase test db --linked` | Blocked. This CLI path requires Docker Desktop in the current environment. The remote query above is the executed substitute. |
+| 2026-08-25 | `supabase test db --linked supabase/tests/audio_backups_rls.test.sql` for Issue #45 | Blocked. Docker and Podman are unavailable, so the CLI could not run pgTAP against the linked project. The new migration was not applied to staging. |
 | 2026-08-25 | Staging Worker integration | Pass, user-confirmed. |
 | 2026-08-25 | Physical iPhone flow | Pass, user-confirmed. |

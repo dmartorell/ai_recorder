@@ -19,6 +19,7 @@ final class AudioItem {
     var cloudBackupStateRawValue: String?
     var cloudBackupID: UUID?
     var transcriptionStateRawValue: String?
+    var transcriptionLanguageRawValue: String?
     @Relationship(deleteRule: .cascade, inverse: \Marker.audio) var markers: [Marker]
     @Relationship(deleteRule: .cascade, inverse: \CaptureEventRecord.audio) var events: [CaptureEventRecord]
 
@@ -35,6 +36,7 @@ final class AudioItem {
         self.cloudBackupStateRawValue = CloudBackupState.notBackedUp.rawValue
         self.cloudBackupID = nil
         self.transcriptionStateRawValue = TranscriptionState.notStarted.rawValue
+        self.transcriptionLanguageRawValue = TranscriptionLanguage.spanishEnglish.rawValue
         self.markers = []
         self.events = []
     }
@@ -55,6 +57,11 @@ final class AudioItem {
     var transcriptionState: TranscriptionState {
         get { TranscriptionState(rawValue: transcriptionStateRawValue ?? "") ?? .notStarted }
         set { transcriptionStateRawValue = newValue.rawValue }
+    }
+
+    var transcriptionLanguage: TranscriptionLanguage {
+        get { TranscriptionLanguage(rawValue: transcriptionLanguageRawValue ?? "") ?? .spanishEnglish }
+        set { transcriptionLanguageRawValue = newValue.rawValue }
     }
 
     var captureEndedByInterruption: Bool {

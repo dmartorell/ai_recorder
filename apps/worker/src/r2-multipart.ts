@@ -8,6 +8,7 @@ export type ConfirmedPart = { partNumber: number; etag: string; byteCount: numbe
 export interface MultipartGateway {
   create(key: string, sha256: string): Promise<{ uploadID: string }>;
   signedPartURL(key: string, uploadID: string, partNumber: number, sha256: string): Promise<string>;
+  signedReadURL(key: string): Promise<string>;
   listParts(key: string, uploadID: string): Promise<ConfirmedPart[]>;
   complete(key: string, uploadID: string, parts: ConfirmedPart[]): Promise<{ size: number; sha256?: string }>;
   abort(key: string, uploadID: string): Promise<void>;
@@ -42,6 +43,13 @@ export class R2MultipartGateway implements MultipartGateway {
     url.searchParams.set("uploadId", uploadID);
     url.searchParams.set("X-Amz-Expires", "900");
     const signed = await this.aws.sign(url, { method: "PUT", aws: { signQuery: true } });
+    return signed.url;
+  }
+
+  async signedReadURL(key: string): Promise<string> {
+    const url = this.objectURL(key);
+    url.searchParams.set("X-Amz-Expires", "900");
+    const signed = await this.aws.sign(url, { method: "GET", aws: { signQuery: true } });
     return signed.url;
   }
 

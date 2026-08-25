@@ -32,6 +32,18 @@ final class CloudBackupCoordinatorTests: XCTestCase {
         XCTAssertEqual(item.cloudBackupState, .backedUp)
     }
 
+    func testBackupSendsTheAudioSelectedTranscriptionLanguage() async throws {
+        let item = availableAudio()
+        item.transcriptionLanguage = .english
+        let client = FakeCloudBackupClient()
+        let coordinator = CloudBackupCoordinator(client: client, files: files, uploader: FakePartUploader(), persistence: FakeBackupPersistence())
+
+        await coordinator.requestBackup(for: item)
+        await coordinator.confirmBackup(for: item)
+
+        XCTAssertEqual(client.requests.first?.transcriptionLanguage, .english)
+    }
+
     func testBackupRefusesAnIneligibleAudio() async throws {
         let item = AudioItem(fileName: "active.m4a")
         let client = FakeCloudBackupClient()

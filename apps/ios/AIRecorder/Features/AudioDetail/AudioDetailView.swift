@@ -198,6 +198,7 @@ private struct CloudBackupSection: View {
     let coordinator: CloudBackupCoordinator
     let requestBackup: () -> Void
     let requestCancellation: () -> Void
+    @Environment(\.modelContext) private var modelContext
 
     var body: some View {
         Section("Cloud backup") {
@@ -205,6 +206,13 @@ private struct CloudBackupSection: View {
             LabeledContent("Cloud audio") { Text(audioStatePresentation(for: item).cloudAudio.localizedString) }
             LabeledContent("Transcription") { Text(audioStatePresentation(for: item).transcription.localizedString) }
             LabeledContent("Summary") { Text(audioStatePresentation(for: item).summary.localizedString) }
+            if item.cloudBackupID == nil {
+                Picker("Transcription language", selection: Binding(get: { item.transcriptionLanguage }, set: { item.transcriptionLanguage = $0; try? modelContext.save() })) {
+                    Text("Spanish").tag(TranscriptionLanguage.spanish)
+                    Text("English").tag(TranscriptionLanguage.english)
+                    Text("Spanish and English").tag(TranscriptionLanguage.spanishEnglish)
+                }
+            }
 
             if item.cloudBackupState == .failed {
                 Button("Retry upload") { Task { await coordinator.resumeBackup(for: item) } }

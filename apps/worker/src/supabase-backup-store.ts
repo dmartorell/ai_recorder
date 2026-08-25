@@ -33,7 +33,8 @@ export class SupabaseBackupStore implements BackupStore {
         p_owner_id: request.ownerID,
         p_local_audio_id: request.localAudioID,
         p_byte_count: request.byteCount,
-        p_sha256: request.sha256
+        p_sha256: request.sha256,
+        p_transcription_language: request.transcriptionLanguage
       })
     });
     if (!response.ok) {

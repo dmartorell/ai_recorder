@@ -11,7 +11,17 @@ cd apps/worker
 npx wrangler queues create ai-recorder-transcription-jobs-staging
 ```
 
-This ticket does not configure a Queue consumer and does not require a Speechmatics account or credential. The queue carries only the opaque Transcription Job UUID. Issue #44 will add the consumer and provider integration.
+The queue carries only the opaque Transcription Job UUID.
+
+Issue #46 adds the consumer. Before deploying that Worker configuration, an operator must explicitly set these staging Worker secrets interactively. Do not place their values in a shell command, file, or this repository:
+
+```sh
+cd apps/worker
+npx wrangler secret put SPEECHMATICS_API_KEY --env staging
+npx wrangler secret put TRANSCRIPTION_CALLBACK_BASE_URL --env staging
+```
+
+`TRANSCRIPTION_CALLBACK_BASE_URL` is the HTTPS Worker origin. The consumer signs each private R2 read URL for 900 seconds, reconciles an unresolved provider request by stable tracking reference before another provider submission, and sends Speechmatics only that scoped URL. Do not deploy, create the queue, or set either secret without explicit approval.
 
 ## Automated staging integration
 

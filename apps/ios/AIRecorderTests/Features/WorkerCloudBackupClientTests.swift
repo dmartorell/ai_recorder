@@ -39,6 +39,24 @@ final class WorkerCloudBackupClientTests: XCTestCase {
         XCTAssertEqual(payload?["local_audio_id"] as? String, "B5F1799A-92AB-43D1-951D-8E1DAC1B67D5")
         XCTAssertEqual(payload?["byte_count"] as? Int, 1_024)
         XCTAssertEqual(payload?["sha256"] as? String, "aabbcc")
+        XCTAssertEqual(payload?["transcription_language"] as? String, "spanish_english")
+    }
+
+    func testBeginBackupEncodesSelectedTranscriptionLanguage() async throws {
+        let transport = StubCloudBackupHTTPTransport(
+            data: Data("{\"id\":\"\(UUID().uuidString)\",\"state\":\"uploading\"}".utf8),
+            response: HTTPURLResponse(url: URL(string: "https://backup.example.test/v1/audio-backups")!, statusCode: 201, httpVersion: nil, headerFields: nil)!
+        )
+        let client = WorkerCloudBackupClient(
+            baseURL: URL(string: "https://backup.example.test")!,
+            authentication: StubAccessTokenProvider(),
+            transport: transport
+        )
+
+        _ = try await client.beginBackup(.init(localAudioID: UUID(), byteCount: 1, sha256: "abc", transcriptionLanguage: .english))
+
+        let payload = try JSONSerialization.jsonObject(with: transport.request!.httpBody!) as? [String: Any]
+        XCTAssertEqual(payload?["transcription_language"] as? String, "english")
     }
 
     func testTranscriptionStatusUsesTheAuthorizedBackupEndpoint() async throws {

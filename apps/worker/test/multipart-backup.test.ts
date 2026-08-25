@@ -146,6 +146,7 @@ class StubMultipart implements MultipartGateway {
     return { uploadID: "upload-id" };
   }
   async signedPartURL() { return "https://r2.example.test/part"; }
+  async signedReadURL() { return "https://r2.example.test/read"; }
   async listParts() { return [{ partNumber: 1, etag: "r2-etag", byteCount: multipartPartSize }]; }
   async complete() { return { size: multipartPartSize, sha256 }; }
   async abort() { this.abortCount += 1; }

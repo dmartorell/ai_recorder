@@ -60,5 +60,6 @@ Do not mark these scenarios passed from simulator, mocks, or Worker tests. Delet
 | 2026-08-25 | Remote `audio_backups_rls.test.sql` executed through `supabase db query --linked --file` | Pass. The final pgTAP assertion reported `ok 14`; the transaction rolls back its fixtures. |
 | 2026-08-25 | `supabase test db --linked` | Blocked. This CLI path requires Docker Desktop in the current environment. The remote query above is the executed substitute. |
 | 2026-08-25 | `supabase test db --linked supabase/tests/audio_backups_rls.test.sql` for Issue #45 | Blocked. Docker and Podman are unavailable, so the CLI could not run pgTAP against the linked project. The new migration was not applied to staging. |
+| 2026-08-25 | `supabase test db --local supabase/tests/audio_backups_rls.test.sql` for Issue #45 on iMac | Pass. `Files=1, Tests=21`, `Result: PASS`. |
 | 2026-08-25 | Staging Worker integration | Pass, user-confirmed. |
 | 2026-08-25 | Physical iPhone flow | Pass, user-confirmed. |

@@ -60,5 +60,5 @@
 **Files:**
 - Modify: `docs/testing/cloud-backup-validation.md`
 
-- [ ] Run Worker typecheck and tests, database tests where linked credentials permit, iOS focused tests, the full iOS suite, and `git diff --check`. Worker and iOS suites pass. Supabase pgTAP is blocked because Docker or Podman is unavailable.
+- [x] Run Worker typecheck and tests, database tests where linked credentials permit, iOS focused tests, the full iOS suite, and `git diff --check`. Worker and iOS suites pass. Local Supabase pgTAP passed on the iMac with 21 assertions.
 - [x] Document the Queue provisioning command and clarify that no Speechmatics credential is required for this ticket.

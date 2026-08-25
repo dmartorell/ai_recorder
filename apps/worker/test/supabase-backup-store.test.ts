@@ -15,6 +15,19 @@ describe("SupabaseBackupStore", () => {
     expect(JSON.parse(String(fetch.requests[0].init?.body))).toEqual({ p_owner_id: request.ownerID, p_local_audio_id: request.localAudioID, p_byte_count: request.byteCount, p_sha256: request.sha256 });
   });
 
+  it("invokes its fetch dependency without a receiver", async () => {
+    let receiver: unknown;
+    const fetch: BackupStoreFetch = async function(this: unknown) {
+      receiver = this;
+      return json([storedBackup]);
+    };
+    const store = new SupabaseBackupStore({ supabaseURL: "https://project.supabase.co", serviceRoleKey: "service-role-key", fetch });
+
+    await store.begin(request);
+
+    expect(receiver).toBeUndefined();
+  });
+
   it("rejects a conflicting source returned by the atomic begin function", async () => {
     const fetch = new StubFetch([json([{ ...storedBackup, sha256: "b".repeat(64) }])]);
     const store = new SupabaseBackupStore({ supabaseURL: "https://project.supabase.co", serviceRoleKey: "service-role-key", fetch: fetch.fetch });

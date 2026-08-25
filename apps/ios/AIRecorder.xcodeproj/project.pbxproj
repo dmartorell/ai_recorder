@@ -20,7 +20,6 @@
 		2E4261062C4CB9D85FB6F7BF /* CaptureEventTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E166091B28B4EB5215860B /* CaptureEventTests.swift */; };
 		2FA2355A29B135FC1068EA60 /* WorkerCloudBackupClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F9904EC180A76F9AB90BFFF /* WorkerCloudBackupClientTests.swift */; };
 		307AD4080336091019CEDB3B /* CaptureProofStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0DC23E53EFE91E55691AABA /* CaptureProofStoreTests.swift */; };
-		32683D1E44B5D05E30FA3238 /* Supabase.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5081F8DE3ADE27A74DFD7A4F /* Supabase.plist */; };
 		33873ED35B1E26791401EA7B /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1C2583B1EDB71F01C22C3FFE /* Localizable.xcstrings */; };
 		38EC2416D23D7569068403B9 /* AudioRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B6BFF14B1117851CF75ED5 /* AudioRepositoryTests.swift */; };
 		3D7452EBADD686A951B8D92D /* RecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8581E5457AE37CF03D6B0510 /* RecordingView.swift */; };
@@ -118,7 +117,6 @@
 		4039331EB02D2E501D862C2B /* AppConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigurationTests.swift; sourceTree = "<group>"; };
 		411D81D5CBC544E328FDA159 /* OriginalAudioInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginalAudioInspector.swift; sourceTree = "<group>"; };
 		42FD315D56C0BE1E428677CA /* LibraryAudioRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAudioRow.swift; sourceTree = "<group>"; };
-		5081F8DE3ADE27A74DFD7A4F /* Supabase.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Supabase.plist; sourceTree = "<group>"; };
 		50E22F72593A77535F990479 /* SupabaseCloudAuthentication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseCloudAuthentication.swift; sourceTree = "<group>"; };
 		52B7474B846A45B908635C2D /* CloudBackupCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupCoordinatorTests.swift; sourceTree = "<group>"; };
 		5A6097925771C18F0DC730DD /* CloudBackupCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudBackupCoordinator.swift; sourceTree = "<group>"; };
@@ -340,7 +338,6 @@
 			isa = PBXGroup;
 			children = (
 				1C2583B1EDB71F01C22C3FFE /* Localizable.xcstrings */,
-				5081F8DE3ADE27A74DFD7A4F /* Supabase.plist */,
 				B294DEE04BD030184E61CC2E /* Supabase.plist.example */,
 			);
 			path = Resources;
@@ -466,6 +463,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9CECE7632899B1F7A4C600C0 /* Build configuration list for PBXNativeTarget "AIRecorder" */;
 			buildPhases = (
+				A99AA44212758D68F1F6D494 /* Bundle local Supabase configuration */,
 				467CDE8A92A9F6F58DDEEBE0 /* Sources */,
 				7C70180AAF97518ED3F7C07B /* Resources */,
 				A8E161E037E9CD78B468E1BA /* Frameworks */,
@@ -566,12 +564,32 @@
 			buildActionMask = 2147483647;
 			files = (
 				33873ED35B1E26791401EA7B /* Localizable.xcstrings in Resources */,
-				32683D1E44B5D05E30FA3238 /* Supabase.plist in Resources */,
 				F8F8C8E9443E721788302E6C /* Supabase.plist.example in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A99AA44212758D68F1F6D494 /* Bundle local Supabase configuration */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Bundle local Supabase configuration";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ -f \"${SRCROOT}/AIRecorder/Resources/Supabase.plist\" ]; then\n  cp \"${SRCROOT}/AIRecorder/Resources/Supabase.plist\" \"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Supabase.plist\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		467CDE8A92A9F6F58DDEEBE0 /* Sources */ = {

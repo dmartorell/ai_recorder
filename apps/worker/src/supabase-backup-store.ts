@@ -15,13 +15,13 @@ export class SupabaseBackupStore implements BackupStore {
   private readonly fetch: BackupStoreFetch;
   private readonly headers: HeadersInit;
 
-  constructor({ supabaseURL, serviceRoleKey, fetch = globalThis.fetch }: {
+  constructor({ supabaseURL, serviceRoleKey, fetch = (input, init) => globalThis.fetch(input, init) }: {
     supabaseURL: string; serviceRoleKey: string; fetch?: BackupStoreFetch;
   }) {
     this.endpoint = new URL(audioBackupsPath, withTrailingSlash(supabaseURL));
     this.partsEndpoint = new URL(audioBackupPartsPath, withTrailingSlash(supabaseURL));
     this.beginEndpoint = new URL(beginBackupPath, withTrailingSlash(supabaseURL));
-    this.fetch = fetch;
+    this.fetch = (input, init) => fetch(input, init);
     this.headers = { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` };
   }
 

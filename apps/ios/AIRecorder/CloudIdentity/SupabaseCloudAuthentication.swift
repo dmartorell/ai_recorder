@@ -22,7 +22,7 @@ final class SupabaseCloudAuthentication: CloudAuthenticating {
     }
 
     func requestMagicLink(email: String) async throws {
-        try await client.auth.signInWithOTP(
+        try await implicitFlowClient.auth.signInWithOTP(
             email: email,
             redirectTo: redirectURL,
             shouldCreateUser: false

@@ -16,7 +16,16 @@ targets:
   AIRecorder:
     type: application
     platform: iOS
-    sources: [AIRecorder]
+    sources:
+      - path: AIRecorder
+        excludes:
+          - Resources/Supabase.plist
+    preBuildScripts:
+      - name: Bundle local Supabase configuration
+        script: |
+          if [ -f "${SRCROOT}/AIRecorder/Resources/Supabase.plist" ]; then
+            cp "${SRCROOT}/AIRecorder/Resources/Supabase.plist" "${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/Supabase.plist"
+          fi
     info:
       path: AIRecorder/App/Info.plist
       properties:

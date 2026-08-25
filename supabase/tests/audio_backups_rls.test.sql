@@ -15,7 +15,8 @@ insert into public.audio_backups (
   object_key,
   byte_count,
   sha256,
-  state
+  state,
+  completed_at
 )
 values
   (
@@ -25,7 +26,8 @@ values
     'original-audio/opaque-owner-key/opaque-backup-key',
     1024,
     repeat('a', 64),
-    'uploading'
+    'uploading',
+    null
   ),
   (
     'cccccccc-cccc-cccc-cccc-cccccccccccc',
@@ -34,7 +36,8 @@ values
     'original-audio/another-owner-key/another-backup-key',
     2048,
     repeat('b', 64),
-    'backed_up'
+    'backed_up',
+    now()
   );
 
 insert into public.audio_backup_parts (backup_id, part_number, etag, byte_count)
@@ -119,11 +122,12 @@ select results_eq(
   'another user cannot read the owner backup'
 );
 
-select is_empty(
+select throws_ok(
   $$ update public.audio_backups
      set state = 'cancelled'
-     where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-     returning id $$,
+     where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' $$,
+  '42501',
+  null,
   'another user cannot update the owner backup'
 );
 
@@ -135,10 +139,11 @@ select results_eq(
   'the denied update left the owner backup intact'
 );
 
-select is_empty(
+select throws_ok(
   $$ delete from public.audio_backups
-     where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
-     returning id $$,
+     where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc' $$,
+  '42501',
+  null,
   'the owner cannot delete another user backup'
 );
 

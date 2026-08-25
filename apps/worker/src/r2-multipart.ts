@@ -36,16 +36,12 @@ export class R2MultipartGateway implements MultipartGateway {
     return { uploadID: upload.uploadId };
   }
 
-  async signedPartURL(key: string, uploadID: string, partNumber: number, sha256: string): Promise<string> {
+  async signedPartURL(key: string, uploadID: string, partNumber: number, _sha256: string): Promise<string> {
     const url = this.objectURL(key);
     url.searchParams.set("partNumber", String(partNumber));
     url.searchParams.set("uploadId", uploadID);
     url.searchParams.set("X-Amz-Expires", "900");
-    const signed = await this.aws.sign(url, {
-      method: "PUT",
-      headers: { "x-amz-checksum-sha256": base64SHA256(sha256) },
-      aws: { signQuery: true }
-    });
+    const signed = await this.aws.sign(url, { method: "PUT", aws: { signQuery: true } });
     return signed.url;
   }
 
@@ -74,14 +70,15 @@ export class R2MultipartGateway implements MultipartGateway {
   }
 }
 
-function parseListParts(xml: string): ConfirmedPart[] {
-  return [...xml.matchAll(/<Part>\s*<PartNumber>(\d+)<\/PartNumber>\s*<LastModified>[^<]*<\/LastModified>\s*<ETag>\"?([^<\"]+)\"?<\/ETag>\s*<Size>(\d+)<\/Size>\s*<\/Part>/g)].map((match) => ({
-    partNumber: Number(match[1]), etag: match[2], byteCount: Number(match[3])
-  }));
-}
-
-function base64SHA256(hexadecimal: string): string {
-  const bytes = hexadecimal.match(/.{2}/g)?.map((pair) => Number.parseInt(pair, 16)) ?? [];
-  return btoa(String.fromCharCode(...bytes));
+export function parseListParts(xml: string): ConfirmedPart[] {
+  return [...xml.matchAll(/<Part>([\s\S]*?)<\/Part>/g)].flatMap(([, contents]) => {
+    const partNumber = contents.match(/<PartNumber>(\d+)<\/PartNumber>/)?.[1];
+    const etag = contents.match(/<ETag>\s*\"?([^<\"]+)\"?\s*<\/ETag>/)?.[1];
+    const byteCount = contents.match(/<Size>(\d+)<\/Size>/)?.[1];
+    const normalizedETag = etag?.replaceAll("&quot;", "").replaceAll('"', "");
+    return partNumber && normalizedETag && byteCount
+      ? [{ partNumber: Number(partNumber), etag: normalizedETag, byteCount: Number(byteCount) }]
+      : [];
+  });
 }
 

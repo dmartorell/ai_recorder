@@ -56,7 +56,6 @@ final class BackgroundURLSessionPartUploader: NSObject, CloudBackupPartUploading
         let taskDescription = try JSONEncoder().encode(context).base64EncodedString()
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
-        request.setValue(base64SHA256(sha256), forHTTPHeaderField: "x-amz-checksum-sha256")
         return try await withCheckedThrowingContinuation { continuation in
             continuations[context] = continuation
             let task = session.uploadTask(with: request, fromFile: fileURL)

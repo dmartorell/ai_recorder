@@ -4,11 +4,13 @@ export interface SpeechmaticsSubmission {
   sourceURL: string;
   language: TranscriptionLanguage;
   reference: string;
+  notification?: { url: string; bearerToken: string };
 }
 
 export interface SpeechmaticsClient {
   submit(submission: SpeechmaticsSubmission): Promise<string>;
   findByReference(reference: string): Promise<string | undefined>;
+  transcript(providerJobID: string): Promise<unknown>;
 }
 
 type Fetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -30,13 +32,25 @@ export class SpeechmaticsBatchClient implements SpeechmaticsClient {
         type: "transcription",
         fetch_data: { url: submission.sourceURL },
         transcription_config: transcriptionConfig(submission.language),
-        tracking: { reference: submission.reference }
+        tracking: { reference: submission.reference },
+        ...(submission.notification ? {
+          notification_config: [{
+            url: submission.notification.url,
+            auth_headers: [`Authorization: Bearer ${submission.notification.bearerToken}`]
+          }]
+        } : {})
       })
     });
     if (!response.ok) throw new Error("Speechmatics job submission failed");
     const body: unknown = await response.json();
     if (!isRecord(body) || typeof body.id !== "string" || !body.id) throw new Error("Speechmatics job submission returned an invalid response");
     return body.id;
+  }
+
+  async transcript(providerJobID: string): Promise<unknown> {
+    const response = await this.fetch(`https://asr.api.speechmatics.com/v2/jobs/${encodeURIComponent(providerJobID)}/transcript`, { headers: this.headers });
+    if (!response.ok) throw new Error("Speechmatics transcript retrieval failed");
+    return response.json();
   }
 
   async findByReference(reference: string): Promise<string | undefined> {

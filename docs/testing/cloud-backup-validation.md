@@ -22,6 +22,20 @@ npx wrangler secret put SPEECHMATICS_API_KEY --env staging
 
 The consumer signs each private R2 read URL for 900 seconds, reconciles an unresolved provider request by stable tracking reference before another provider submission, and sends Speechmatics only that scoped URL. It does not register a completion callback. Do not deploy, create the queue, or set the secret without explicit approval.
 
+## Automatic Transcript callback setup
+
+Issue #47 requires two operator-only staging Worker secrets. Set each value interactively. Do not put either value in a command, shell history, file, test fixture, or issue comment:
+
+```sh
+cd apps/worker
+npx wrangler secret put TRANSCRIPTION_CALLBACK_TOKEN --env staging
+npx wrangler secret put PUBLIC_WORKER_URL --env staging
+```
+
+`PUBLIC_WORKER_URL` is the deployed public Worker base URL. The Worker appends `/v1/transcription-callback`. The callback accepts only a metadata-only `POST` with the configured bearer token, a syntactically valid provider job ID, and `status=success`. It never accepts a transcript body. A valid callback queues only the opaque Transcription Job UUID. The consumer retrieves JSON-v2 from Speechmatics, stores it in private R2, then atomically persists the Automatic Transcript projection.
+
+Before using a real interview, exercise only a synthetic provider job and record pass/fail for: rejected missing or incorrect bearer, rejected failed status and body payload, accepted empty success callback, one private artifact, one complete Transcription Job, and an idempotent duplicate callback. Do not retain callback URLs, provider IDs, tokens, object keys, or transcript content as evidence.
+
 ## Automated staging integration
 
 `apps/worker/test/staging-backup.integration.test.ts` exercises the deployed Worker, Supabase, and private R2 bucket with two pre-provisioned staging users. It verifies:

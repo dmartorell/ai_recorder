@@ -1,32 +1,75 @@
 import { createDefaultWorker } from "./cloud-backup";
 import { R2MultipartGateway } from "./r2-multipart";
 import { SpeechmaticsBatchClient } from "./speechmatics-batch-client";
+import { SpeechmaticsCallback } from "./speechmatics-callback";
+import { R2TranscriptArtifactStore, TranscriptionIngester } from "./transcription-ingester";
+import { SupabaseTranscriptionIngestionStore } from "./supabase-transcription-ingestion-store";
 import { SupabaseTranscriptionSubmissionStore } from "./supabase-transcription-submission-store";
 import { TranscriptionSubmitter } from "./transcription-submitter";
+
+type TranscriptionQueueMessage =
+  | { kind: "submit"; transcription_job_id: string }
+  | { kind: "ingest"; transcription_job_id: string };
 
 export default {
   fetch(request, env, context) {
     const multipart = gateway(env);
-    return createDefaultWorker(env.SUPABASE_URL ?? "https://unconfigured.invalid", env.SUPABASE_SERVICE_ROLE_KEY, multipart, env.TRANSCRIPTION_JOBS).fetch!(request, env, context);
+    const ingestionStore = configuredIngestionStore(env);
+    const callback = configuredCallback(env, ingestionStore);
+    return createDefaultWorker(
+      env.SUPABASE_URL ?? "https://unconfigured.invalid",
+      env.SUPABASE_SERVICE_ROLE_KEY,
+      multipart,
+      env.TRANSCRIPTION_JOBS,
+      callback
+    ).fetch!(request, env, context);
   },
   async queue(batch, env) {
     const multipart = gateway(env);
-    if (!multipart || !env.SUPABASE_SERVICE_ROLE_KEY || !env.SPEECHMATICS_API_KEY) {
+    const ingestionStore = configuredIngestionStore(env);
+    const notification = callbackConfiguration(env);
+    if (!multipart || !env.SUPABASE_SERVICE_ROLE_KEY || !env.SPEECHMATICS_API_KEY || !ingestionStore || !notification) {
       for (const message of batch.messages) message.retry();
       return;
     }
+    const provider = new SpeechmaticsBatchClient({ apiKey: env.SPEECHMATICS_API_KEY });
     const submitter = new TranscriptionSubmitter({
       jobs: new SupabaseTranscriptionSubmissionStore({ supabaseURL: env.SUPABASE_URL ?? "https://unconfigured.invalid", serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY }),
       source: multipart,
-      provider: new SpeechmaticsBatchClient({ apiKey: env.SPEECHMATICS_API_KEY })
+      provider,
+      notification
     });
+    const ingester = new TranscriptionIngester({ jobs: ingestionStore, provider, artifacts: new R2TranscriptArtifactStore(env.ORIGINAL_AUDIO!) });
     for (const message of batch.messages) {
-      const body = message.body as { transcription_job_id?: unknown };
+      const body = message.body as Partial<TranscriptionQueueMessage>;
       if (typeof body?.transcription_job_id !== "string") { message.ack(); continue; }
-      try { await submitter.submit(body.transcription_job_id); message.ack(); } catch { message.retry(); }
+      try {
+        if (body.kind === "submit") await submitter.submit(body.transcription_job_id);
+        else if (body.kind === "ingest") await ingester.ingest(body.transcription_job_id);
+        else { message.ack(); continue; }
+        message.ack();
+      } catch { message.retry(); }
     }
   }
 } satisfies ExportedHandler<Env>;
+
+function configuredIngestionStore(env: Env): SupabaseTranscriptionIngestionStore | undefined {
+  return env.SUPABASE_SERVICE_ROLE_KEY
+    ? new SupabaseTranscriptionIngestionStore({ supabaseURL: env.SUPABASE_URL ?? "https://unconfigured.invalid", serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY })
+    : undefined;
+}
+
+function configuredCallback(env: Env, jobs: SupabaseTranscriptionIngestionStore | undefined): SpeechmaticsCallback | undefined {
+  const configuration = callbackConfiguration(env);
+  return configuration && jobs && env.TRANSCRIPTION_JOBS
+    ? new SpeechmaticsCallback({ bearerToken: configuration.bearerToken, jobs, queue: env.TRANSCRIPTION_JOBS })
+    : undefined;
+}
+
+function callbackConfiguration(env: Env): { url: string; bearerToken: string } | undefined {
+  if (!env.PUBLIC_WORKER_URL || !env.TRANSCRIPTION_CALLBACK_TOKEN) return undefined;
+  return { url: new URL("/v1/transcription-callback", env.PUBLIC_WORKER_URL).toString(), bearerToken: env.TRANSCRIPTION_CALLBACK_TOKEN };
+}
 
 function gateway(env: Env): R2MultipartGateway | undefined {
   return env.R2_ACCESS_KEY_ID && env.R2_SECRET_ACCESS_KEY && env.R2_BUCKET_NAME && env.R2_ACCOUNT_ID && env.ORIGINAL_AUDIO

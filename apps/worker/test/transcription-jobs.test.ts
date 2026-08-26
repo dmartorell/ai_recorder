@@ -22,7 +22,7 @@ describe("verified backup transcription jobs", () => {
 
     expect(jobs.enqueuedBackupIDs).toEqual([backup.id, backup.id]);
     expect(jobs.jobs).toHaveLength(1);
-    expect(queue.messages).toEqual([{ transcription_job_id: jobs.jobs[0].id }, { transcription_job_id: jobs.jobs[0].id }]);
+    expect(queue.messages).toEqual([{ kind: "submit", transcription_job_id: jobs.jobs[0].id }, { kind: "submit", transcription_job_id: jobs.jobs[0].id }]);
   });
 
   it("returns queued transcription state only to the owner", async () => {
@@ -74,6 +74,6 @@ class FakeJobStore implements TranscriptionJobStore {
 }
 
 class FakeQueue implements TranscriptionJobQueue {
-  messages: { transcription_job_id: string }[] = [];
-  async send(message: { transcription_job_id: string }): Promise<void> { this.messages.push(message); }
+  messages: { kind: "submit"; transcription_job_id: string }[] = [];
+  async send(message: { kind: "submit"; transcription_job_id: string }): Promise<void> { this.messages.push(message); }
 }

@@ -98,3 +98,8 @@ Do not mark these scenarios passed from simulator, mocks, or Worker tests. Delet
 | 2026-08-25 | `supabase test db --local supabase/tests/audio_backups_rls.test.sql` for Issue #45 on iMac | Pass. `Files=1, Tests=21`, `Result: PASS`. |
 | 2026-08-25 | Staging Worker integration | Pass, user-confirmed. |
 | 2026-08-25 | Physical iPhone flow | Pass, user-confirmed. |
+| 2026-08-27 | Worker lifecycle fakes: `npm run check && npm test` | Pass. TypeScript check passed; 64 tests passed, with one staging-only test skipped. Covers queue submission, callback, ingestion, bounded retry, explicit retry, and cleanup. |
+| 2026-08-27 | iOS suite on iPhone 15 simulator | Pass. 110 unit tests and 12 UI tests passed. |
+| 2026-08-27 | Isolated staging integration | Blocked. Required isolated staging variables were not present, so the integration test skipped. |
+| 2026-08-27 | Local pgTAP suite | Blocked. No local Supabase database was running at `127.0.0.1:54322`. |
+| 2026-08-27 | Physical iPhone pipeline and two-hour reliability check | Pending. These require a staging-configured physical iPhone and synthetic Audio. |

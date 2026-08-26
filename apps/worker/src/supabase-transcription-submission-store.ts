@@ -6,7 +6,7 @@ export class SupabaseTranscriptionSubmissionStore implements SubmissionJobStore 
   private readonly base: string;
   private readonly headers: HeadersInit;
   private readonly fetch: Fetch;
-  constructor({ supabaseURL, serviceRoleKey, fetch = globalThis.fetch }: { supabaseURL: string; serviceRoleKey: string; fetch?: Fetch }) {
+  constructor({ supabaseURL, serviceRoleKey, fetch = (input, init) => globalThis.fetch(input, init) }: { supabaseURL: string; serviceRoleKey: string; fetch?: Fetch }) {
     this.base = supabaseURL.endsWith("/") ? supabaseURL : `${supabaseURL}/`;
     this.headers = { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" };
     this.fetch = fetch;

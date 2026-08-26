@@ -58,6 +58,7 @@ protocol CloudBackupClient: AnyObject {
     func completeMultipartUpload(id: UUID) async throws -> CloudBackupUpload
     func cancelMultipartUpload(id: UUID) async throws
     func transcriptionStatus(id: UUID) async throws -> CloudTranscriptionStatus
+    func retryTranscription(id: UUID) async throws
 }
 
 @MainActor
@@ -70,6 +71,7 @@ final class UnavailableCloudBackupClient: CloudBackupClient {
     func completeMultipartUpload(id: UUID) async throws -> CloudBackupUpload { throw CloudAuthenticationError.notConfigured }
     func cancelMultipartUpload(id: UUID) async throws { throw CloudAuthenticationError.notConfigured }
     func transcriptionStatus(id: UUID) async throws -> CloudTranscriptionStatus { throw CloudAuthenticationError.notConfigured }
+    func retryTranscription(id: UUID) async throws { throw CloudAuthenticationError.notConfigured }
 }
 
 enum CloudBackupErrorMessage {
@@ -173,6 +175,16 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
         do {
             let status = try await client.transcriptionStatus(id: backupID)
             try persistence.saveTranscriptionState(for: item, state: status.state)
+        } catch {
+            errorMessage = .init(error)
+        }
+    }
+
+    func retryTranscription(for item: AudioItem) async {
+        guard item.cloudBackupState == .backedUp, let backupID = item.cloudBackupID, item.transcriptionState == .failed else { return }
+        do {
+            try await client.retryTranscription(id: backupID)
+            await refreshTranscriptionStatus(for: item)
         } catch {
             errorMessage = .init(error)
         }

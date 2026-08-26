@@ -28,7 +28,6 @@ export class TranscriptionSubmitter {
     const job = await this.dependencies.jobs.claimSubmission(jobID, claimID);
     if (job.provider_job_id) return;
 
-    let submission: SpeechmaticsSubmission;
     try {
       const existingProviderJobID = await this.dependencies.provider.findByReference(job.provider_reference);
       if (existingProviderJobID) {
@@ -38,18 +37,17 @@ export class TranscriptionSubmitter {
       if (job.submission_claim !== claimID) throw new Error("A transcription submission is unresolved");
       const backup = await this.dependencies.jobs.backup(job.owner_id, job.backup_id);
       if (!backup) throw new Error("Verified audio backup was not found");
-      submission = {
+      const submission: SpeechmaticsSubmission = {
         sourceURL: await this.dependencies.source.signedReadURL(backup.object_key),
         language: job.transcription_language,
         reference: job.provider_reference,
         notification: this.dependencies.notification
       };
+      const providerJobID = await this.dependencies.provider.submit(submission);
+      await this.dependencies.jobs.recordSubmission(job.id, providerJobID);
     } catch (error) {
       if (job.submission_claim === claimID) await this.dependencies.jobs.releaseSubmissionClaim(job.id, claimID);
       throw error;
     }
-
-    const providerJobID = await this.dependencies.provider.submit(submission);
-    await this.dependencies.jobs.recordSubmission(job.id, providerJobID);
   }
 }

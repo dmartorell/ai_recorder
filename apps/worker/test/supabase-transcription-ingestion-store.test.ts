@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { SupabaseTranscriptionIngestionStore } from "../src/supabase-transcription-ingestion-store";
 
-const job = { id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", provider_job_id: "provider-job", provider_reference: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", state: "processing" };
+const job = { id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", provider_job_id: "provider-job", provider_reference: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", state: "processing", provider_cleanup_state: "not_started" };
 
 describe("SupabaseTranscriptionIngestionStore", () => {
   it("resolves one processing job without exposing provider output", async () => {

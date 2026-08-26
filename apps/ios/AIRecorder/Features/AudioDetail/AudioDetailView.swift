@@ -214,6 +214,11 @@ private struct CloudBackupSection: View {
                 }
             }
 
+            if item.transcriptionState == .failed {
+                Button("Retry transcription") { Task { await coordinator.retryTranscription(for: item) } }
+                    .accessibilityHint("Retries transcription from the verified cloud audio without uploading the Original Audio again.")
+                    .accessibilityIdentifier("transcription-retry")
+            }
             if item.cloudBackupState == .failed {
                 Button("Retry upload") { Task { await coordinator.resumeBackup(for: item) } }
                     .accessibilityHint("Retries this cloud backup without creating another Original Audio.")

@@ -84,6 +84,17 @@ final class WorkerCloudBackupClientTests: XCTestCase {
         XCTAssertEqual(transport.request?.value(forHTTPHeaderField: "Authorization"), "Bearer test-access-token")
     }
 
+    func testRetryTranscriptionUsesTheAuthorizedRetryEndpoint() async throws {
+        let backupID = UUID()
+        let transport = StubCloudBackupHTTPTransport(data: Data(), response: HTTPURLResponse(url: URL(string: "https://backup.example.test")!, statusCode: 204, httpVersion: nil, headerFields: nil)!)
+        let client = WorkerCloudBackupClient(baseURL: URL(string: "https://backup.example.test")!, authentication: StubAccessTokenProvider(), transport: transport)
+
+        try await client.retryTranscription(id: backupID)
+
+        XCTAssertEqual(transport.request?.url?.path, "/v1/audio-backups/\(backupID.uuidString)/transcription/retry")
+        XCTAssertEqual(transport.request?.httpMethod, "POST")
+    }
+
     func testBeginBackupRejectsAnUnsuccessfulWorkerResponse() async throws {
         let transport = StubCloudBackupHTTPTransport(
             data: Data(),

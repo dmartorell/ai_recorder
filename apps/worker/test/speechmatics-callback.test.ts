@@ -12,6 +12,14 @@ describe("SpeechmaticsCallback", () => {
     expect(dependencies.messages).toEqual([{ kind: "ingest", transcription_job_id: job.id }]);
   });
 
+  it("records an authenticated terminal provider failure without queuing ingestion", async () => {
+    const dependencies = new Fakes();
+    const response = await callback(dependencies).handle(new Request(`https://worker.example.test/v1/transcription-callback?id=${providerJobID}&status=failed`, { method: "POST", headers: { Authorization: "Bearer callback-token" } }));
+    expect(response.status).toBe(204);
+    expect(dependencies.failedProviderJobs).toEqual([providerJobID]);
+    expect(dependencies.messages).toEqual([]);
+  });
+
   it("queues duplicate accepted callbacks safely", async () => {
     const dependencies = new Fakes();
     const request = () => new Request(`https://worker.example.test/v1/transcription-callback?id=${providerJobID}&status=success`, { method: "POST", headers: { Authorization: "Bearer callback-token" } });
@@ -35,5 +43,11 @@ describe("SpeechmaticsCallback", () => {
 function callback(fakes: Fakes) { return new SpeechmaticsCallback({ bearerToken: "callback-token", jobs: fakes.jobs, queue: { send: async (message) => { fakes.messages.push(message); } } }); }
 class Fakes {
   messages: { kind: "ingest"; transcription_job_id: string }[] = [];
-  jobs = { processingJob: async () => job, job: async () => job, complete: async () => undefined };
+  failedProviderJobs: string[] = [];
+  jobs = {
+    processingJob: async () => job,
+    job: async () => job,
+    complete: async () => undefined,
+    failTerminalProvider: async (providerID: string) => { this.failedProviderJobs.push(providerID); return true; }
+  };
 }

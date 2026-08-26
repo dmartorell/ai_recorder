@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(45);
+select plan(66);
 
 insert into auth.users (id, email)
 values
@@ -206,6 +206,80 @@ select throws_ok(
 reset role;
 
 select results_eq(
+  $$ select state from public.fail_transcription_attempt(
+       (select id from public.transcription_jobs
+        where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'submit'
+     ) $$,
+  array['queued'],
+  'the first transient submission failure remains retryable'
+);
+
+select results_eq(
+  $$ select state from public.fail_transcription_attempt(
+       (select id from public.transcription_jobs
+        where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'submit'
+     ) $$,
+  array['queued'],
+  'the second transient submission failure remains retryable'
+);
+
+select results_eq(
+  $$ select state from public.fail_transcription_attempt(
+       (select id from public.transcription_jobs
+        where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'submit'
+     ) $$,
+  array['failed'],
+  'the third submission failure is terminal'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select results_eq(
+  $$ select state from public.transcription_jobs $$,
+  array['failed'],
+  'the owner can read a failed transcription job'
+);
+select throws_ok(
+  $$ select * from public.retry_failed_transcription(
+       (select id from public.transcription_jobs
+        where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc')
+     ) $$,
+  '42501',
+  null,
+  'authenticated users cannot retry transcription jobs directly'
+);
+select throws_ok(
+  $$ select * from public.fail_transcription_attempt(
+       (select id from public.transcription_jobs
+        where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'submit'
+     ) $$,
+  '42501',
+  null,
+  'authenticated users cannot record transcription failures directly'
+);
+select throws_ok(
+  $$ select * from public.fail_terminal_provider_transcription('terminal-provider-job') $$,
+  '42501',
+  null,
+  'authenticated users cannot record terminal provider failures directly'
+);
+reset role;
+
+select results_eq(
+  $$ select state || ':' || coalesce(provider_job_id, '')
+       from public.retry_failed_transcription(
+         (select id from public.transcription_jobs
+          where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc')
+       ) $$,
+  array['queued:'],
+  'an explicit retry resets a failed pre-submission job without changing its backup'
+);
+
+select results_eq(
   $$ select transcription_language from public.transcription_jobs
      where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc' $$,
   array['spanish_english'],
@@ -237,6 +311,69 @@ select results_eq(
   'recording provider acceptance moves the job from queued to processing'
 );
 
+insert into public.audio_backups (id, owner_id, local_audio_id, object_key, byte_count, sha256, state, completed_at)
+values ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '11111111-1111-1111-1111-111111111111', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'original-audio/terminal-provider-failure', 1024, repeat('c', 64), 'backed_up', now());
+
+select results_eq(
+  $$ select state from public.record_transcription_submission(
+       (select id from public.enqueue_transcription_job('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee')),
+       'terminal-provider-job'
+     ) $$,
+  array['processing'],
+  'a provider submission is processing before a terminal provider failure'
+);
+
+select results_eq(
+  $$ select state from public.fail_terminal_provider_transcription('terminal-provider-job') $$,
+  array['failed'],
+  'a terminal provider failure records the processing job as failed without provider details'
+);
+
+select results_eq(
+  $$ select state from public.fail_transcription_attempt(
+       (select id from public.transcription_jobs
+        where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'ingest'
+     ) $$,
+  array['processing'],
+  'the first transient ingestion failure remains retryable'
+);
+
+select results_eq(
+  $$ select state from public.fail_transcription_attempt(
+       (select id from public.transcription_jobs
+        where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'ingest'
+     ) $$,
+  array['processing'],
+  'the second transient ingestion failure remains retryable'
+);
+
+select results_eq(
+  $$ select state from public.fail_transcription_attempt(
+       (select id from public.transcription_jobs
+        where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'ingest'
+     ) $$,
+  array['failed'],
+  'the third ingestion failure is terminal'
+);
+
+select results_eq(
+  $$ select count(*)::integer from public.automatic_transcripts $$,
+  array[0],
+  'a terminal ingestion failure preserves the absence of an automatic transcript'
+);
+
+select results_eq(
+  $$ select state from public.retry_failed_transcription(
+       (select id from public.transcription_jobs
+        where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc')
+     ) $$,
+  array['processing'],
+  'an explicit retry preserves an accepted provider job for ingestion'
+);
+
 select results_eq(
   $$ select state from complete_transcription_ingestion(
        (select id from public.transcription_jobs where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
@@ -262,6 +399,74 @@ select results_eq(
   $$ select count(*)::integer from public.automatic_transcripts $$,
   array[1],
   'ingestion preserves one immutable automatic transcript'
+);
+
+select results_eq(
+  $$ select provider_cleanup_state from public.transcription_jobs
+     where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc' $$,
+  array['pending'],
+  'ingestion makes provider cleanup pending after preserving the transcript'
+);
+
+select results_eq(
+  $$ with claimed as (
+       select * from public.claim_provider_cleanup(
+         (select id from public.transcription_jobs
+          where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc')
+       )
+     )
+     select provider_cleanup_state
+     from public.fail_provider_cleanup(
+       (select transcription_job_id from claimed),
+       (select provider_cleanup_claim from claimed)
+     ) $$,
+  array['pending'],
+  'the first cleanup failure remains pending'
+);
+
+select results_eq(
+  $$ with claimed as (
+       select * from public.claim_provider_cleanup(
+         (select id from public.transcription_jobs
+          where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc')
+       )
+     )
+     select provider_cleanup_state
+     from public.fail_provider_cleanup(
+       (select transcription_job_id from claimed),
+       (select provider_cleanup_claim from claimed)
+     ) $$,
+  array['pending'],
+  'the second cleanup failure remains pending'
+);
+
+select results_eq(
+  $$ with claimed as (
+       select * from public.claim_provider_cleanup(
+         (select id from public.transcription_jobs
+          where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc')
+       )
+     )
+     select provider_cleanup_state
+     from public.fail_provider_cleanup(
+       (select transcription_job_id from claimed),
+       (select provider_cleanup_claim from claimed)
+     ) $$,
+  array['failed'],
+  'the third cleanup failure is terminal without changing transcription completion'
+);
+
+select results_eq(
+  $$ select count(*)::integer from public.automatic_transcripts $$,
+  array[1],
+  'a terminal cleanup failure preserves the completed automatic transcript'
+);
+
+select results_eq(
+  $$ select state from public.transcription_jobs
+     where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc' $$,
+  array['complete'],
+  'a terminal cleanup failure retains transcription completion'
 );
 
 select results_eq(

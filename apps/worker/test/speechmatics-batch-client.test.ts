@@ -19,7 +19,8 @@ describe("SpeechmaticsBatchClient", () => {
     })).resolves.toBe("provider-job");
 
     expect(request?.headers.get("Authorization")).toBe("Bearer test-key");
-    await expect(request?.json()).resolves.toEqual({
+    const form = await request?.formData();
+    expect(JSON.parse(form?.get("config") as string)).toEqual({
       type: "transcription",
       fetch_data: { url: "https://worker.example.test/v1/transcription-source/opaque-capability" },
       transcription_config: { model: "melia-1", language: "multi", language_hints: ["es", "en"], diarization: "speaker" },
@@ -35,8 +36,9 @@ describe("SpeechmaticsBatchClient", () => {
     } });
 
     await client.submit({ sourceURL: "https://worker.example.test/source", language: "english", reference: "stable-reference", notification: { url: "https://worker.example.test/v1/transcription-callback", bearerToken: "callback-token" } });
-    await expect(request?.json()).resolves.toMatchObject({
-      notification_config: [{ url: "https://worker.example.test/v1/transcription-callback", auth_headers: ["Authorization: Bearer callback-token"] }]
+    const form = await request?.formData();
+    expect(JSON.parse(form?.get("config") as string)).toMatchObject({
+      notification_config: [{ url: "https://worker.example.test/v1/transcription-callback", contents: [], auth_headers: ["Authorization: Bearer callback-token"] }]
     });
   });
 
@@ -48,6 +50,28 @@ describe("SpeechmaticsBatchClient", () => {
     } });
     await expect(client.transcript("provider/job")).resolves.toEqual({ format: "2.9" });
     expect(request?.url).toBe("https://asr.api.speechmatics.com/v2/jobs/provider%2Fjob/transcript");
+  });
+
+  it("deletes a provider job without parsing its response", async () => {
+    let request: Request | undefined;
+    const client = new SpeechmaticsBatchClient({ apiKey: "test-key", fetch: async (input, init) => {
+      request = new Request(input, init);
+      return new Response(null, { status: 204 });
+    } });
+
+    await expect(client.deleteJob("provider/job")).resolves.toBe("deleted");
+    expect(request?.method).toBe("DELETE");
+    expect(request?.url).toBe("https://asr.api.speechmatics.com/v2/jobs/provider%2Fjob");
+  });
+
+  it.each([404, 410])("treats deletion status %i as already deleted", async (status) => {
+    const client = new SpeechmaticsBatchClient({ apiKey: "test-key", fetch: async () => new Response(null, { status }) });
+    await expect(client.deleteJob("provider-job")).resolves.toBe("already_deleted");
+  });
+
+  it("rejects an unsuccessful provider deletion without exposing its response", async () => {
+    const client = new SpeechmaticsBatchClient({ apiKey: "test-key", fetch: async () => new Response("sensitive provider response", { status: 500 }) });
+    await expect(client.deleteJob("provider-job")).rejects.toThrow("Speechmatics job deletion failed");
   });
 
   it("finds a recent provider job by the stable tracking reference", async () => {
@@ -85,6 +109,7 @@ describe("SpeechmaticsBatchClient", () => {
     } });
 
     await client.submit({ sourceURL: "https://worker.example.test/source", language, reference: "reference" });
-    await expect(request?.json()).resolves.toMatchObject({ transcription_config: transcriptionConfig });
+    const form = await request?.formData();
+    expect(JSON.parse(form?.get("config") as string)).toMatchObject({ transcription_config: transcriptionConfig });
   });
 });

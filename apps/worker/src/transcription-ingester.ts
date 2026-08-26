@@ -5,16 +5,22 @@ export interface IngestionJob {
   provider_job_id: string;
   provider_reference: string;
   state: "processing" | "complete";
+  provider_cleanup_state: "not_started" | "pending" | "complete" | "failed";
 }
 
 export interface TranscriptionIngestionStore {
   processingJob(providerJobID: string): Promise<IngestionJob | undefined>;
   job(jobID: string): Promise<IngestionJob | undefined>;
   complete(jobID: string, artifactKey: string, transcript: unknown): Promise<void>;
+  failTerminalProvider(providerJobID: string): Promise<boolean>;
 }
 
 export interface PrivateTranscriptArtifactStore {
   putIfAbsent(key: string, contents: string): Promise<void>;
+}
+
+export interface TranscriptionCleanupQueue {
+  send(message: { kind: "cleanup"; transcription_job_id: string }): Promise<unknown>;
 }
 
 export class R2TranscriptArtifactStore implements PrivateTranscriptArtifactStore {
@@ -34,17 +40,25 @@ export class TranscriptionIngester {
     jobs: TranscriptionIngestionStore;
     provider: SpeechmaticsClient;
     artifacts: PrivateTranscriptArtifactStore;
+    queue: TranscriptionCleanupQueue;
   }) {}
 
   async ingest(jobID: string): Promise<void> {
     const job = await this.dependencies.jobs.job(jobID);
-    if (!job || job.state === "complete") return;
+    if (!job) return;
+    if (job.state === "complete") {
+      if (job.provider_cleanup_state === "pending") {
+        await this.dependencies.queue.send({ kind: "cleanup", transcription_job_id: job.id });
+      }
+      return;
+    }
 
     const transcript = await this.dependencies.provider.transcript(job.provider_job_id);
     validateTranscript(transcript, job);
     const artifactKey = `automatic-transcripts/${job.id}.json`;
     await this.dependencies.artifacts.putIfAbsent(artifactKey, JSON.stringify(transcript));
     await this.dependencies.jobs.complete(job.id, artifactKey, transcript);
+    await this.dependencies.queue.send({ kind: "cleanup", transcription_job_id: job.id });
   }
 }
 

@@ -29,7 +29,9 @@
           {
             "queue": "ai-recorder-transcription-jobs-staging",
             "max_batch_size": 1,
-            "max_batch_timeout": 5
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "retry_delay": 60
           }
         ]
       }

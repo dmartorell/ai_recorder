@@ -14,8 +14,13 @@ export class SpeechmaticsCallback {
     if (!timingSafeEqual(bearerToken(request), this.dependencies.bearerToken)) return Response.json({ error: "unauthorized" }, { status: 401 });
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
-    if (!id || !providerJobID.test(id) || url.searchParams.get("status") !== "success" || await request.arrayBuffer().then((body) => body.byteLength !== 0)) {
+    const status = url.searchParams.get("status");
+    if (!id || !providerJobID.test(id) || (status !== "success" && status !== "failed") || await request.arrayBuffer().then((body) => body.byteLength !== 0)) {
       return Response.json({ error: "invalid_request" }, { status: 400 });
+    }
+    if (status === "failed") {
+      if (!await this.dependencies.jobs.failTerminalProvider(id)) return Response.json({ error: "not_found" }, { status: 404 });
+      return new Response(null, { status: 204 });
     }
     const job = await this.dependencies.jobs.processingJob(id);
     if (!job) return Response.json({ error: "not_found" }, { status: 404 });

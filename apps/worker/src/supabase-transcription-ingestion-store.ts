@@ -7,7 +7,7 @@ export class SupabaseTranscriptionIngestionStore implements TranscriptionIngesti
   private readonly headers: HeadersInit;
   private readonly fetch: Fetch;
 
-  constructor({ supabaseURL, serviceRoleKey, fetch = globalThis.fetch }: { supabaseURL: string; serviceRoleKey: string; fetch?: Fetch }) {
+  constructor({ supabaseURL, serviceRoleKey, fetch = (input, init) => globalThis.fetch(input, init) }: { supabaseURL: string; serviceRoleKey: string; fetch?: Fetch }) {
     this.base = supabaseURL.endsWith("/") ? supabaseURL : `${supabaseURL}/`;
     this.headers = { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" };
     this.fetch = fetch;
@@ -23,12 +23,22 @@ export class SupabaseTranscriptionIngestionStore implements TranscriptionIngesti
 
   private async resolve(filters: Record<string, string>): Promise<IngestionJob | undefined> {
     const url = new URL("rest/v1/transcription_jobs", this.base);
-    url.search = new URLSearchParams({ ...filters, select: "id,provider_job_id,provider_reference,state" }).toString();
+    url.search = new URLSearchParams({ ...filters, select: "id,provider_job_id,provider_reference,state,provider_cleanup_state" }).toString();
     const response = await this.fetch(url, { headers: this.headers });
     if (!response.ok) throw new Error("Could not resolve transcription ingestion");
     const rows: unknown = await response.json();
     if (!Array.isArray(rows) || rows.length > 1 || (rows.length === 1 && !isJob(rows[0]))) throw new Error("Invalid transcription ingestion record");
     return rows[0];
+  }
+
+  async failTerminalProvider(providerJobID: string): Promise<boolean> {
+    const response = await this.fetch(new URL("rest/v1/rpc/fail_terminal_provider_transcription", this.base), {
+      method: "POST", headers: this.headers, body: JSON.stringify({ p_provider_job_id: providerJobID })
+    });
+    if (!response.ok) throw new Error("Could not record terminal provider failure");
+    const rows: unknown = await response.json();
+    if (!Array.isArray(rows) || rows.length > 1 || (rows.length === 1 && !isJob(rows[0]))) throw new Error("Invalid transcription ingestion record");
+    return rows.length === 1;
   }
 
   async complete(jobID: string, artifactKey: string, transcript: unknown): Promise<void> {
@@ -45,6 +55,8 @@ export class SupabaseTranscriptionIngestionStore implements TranscriptionIngesti
 
 function isJob(value: unknown): value is IngestionJob {
   return isRecord(value) && typeof value.id === "string" && typeof value.provider_job_id === "string"
-    && typeof value.provider_reference === "string" && (value.state === "processing" || value.state === "complete");
+    && typeof value.provider_reference === "string" && (value.state === "processing" || value.state === "complete")
+    && (value.provider_cleanup_state === "not_started" || value.provider_cleanup_state === "pending"
+      || value.provider_cleanup_state === "complete" || value.provider_cleanup_state === "failed");
 }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value); }

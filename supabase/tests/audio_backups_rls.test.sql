@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(63);
+select plan(66);
 
 insert into auth.users (id, email)
 values
@@ -261,6 +261,12 @@ select throws_ok(
   null,
   'authenticated users cannot record transcription failures directly'
 );
+select throws_ok(
+  $$ select * from public.fail_terminal_provider_transcription('terminal-provider-job') $$,
+  '42501',
+  null,
+  'authenticated users cannot record terminal provider failures directly'
+);
 reset role;
 
 select results_eq(
@@ -303,6 +309,24 @@ select results_eq(
      ) $$,
   array['processing:speechmatics-job'],
   'recording provider acceptance moves the job from queued to processing'
+);
+
+insert into public.audio_backups (id, owner_id, local_audio_id, object_key, byte_count, sha256, state, completed_at)
+values ('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', '11111111-1111-1111-1111-111111111111', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'original-audio/terminal-provider-failure', 1024, repeat('c', 64), 'backed_up', now());
+
+select results_eq(
+  $$ select state from public.record_transcription_submission(
+       (select id from public.enqueue_transcription_job('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee')),
+       'terminal-provider-job'
+     ) $$,
+  array['processing'],
+  'a provider submission is processing before a terminal provider failure'
+);
+
+select results_eq(
+  $$ select state from public.fail_terminal_provider_transcription('terminal-provider-job') $$,
+  array['failed'],
+  'a terminal provider failure records the processing job as failed without provider details'
 );
 
 select results_eq(

@@ -103,3 +103,4 @@ Do not mark these scenarios passed from simulator, mocks, or Worker tests. Delet
 | 2026-08-27 | Isolated staging integration | Blocked. Required isolated staging variables were not present, so the integration test skipped. |
 | 2026-08-27 | Local pgTAP suite | Blocked. No local Supabase database was running at `127.0.0.1:54322`. |
 | 2026-08-27 | Physical iPhone pipeline and two-hour reliability check | Pending. These require a staging-configured physical iPhone and synthetic Audio. |
+| 2026-08-27 | Local pgTAP suite on iMac | Pass. `Files=1, Tests=66`, `Result: PASS`. |

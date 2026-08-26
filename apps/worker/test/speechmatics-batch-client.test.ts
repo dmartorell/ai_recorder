@@ -19,7 +19,8 @@ describe("SpeechmaticsBatchClient", () => {
     })).resolves.toBe("provider-job");
 
     expect(request?.headers.get("Authorization")).toBe("Bearer test-key");
-    await expect(request?.json()).resolves.toEqual({
+    const form = await request?.formData();
+    expect(JSON.parse(form?.get("config") as string)).toEqual({
       type: "transcription",
       fetch_data: { url: "https://worker.example.test/v1/transcription-source/opaque-capability" },
       transcription_config: { model: "melia-1", language: "multi", language_hints: ["es", "en"], diarization: "speaker" },
@@ -35,8 +36,9 @@ describe("SpeechmaticsBatchClient", () => {
     } });
 
     await client.submit({ sourceURL: "https://worker.example.test/source", language: "english", reference: "stable-reference", notification: { url: "https://worker.example.test/v1/transcription-callback", bearerToken: "callback-token" } });
-    await expect(request?.json()).resolves.toMatchObject({
-      notification_config: [{ url: "https://worker.example.test/v1/transcription-callback", auth_headers: ["Authorization: Bearer callback-token"] }]
+    const form = await request?.formData();
+    expect(JSON.parse(form?.get("config") as string)).toMatchObject({
+      notification_config: [{ url: "https://worker.example.test/v1/transcription-callback", contents: [], auth_headers: ["Authorization: Bearer callback-token"] }]
     });
   });
 
@@ -107,6 +109,7 @@ describe("SpeechmaticsBatchClient", () => {
     } });
 
     await client.submit({ sourceURL: "https://worker.example.test/source", language, reference: "reference" });
-    await expect(request?.json()).resolves.toMatchObject({ transcription_config: transcriptionConfig });
+    const form = await request?.formData();
+    expect(JSON.parse(form?.get("config") as string)).toMatchObject({ transcription_config: transcriptionConfig });
   });
 });

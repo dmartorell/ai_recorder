@@ -20,27 +20,16 @@ export class SpeechmaticsBatchClient implements SpeechmaticsClient {
   private readonly fetch: Fetch;
   private readonly headers: HeadersInit;
 
-  constructor({ apiKey, fetch = globalThis.fetch }: { apiKey: string; fetch?: Fetch }) {
+  constructor({ apiKey, fetch = (input, init) => globalThis.fetch(input, init) }: { apiKey: string; fetch?: Fetch }) {
     this.fetch = fetch;
-    this.headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+    this.headers = { Authorization: `Bearer ${apiKey}` };
   }
 
   async submit(submission: SpeechmaticsSubmission): Promise<string> {
     const response = await this.fetch("https://asr.api.speechmatics.com/v2/jobs", {
       method: "POST",
       headers: this.headers,
-      body: JSON.stringify({
-        type: "transcription",
-        fetch_data: { url: submission.sourceURL },
-        transcription_config: transcriptionConfig(submission.language),
-        tracking: { reference: submission.reference },
-        ...(submission.notification ? {
-          notification_config: [{
-            url: submission.notification.url,
-            auth_headers: [`Authorization: Bearer ${submission.notification.bearerToken}`]
-          }]
-        } : {})
-      })
+      body: jobConfiguration(submission)
     });
     if (!response.ok) throw new Error("Speechmatics job submission failed");
     const body: unknown = await response.json();
@@ -75,6 +64,24 @@ export class SpeechmaticsBatchClient implements SpeechmaticsClient {
     const match = matches[0];
     return match && typeof match.id === "string" ? match.id : undefined;
   }
+}
+
+function jobConfiguration(submission: SpeechmaticsSubmission): FormData {
+  const form = new FormData();
+  form.set("config", JSON.stringify({
+    type: "transcription",
+    fetch_data: { url: submission.sourceURL },
+    transcription_config: transcriptionConfig(submission.language),
+    tracking: { reference: submission.reference },
+    ...(submission.notification ? {
+      notification_config: [{
+        url: submission.notification.url,
+        contents: [],
+        auth_headers: [`Authorization: Bearer ${submission.notification.bearerToken}`]
+      }]
+    } : {})
+  }));
+  return form;
 }
 
 function transcriptionConfig(language: TranscriptionLanguage) {

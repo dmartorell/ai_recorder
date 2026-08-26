@@ -2,18 +2,22 @@ import type { StoredBackup } from "./cloud-backup";
 
 const transcriptionJobsPath = "rest/v1/transcription_jobs";
 const enqueueTranscriptionJobPath = "rest/v1/rpc/enqueue_transcription_job";
-const selectedColumns = "id,backup_id,owner_id,state";
+const selectedColumns = "id,backup_id,owner_id,state,provider_job_id";
+
+export class TranscriptionJobNotRetryableError extends Error {}
 
 export interface TranscriptionJob {
   id: string;
   backup_id: string;
   owner_id: string;
   state: "queued" | "processing" | "complete" | "failed";
+  provider_job_id: string | null;
 }
 
 export interface TranscriptionJobStore {
   enqueue(backup: StoredBackup): Promise<TranscriptionJob>;
   get(ownerID: string, backupID: string): Promise<TranscriptionJob | undefined>;
+  retryFailed(ownerID: string, backupID: string): Promise<TranscriptionJob | undefined>;
 }
 
 type StoreFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -41,6 +45,16 @@ export class SupabaseTranscriptionJobStore implements TranscriptionJobStore {
     return oneJob(await response.json());
   }
 
+  async retryFailed(ownerID: string, backupID: string): Promise<TranscriptionJob | undefined> {
+    const job = await this.get(ownerID, backupID);
+    if (!job) return undefined;
+    if (job.state !== "failed") throw new TranscriptionJobNotRetryableError();
+    const endpoint = new URL("rpc/retry_failed_transcription", this.endpoint);
+    const response = await this.fetch(endpoint, { method: "POST", headers: { ...this.headers, "Content-Type": "application/json" }, body: JSON.stringify({ p_job_id: job.id }) });
+    if (!response.ok) throw new Error("Could not retry transcription job");
+    return oneJob(await response.json());
+  }
+
   async get(ownerID: string, backupID: string): Promise<TranscriptionJob | undefined> {
     const url = new URL(this.endpoint);
     url.search = new URLSearchParams({ owner_id: `eq.${ownerID}`, backup_id: `eq.${backupID}`, select: selectedColumns }).toString();
@@ -62,7 +76,8 @@ function isJob(value: unknown): value is TranscriptionJob {
     && typeof value.id === "string"
     && typeof value.backup_id === "string"
     && typeof value.owner_id === "string"
-    && (value.state === "queued" || value.state === "processing" || value.state === "complete" || value.state === "failed");
+    && (value.state === "queued" || value.state === "processing" || value.state === "complete" || value.state === "failed")
+    && (typeof value.provider_job_id === "string" || value.provider_job_id === null);
 }
 
 function withTrailingSlash(url: string): string { return url.endsWith("/") ? url : `${url}/`; }

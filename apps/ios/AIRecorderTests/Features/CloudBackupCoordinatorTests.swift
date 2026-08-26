@@ -127,6 +127,24 @@ final class CloudBackupCoordinatorTests: XCTestCase {
         XCTAssertEqual(item.transcriptionState, .queued)
     }
 
+    func testRetryTranscriptionRefreshesFailedBackedUpAudioWithoutChangingBackupState() async throws {
+        let item = availableAudio()
+        let backupID = UUID()
+        item.cloudBackupID = backupID
+        item.cloudBackupState = .backedUp
+        item.transcriptionState = .failed
+        let client = FakeCloudBackupClient()
+        client.returnedTranscriptionStatus = .init(state: .processing)
+        let coordinator = CloudBackupCoordinator(client: client, files: files, uploader: FakePartUploader(), persistence: FakeBackupPersistence())
+
+        await coordinator.retryTranscription(for: item)
+
+        XCTAssertEqual(client.retriedBackupIDs, [backupID])
+        XCTAssertEqual(item.cloudBackupState, .backedUp)
+        XCTAssertEqual(item.transcriptionState, .processing)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: files.url(for: item.id).path))
+    }
+
     func testCancelBackupAbortsTransferAndLeavesOriginalAudioUnbacked() async throws {
         let item = availableAudio()
         let backupID = UUID()
@@ -297,6 +315,8 @@ private final class FakeCloudBackupClient: CloudBackupClient {
     }
     func cancelMultipartUpload(id: UUID) async throws { cancelledBackupIDs.append(id) }
     func transcriptionStatus(id: UUID) async throws -> CloudTranscriptionStatus { returnedTranscriptionStatus }
+    var retriedBackupIDs = [UUID]()
+    func retryTranscription(id: UUID) async throws { retriedBackupIDs.append(id) }
 }
 
 private final class FakeBackupPersistence: CloudBackupPersisting {

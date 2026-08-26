@@ -20,7 +20,7 @@ cd apps/worker
 npx wrangler secret put SPEECHMATICS_API_KEY --env staging
 ```
 
-The consumer signs each private R2 read URL for 900 seconds, reconciles an unresolved provider request by stable tracking reference before another provider submission, and sends Speechmatics only that scoped URL. It does not register a completion callback. Do not deploy, create the queue, or set the secret without explicit approval.
+The consumer signs each private R2 read URL for 900 seconds, reconciles an unresolved provider request by stable tracking reference before another provider submission, and sends Speechmatics only that scoped URL. Do not deploy, create the queue, or set the secret without explicit approval.
 
 ## Automatic Transcript callback setup
 
@@ -62,6 +62,18 @@ The suite skips when any value is absent, so a skipped result is not validation.
 ## Signed URL expiry and scope
 
 The integration suite automatically confirms method and part-number scope. During the same run, retain the signed URL only in memory. After 900 seconds, retry the `PUT` with the same synthetic part. It must be rejected. Record only pass/fail and HTTP status. Never place the URL in this repository or an issue comment.
+
+## Transcription recovery validation
+
+Use synthetic Audio only. Record pass/fail and HTTP status only for each check:
+
+- two transient submission failures followed by stable-reference reconciliation with one provider job;
+- terminal submission or ingestion failure after three deliveries;
+- owner-authorized retry that queues the existing backed-up Original Audio without another multipart upload;
+- one preserved Automatic Transcript projection and artifact after successful ingestion;
+- provider deletion success, plus cleanup retries that retain transcription `complete` while cleanup is pending or failed.
+
+Do not retain provider IDs, provider responses, transcript text, object keys, signed URLs, credentials, callback tokens, or API keys in commands, logs, evidence, or issue comments. A failed synthetic job must be retried only through the Audio detail `Retry transcription` control. Do not create another Audio merely to retry processing.
 
 ## Physical iPhone validation
 

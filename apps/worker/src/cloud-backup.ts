@@ -1,7 +1,7 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { multipartPartSize, type MultipartGateway } from "./r2-multipart";
 import { BackupMetadataConflictError, SupabaseBackupStore } from "./supabase-backup-store";
-import { SupabaseTranscriptionJobStore, type TranscriptionJobStore } from "./supabase-transcription-job-store";
+import { SupabaseTranscriptionJobStore, TranscriptionJobNotRetryableError, type TranscriptionJobStore } from "./supabase-transcription-job-store";
 import { SpeechmaticsCallback } from "./speechmatics-callback";
 
 const backupPath = "/v1/audio-backups";
@@ -14,7 +14,7 @@ export interface StoredBackup { id: string; owner_id: string; local_audio_id: st
 export interface StoredPart { part_number: number; etag: string; byte_count: number; }
 export type MultipartUploadClaim = { kind: "existing"; uploadID: string } | { kind: "claimed"; claimID: string } | { kind: "inProgress" };
 export interface BackupStore { begin(request: BeginBackupRequest): Promise<CloudBackup>; get(ownerID: string, id: string): Promise<StoredBackup | undefined>; claimMultipartUpload(backup: StoredBackup): Promise<MultipartUploadClaim>; assignUploadID(backup: StoredBackup, claimID: string, uploadID: string): Promise<boolean>; releaseMultipartUploadClaim(backup: StoredBackup, claimID: string): Promise<void>; confirmedParts(backupID: string): Promise<StoredPart[]>; confirmPart(backupID: string, part: StoredPart): Promise<void>; cancel(backup: StoredBackup): Promise<void>; markBackedUp(backup: StoredBackup): Promise<void>; }
-export interface TranscriptionJobQueue { send(message: { kind: "submit"; transcription_job_id: string }): Promise<unknown>; }
+export interface TranscriptionJobQueue { send(message: { kind: "submit" | "ingest"; transcription_job_id: string }): Promise<unknown>; }
 interface WorkerDependencies { authentication: WorkerAuthenticator; backups: BackupStore; transcriptionJobs?: TranscriptionJobStore; transcriptionQueue?: TranscriptionJobQueue; multipart?: MultipartGateway; }
 
 export function createWorker({ authentication, backups, transcriptionJobs = new UnconfiguredTranscriptionJobStore(), transcriptionQueue, multipart }: WorkerDependencies): ExportedHandler<Env> {
@@ -26,6 +26,12 @@ export function createWorker({ authentication, backups, transcriptionJobs = new 
     const suffix = url.pathname.slice(backupPath.length);
     try {
       if (suffix === "" && request.method === "POST") return await begin(request, identity.userID, backups);
+      const retryMatch = suffix.match(/^\/([0-9a-f-]{36})\/transcription\/retry$/i);
+      if (retryMatch && uuidPattern.test(retryMatch[1]) && request.method === "POST") {
+        const backup = await backups.get(identity.userID, retryMatch[1]);
+        if (!backup) return Response.json({ error: "not_found" }, { status: 404 });
+        return await retryTranscription(backup, identity.userID, transcriptionJobs, transcriptionQueue);
+      }
       const match = suffix.match(/^\/([0-9a-f-]{36})(?:\/(multipart|complete|cancel|transcription)|\/parts\/(\d+)\/(url|confirm))?$/i);
       if (!match || !uuidPattern.test(match[1])) return Response.json({ error: "not_found" }, { status: 404 });
       const backup = await backups.get(identity.userID, match[1]);
@@ -42,7 +48,7 @@ export function createWorker({ authentication, backups, transcriptionJobs = new 
     } catch (error) {
       if (error instanceof BackupMetadataConflictError) return Response.json({ error: "backup_metadata_conflict" }, { status: 409 });
       if (error instanceof InvalidRequestError) return Response.json({ error: "invalid_request" }, { status: 400 });
-      if (error instanceof InvalidStateError) return Response.json({ error: "invalid_state" }, { status: 409 });
+      if (error instanceof InvalidStateError || error instanceof TranscriptionJobNotRetryableError) return Response.json({ error: "invalid_state" }, { status: 409 });
       throw error;
     }
   }};
@@ -80,7 +86,18 @@ async function signedURL(request: Request, backup: StoredBackup, partNumber: num
 async function confirm(request: Request, backup: StoredBackup, partNumber: number, backups: BackupStore, multipart: MultipartGateway): Promise<Response> { active(backup); const uploadID = uploadIDFor(backup); validatePart(backup, partNumber); const body = await parseJSON(request); const etag = isRecord(body) ? body.etag : undefined; if (typeof etag !== "string" || !etag) throw new InvalidRequestError(); const part = (await multipart.listParts(backup.object_key, uploadID)).find((candidate) => candidate.partNumber === partNumber && candidate.etag === etag.replaceAll('"', "")); if (!part || part.byteCount !== expectedPartBytes(backup, partNumber)) throw new InvalidRequestError(); await backups.confirmPart(backup.id, { part_number: part.partNumber, etag: part.etag, byte_count: part.byteCount }); return new Response(null, { status: 204 }); }
 async function complete(backup: StoredBackup, backups: BackupStore, multipart: MultipartGateway, transcriptionJobs?: TranscriptionJobStore, transcriptionQueue?: TranscriptionJobQueue): Promise<Response> { if (backup.state === "backed_up") return backedUp(backup, transcriptionJobs, transcriptionQueue); active(backup); const uploadID = uploadIDFor(backup); const parts = await backups.confirmedParts(backup.id); const count = Math.ceil(backup.byte_count / multipartPartSize); if (parts.length !== count || parts.some((part, index) => part.part_number !== index + 1 || part.byte_count !== expectedPartBytes(backup, part.part_number))) throw new InvalidRequestError(); const object = await multipart.complete(backup.object_key, uploadID, parts.map((part) => ({ partNumber: part.part_number, etag: part.etag, byteCount: part.byte_count }))); if (object.size !== backup.byte_count || object.sha256 !== backup.sha256) throw new Error("Completed object verification failed"); await backups.markBackedUp(backup); return backedUp(backup, transcriptionJobs, transcriptionQueue); }
 async function backedUp(backup: StoredBackup, transcriptionJobs?: TranscriptionJobStore, transcriptionQueue?: TranscriptionJobQueue): Promise<Response> { if (transcriptionJobs && transcriptionQueue) { const job = await transcriptionJobs.enqueue(backup); await transcriptionQueue.send({ kind: "submit", transcription_job_id: job.id }); } return Response.json({ id: backup.id, state: "backed_up" }); }
-async function transcriptionStatus(backup: StoredBackup, transcriptionJobs: TranscriptionJobStore): Promise<Response> { const job = await transcriptionJobs.get(backup.owner_id, backup.id); return Response.json({ state: job?.state ?? "not_started" }); }
+async function retryTranscription(backup: StoredBackup, ownerID: string, transcriptionJobs: TranscriptionJobStore, transcriptionQueue?: TranscriptionJobQueue): Promise<Response> {
+  if (!transcriptionQueue) return Response.json({ error: "service_unavailable" }, { status: 503 });
+  const job = await transcriptionJobs.retryFailed(ownerID, backup.id);
+  if (!job) return Response.json({ error: "not_found" }, { status: 404 });
+  if (job.state !== "queued" && job.state !== "processing") throw new InvalidStateError();
+  await transcriptionQueue.send({ kind: job.provider_job_id ? "ingest" : "submit", transcription_job_id: job.id });
+  return new Response(null, { status: 204 });
+}
+async function transcriptionStatus(backup: StoredBackup, transcriptionJobs: TranscriptionJobStore): Promise<Response> {
+  const job = await transcriptionJobs.get(backup.owner_id, backup.id);
+  return Response.json({ state: job?.state ?? "not_started" });
+}
 async function cancel(backup: StoredBackup, backups: BackupStore, multipart: MultipartGateway): Promise<Response> { active(backup); if (backup.r2_upload_id) await multipart.abort(backup.object_key, backup.r2_upload_id); await backups.cancel(backup); return new Response(null, { status: 204 }); }
 function active(backup: StoredBackup) { if (backup.state !== "uploading") throw new InvalidStateError(); }
 function uploadIDFor(backup: StoredBackup): string { if (!backup.r2_upload_id) throw new InvalidStateError(); return backup.r2_upload_id; }
@@ -105,4 +122,4 @@ export function createDefaultWorker(supabaseURL: string, serviceRoleKey: string 
   };
 }
 class UnconfiguredBackupStore implements BackupStore { async begin(): Promise<CloudBackup> { throw new Error("service unavailable"); } async get(): Promise<undefined> { return undefined; } async claimMultipartUpload(): Promise<MultipartUploadClaim> { throw new Error("service unavailable"); } async assignUploadID(): Promise<boolean> { throw new Error("service unavailable"); } async releaseMultipartUploadClaim(): Promise<void> { throw new Error("service unavailable"); } async confirmedParts(): Promise<StoredPart[]> { return []; } async confirmPart(): Promise<void> { throw new Error("service unavailable"); } async cancel(): Promise<void> { throw new Error("service unavailable"); } async markBackedUp(): Promise<void> { throw new Error("service unavailable"); } }
-class UnconfiguredTranscriptionJobStore implements TranscriptionJobStore { async enqueue(): Promise<never> { throw new Error("service unavailable"); } async get(): Promise<undefined> { return undefined; } }
+class UnconfiguredTranscriptionJobStore implements TranscriptionJobStore { async enqueue(): Promise<never> { throw new Error("service unavailable"); } async get(): Promise<undefined> { return undefined; } async retryFailed(): Promise<undefined> { return undefined; } }

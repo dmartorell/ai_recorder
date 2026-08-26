@@ -7,7 +7,7 @@ export class SupabaseTranscriptionIngestionStore implements TranscriptionIngesti
   private readonly headers: HeadersInit;
   private readonly fetch: Fetch;
 
-  constructor({ supabaseURL, serviceRoleKey, fetch = globalThis.fetch }: { supabaseURL: string; serviceRoleKey: string; fetch?: Fetch }) {
+  constructor({ supabaseURL, serviceRoleKey, fetch = (input, init) => globalThis.fetch(input, init) }: { supabaseURL: string; serviceRoleKey: string; fetch?: Fetch }) {
     this.base = supabaseURL.endsWith("/") ? supabaseURL : `${supabaseURL}/`;
     this.headers = { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" };
     this.fetch = fetch;
@@ -29,6 +29,16 @@ export class SupabaseTranscriptionIngestionStore implements TranscriptionIngesti
     const rows: unknown = await response.json();
     if (!Array.isArray(rows) || rows.length > 1 || (rows.length === 1 && !isJob(rows[0]))) throw new Error("Invalid transcription ingestion record");
     return rows[0];
+  }
+
+  async failTerminalProvider(providerJobID: string): Promise<boolean> {
+    const response = await this.fetch(new URL("rest/v1/rpc/fail_terminal_provider_transcription", this.base), {
+      method: "POST", headers: this.headers, body: JSON.stringify({ p_provider_job_id: providerJobID })
+    });
+    if (!response.ok) throw new Error("Could not record terminal provider failure");
+    const rows: unknown = await response.json();
+    if (!Array.isArray(rows) || rows.length > 1 || (rows.length === 1 && !isJob(rows[0]))) throw new Error("Invalid transcription ingestion record");
+    return rows.length === 1;
   }
 
   async complete(jobID: string, artifactKey: string, transcript: unknown): Promise<void> {

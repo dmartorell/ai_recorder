@@ -58,6 +58,10 @@ describe("TranscriptionSubmitter", () => {
 
     await expect(submitter.submit(job.id)).rejects.toThrow("provider unavailable");
     expect(jobs.recorded).toEqual([]);
+
+    provider.error = undefined;
+    await submitter.submit(job.id);
+    expect(jobs.recorded).toEqual(["provider-job"]);
   });
 });
 

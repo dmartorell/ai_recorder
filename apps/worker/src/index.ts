@@ -3,13 +3,11 @@ import { R2MultipartGateway } from "./r2-multipart";
 import { SpeechmaticsBatchClient } from "./speechmatics-batch-client";
 import { SpeechmaticsCallback } from "./speechmatics-callback";
 import { R2TranscriptArtifactStore, TranscriptionIngester } from "./transcription-ingester";
+import { ProviderCleanupService, SupabaseTranscriptionRecoveryStore } from "./transcription-recovery-store";
+import { handleTranscriptionQueue, type TranscriptionQueueMessage } from "./transcription-queue";
 import { SupabaseTranscriptionIngestionStore } from "./supabase-transcription-ingestion-store";
 import { SupabaseTranscriptionSubmissionStore } from "./supabase-transcription-submission-store";
 import { TranscriptionSubmitter } from "./transcription-submitter";
-
-type TranscriptionQueueMessage =
-  | { kind: "submit"; transcription_job_id: string }
-  | { kind: "ingest"; transcription_job_id: string };
 
 export default {
   fetch(request, env, context) {
@@ -28,8 +26,23 @@ export default {
     const multipart = gateway(env);
     const ingestionStore = configuredIngestionStore(env);
     const notification = callbackConfiguration(env);
-    if (!multipart || !env.SUPABASE_SERVICE_ROLE_KEY || !env.SPEECHMATICS_API_KEY || !ingestionStore || !notification) {
-      for (const message of batch.messages) message.retry();
+    const recovery = env.SUPABASE_SERVICE_ROLE_KEY
+      ? new SupabaseTranscriptionRecoveryStore({ supabaseURL: env.SUPABASE_URL ?? "https://unconfigured.invalid", serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY })
+      : undefined;
+    if (!multipart || !ingestionStore || !notification || !recovery) {
+      for (const message of batch.messages) message.retry({ delaySeconds: 60 });
+      return;
+    }
+    if (!env.SPEECHMATICS_API_KEY) {
+      for (const message of batch.messages) {
+        const body = message.body as Partial<TranscriptionQueueMessage>;
+        if ((body.kind === "submit" || body.kind === "ingest") && typeof body.transcription_job_id === "string" && message.attempts >= 3) {
+          await recovery.failTranscriptionAttempt(body.transcription_job_id, body.kind);
+          message.ack();
+        } else {
+          message.retry({ delaySeconds: 60 });
+        }
+      }
       return;
     }
     const provider = new SpeechmaticsBatchClient({ apiKey: env.SPEECHMATICS_API_KEY });
@@ -45,16 +58,8 @@ export default {
       artifacts: new R2TranscriptArtifactStore(env.ORIGINAL_AUDIO!),
       queue: env.TRANSCRIPTION_JOBS
     });
-    for (const message of batch.messages) {
-      const body = message.body as Partial<TranscriptionQueueMessage>;
-      if (typeof body?.transcription_job_id !== "string") { message.ack(); continue; }
-      try {
-        if (body.kind === "submit") await submitter.submit(body.transcription_job_id);
-        else if (body.kind === "ingest") await ingester.ingest(body.transcription_job_id);
-        else { message.ack(); continue; }
-        message.ack();
-      } catch { message.retry(); }
-    }
+    const cleanup = new ProviderCleanupService({ store: recovery, provider });
+    await handleTranscriptionQueue(batch.messages, { submitter, ingester, cleanup, recovery });
   }
 } satisfies ExportedHandler<Env>;
 

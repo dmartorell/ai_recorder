@@ -20,6 +20,8 @@ export interface TranscriptionRecoveryStore {
   failProviderCleanup(jobID: string, claimID: string): Promise<void>;
 }
 
+export class ProviderCleanupFailure extends Error {}
+
 export class ProviderCleanupService {
   constructor(private readonly dependencies: {
     store: TranscriptionRecoveryStore;
@@ -34,7 +36,7 @@ export class ProviderCleanupService {
       await this.dependencies.store.completeProviderCleanup(claim.transcription_job_id, claim.provider_cleanup_claim);
     } catch (error) {
       await this.dependencies.store.failProviderCleanup(claim.transcription_job_id, claim.provider_cleanup_claim);
-      throw error;
+      throw new ProviderCleanupFailure();
     }
   }
 }
@@ -46,7 +48,7 @@ export class SupabaseTranscriptionRecoveryStore implements TranscriptionRecovery
   private readonly headers: HeadersInit;
   private readonly fetch: Fetch;
 
-  constructor({ supabaseURL, serviceRoleKey, fetch = globalThis.fetch }: { supabaseURL: string; serviceRoleKey: string; fetch?: Fetch }) {
+  constructor({ supabaseURL, serviceRoleKey, fetch = (input, init) => globalThis.fetch(input, init) }: { supabaseURL: string; serviceRoleKey: string; fetch?: Fetch }) {
     this.base = supabaseURL.endsWith("/") ? supabaseURL : `${supabaseURL}/`;
     this.headers = { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}`, "Content-Type": "application/json" };
     this.fetch = fetch;

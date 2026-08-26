@@ -12,6 +12,7 @@ export interface TranscriptionIngestionStore {
   processingJob(providerJobID: string): Promise<IngestionJob | undefined>;
   job(jobID: string): Promise<IngestionJob | undefined>;
   complete(jobID: string, artifactKey: string, transcript: unknown): Promise<void>;
+  failTerminalProvider(providerJobID: string): Promise<boolean>;
 }
 
 export interface PrivateTranscriptArtifactStore {

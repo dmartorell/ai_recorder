@@ -50,6 +50,28 @@ describe("SpeechmaticsBatchClient", () => {
     expect(request?.url).toBe("https://asr.api.speechmatics.com/v2/jobs/provider%2Fjob/transcript");
   });
 
+  it("deletes a provider job without parsing its response", async () => {
+    let request: Request | undefined;
+    const client = new SpeechmaticsBatchClient({ apiKey: "test-key", fetch: async (input, init) => {
+      request = new Request(input, init);
+      return new Response(null, { status: 204 });
+    } });
+
+    await expect(client.deleteJob("provider/job")).resolves.toBe("deleted");
+    expect(request?.method).toBe("DELETE");
+    expect(request?.url).toBe("https://asr.api.speechmatics.com/v2/jobs/provider%2Fjob");
+  });
+
+  it.each([404, 410])("treats deletion status %i as already deleted", async (status) => {
+    const client = new SpeechmaticsBatchClient({ apiKey: "test-key", fetch: async () => new Response(null, { status }) });
+    await expect(client.deleteJob("provider-job")).resolves.toBe("already_deleted");
+  });
+
+  it("rejects an unsuccessful provider deletion without exposing its response", async () => {
+    const client = new SpeechmaticsBatchClient({ apiKey: "test-key", fetch: async () => new Response("sensitive provider response", { status: 500 }) });
+    await expect(client.deleteJob("provider-job")).rejects.toThrow("Speechmatics job deletion failed");
+  });
+
   it("finds a recent provider job by the stable tracking reference", async () => {
     const client = new SpeechmaticsBatchClient({
       apiKey: "test-key",

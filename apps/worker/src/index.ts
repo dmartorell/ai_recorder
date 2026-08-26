@@ -39,7 +39,12 @@ export default {
       provider,
       notification
     });
-    const ingester = new TranscriptionIngester({ jobs: ingestionStore, provider, artifacts: new R2TranscriptArtifactStore(env.ORIGINAL_AUDIO!) });
+    const ingester = new TranscriptionIngester({
+      jobs: ingestionStore,
+      provider,
+      artifacts: new R2TranscriptArtifactStore(env.ORIGINAL_AUDIO!),
+      queue: env.TRANSCRIPTION_JOBS
+    });
     for (const message of batch.messages) {
       const body = message.body as Partial<TranscriptionQueueMessage>;
       if (typeof body?.transcription_job_id !== "string") { message.ack(); continue; }

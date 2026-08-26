@@ -11,6 +11,7 @@ export interface SpeechmaticsClient {
   submit(submission: SpeechmaticsSubmission): Promise<string>;
   findByReference(reference: string): Promise<string | undefined>;
   transcript(providerJobID: string): Promise<unknown>;
+  deleteJob(providerJobID: string): Promise<"deleted" | "already_deleted">;
 }
 
 type Fetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -51,6 +52,16 @@ export class SpeechmaticsBatchClient implements SpeechmaticsClient {
     const response = await this.fetch(`https://asr.api.speechmatics.com/v2/jobs/${encodeURIComponent(providerJobID)}/transcript`, { headers: this.headers });
     if (!response.ok) throw new Error("Speechmatics transcript retrieval failed");
     return response.json();
+  }
+
+  async deleteJob(providerJobID: string): Promise<"deleted" | "already_deleted"> {
+    const response = await this.fetch(`https://asr.api.speechmatics.com/v2/jobs/${encodeURIComponent(providerJobID)}`, {
+      method: "DELETE",
+      headers: this.headers
+    });
+    if (response.status === 404 || response.status === 410) return "already_deleted";
+    if (!response.ok) throw new Error("Speechmatics job deletion failed");
+    return "deleted";
   }
 
   async findByReference(reference: string): Promise<string | undefined> {

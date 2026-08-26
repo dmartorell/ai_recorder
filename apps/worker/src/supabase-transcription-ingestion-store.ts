@@ -23,7 +23,7 @@ export class SupabaseTranscriptionIngestionStore implements TranscriptionIngesti
 
   private async resolve(filters: Record<string, string>): Promise<IngestionJob | undefined> {
     const url = new URL("rest/v1/transcription_jobs", this.base);
-    url.search = new URLSearchParams({ ...filters, select: "id,provider_job_id,provider_reference,state" }).toString();
+    url.search = new URLSearchParams({ ...filters, select: "id,provider_job_id,provider_reference,state,provider_cleanup_state" }).toString();
     const response = await this.fetch(url, { headers: this.headers });
     if (!response.ok) throw new Error("Could not resolve transcription ingestion");
     const rows: unknown = await response.json();
@@ -45,6 +45,8 @@ export class SupabaseTranscriptionIngestionStore implements TranscriptionIngesti
 
 function isJob(value: unknown): value is IngestionJob {
   return isRecord(value) && typeof value.id === "string" && typeof value.provider_job_id === "string"
-    && typeof value.provider_reference === "string" && (value.state === "processing" || value.state === "complete");
+    && typeof value.provider_reference === "string" && (value.state === "processing" || value.state === "complete")
+    && (value.provider_cleanup_state === "not_started" || value.provider_cleanup_state === "pending"
+      || value.provider_cleanup_state === "complete" || value.provider_cleanup_state === "failed");
 }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value); }

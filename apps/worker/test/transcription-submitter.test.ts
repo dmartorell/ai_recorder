@@ -80,5 +80,6 @@ class FakeProvider {
   error: Error | undefined;
   constructor(private readonly existingJobID: string | undefined = undefined) {}
   async findByReference() { return this.existingJobID; }
+  async transcript() { return {}; }
   async submit(value: unknown) { this.submissions.push(value); if (this.error) throw this.error; return "provider-job"; }
 }

@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(26);
+select plan(45);
 
 insert into auth.users (id, email)
 values
@@ -236,6 +236,122 @@ select results_eq(
   array['processing:speechmatics-job'],
   'recording provider acceptance moves the job from queued to processing'
 );
+
+select results_eq(
+  $$ select state from complete_transcription_ingestion(
+       (select id from public.transcription_jobs where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'automatic-transcripts/' || (select id from public.transcription_jobs where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc')::text || '.json',
+       jsonb_build_object(
+         'format', '2.9',
+         'job', jsonb_build_object(
+           'id', 'speechmatics-job',
+           'tracking', jsonb_build_object('reference', (select provider_reference::text from public.transcription_jobs where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'))
+         ),
+         'results', jsonb_build_array(
+           jsonb_build_object('type', 'word', 'start_time', 0.1, 'end_time', 0.4, 'alternatives', jsonb_build_array(jsonb_build_object('content', 'Hola', 'confidence', 0.98, 'language', 'es', 'speaker', 'S1'))),
+           jsonb_build_object('type', 'punctuation', 'start_time', 0.4, 'end_time', 0.4, 'alternatives', jsonb_build_array(jsonb_build_object('content', ',', 'speaker', 'S1'))),
+           jsonb_build_object('type', 'word', 'start_time', 0.5, 'end_time', 0.9, 'alternatives', jsonb_build_array(jsonb_build_object('content', 'hello', 'confidence', 0.97, 'language', 'en', 'speaker', 'S2')))
+         )
+       )
+     ) $$,
+  array['complete'],
+  'ingestion atomically completes a processing transcription job'
+);
+
+select results_eq(
+  $$ select count(*)::integer from public.automatic_transcripts $$,
+  array[1],
+  'ingestion preserves one immutable automatic transcript'
+);
+
+select results_eq(
+  $$ select provider_label from public.automatic_speakers order by ordinal $$,
+  array['S1', 'S2'],
+  'automatic speakers are scoped to the automatic transcript'
+);
+
+select results_eq(
+  $$ select content from public.transcript_segments order by ordinal $$,
+  array['Hola,', 'hello'],
+  'recognized words and punctuation form ordered transcript segments'
+);
+
+select results_eq(
+  $$ select start_time_ms || ':' || end_time_ms || ':' || confidence || ':' || language
+     from public.transcript_words order by start_time_ms $$,
+  array['100:400:0.98:es', '500:900:0.97:en'],
+  'word timing confidence and language are persisted'
+);
+
+select results_eq(
+  $$ select state from complete_transcription_ingestion(
+       (select id from public.transcription_jobs where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'automatic-transcripts/' || (select id from public.transcription_jobs where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc')::text || '.json',
+       jsonb_build_object('format', 'not-used')
+     ) $$,
+  array['complete'],
+  'duplicate completion with the same artifact is idempotent'
+);
+
+select throws_ok(
+  $$ select * from complete_transcription_ingestion(
+       (select id from public.transcription_jobs where backup_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'),
+       'automatic-transcripts/ffffffff-ffff-ffff-ffff-ffffffffffff.json',
+       '{}'::jsonb
+     ) $$,
+  'P0001',
+  'conflicting transcription result',
+  'a second artifact cannot replace an automatic transcript'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select results_eq(
+  $$ select count(*)::integer from public.automatic_transcripts $$,
+  array[1],
+  'the owner can read its automatic transcript'
+);
+select results_eq(
+  $$ select count(*)::integer from public.automatic_speakers $$,
+  array[2],
+  'the owner can read its audio-scoped automatic speakers'
+);
+select results_eq(
+  $$ select count(*)::integer from public.transcript_segments $$,
+  array[2],
+  'the owner can read its transcript segments'
+);
+select results_eq(
+  $$ select count(*)::integer from public.transcript_words $$,
+  array[2],
+  'the owner can read its transcript words'
+);
+select throws_ok(
+  $$ insert into public.automatic_transcripts (transcription_job_id, owner_id, provider_job_id, provider_reference, source_artifact_key, format_version)
+     values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 'provider', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'automatic-transcripts/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.json', '2.9') $$,
+  '42501', null,
+  'an authenticated user cannot write automatic transcripts directly'
+);
+select throws_ok(
+  $$ insert into public.automatic_speakers (automatic_transcript_id, provider_label, ordinal) values ((select id from public.automatic_transcripts), 'S3', 2) $$,
+  '42501', null,
+  'an authenticated user cannot write automatic speakers directly'
+);
+select throws_ok(
+  $$ insert into public.transcript_segments (automatic_transcript_id, automatic_speaker_id, ordinal, content, start_time_ms, end_time_ms) values ((select id from public.automatic_transcripts), (select id from public.automatic_speakers limit 1), 2, 'synthetic', 1, 2) $$,
+  '42501', null,
+  'an authenticated user cannot write transcript segments directly'
+);
+select throws_ok(
+  $$ insert into public.transcript_words (transcript_segment_id, ordinal, content, start_time_ms, end_time_ms, confidence, language, provider_speaker_label) values ((select id from public.transcript_segments limit 1), 9, 'synthetic', 1, 2, 0.5, 'en', 'S1') $$,
+  '42501', null,
+  'an authenticated user cannot write transcript words directly'
+);
+set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select is_empty($$ select * from public.automatic_transcripts $$, 'another user cannot read automatic transcripts');
+select is_empty($$ select * from public.automatic_speakers $$, 'another user cannot read automatic speakers');
+select is_empty($$ select * from public.transcript_segments $$, 'another user cannot read transcript segments');
+select is_empty($$ select * from public.transcript_words $$, 'another user cannot read transcript words');
 
 select * from finish();
 rollback;

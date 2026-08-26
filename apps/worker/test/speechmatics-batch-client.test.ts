@@ -27,6 +27,29 @@ describe("SpeechmaticsBatchClient", () => {
     });
   });
 
+  it("requests a metadata-only authenticated completion notification", async () => {
+    let request: Request | undefined;
+    const client = new SpeechmaticsBatchClient({ apiKey: "test-key", fetch: async (input, init) => {
+      request = new Request(input, init);
+      return Response.json({ id: "provider-job" }, { status: 201 });
+    } });
+
+    await client.submit({ sourceURL: "https://worker.example.test/source", language: "english", reference: "stable-reference", notification: { url: "https://worker.example.test/v1/transcription-callback", bearerToken: "callback-token" } });
+    await expect(request?.json()).resolves.toMatchObject({
+      notification_config: [{ url: "https://worker.example.test/v1/transcription-callback", auth_headers: ["Authorization: Bearer callback-token"] }]
+    });
+  });
+
+  it("retrieves the JSON-v2 transcript server-side", async () => {
+    let request: Request | undefined;
+    const client = new SpeechmaticsBatchClient({ apiKey: "test-key", fetch: async (input, init) => {
+      request = new Request(input, init);
+      return Response.json({ format: "2.9" });
+    } });
+    await expect(client.transcript("provider/job")).resolves.toEqual({ format: "2.9" });
+    expect(request?.url).toBe("https://asr.api.speechmatics.com/v2/jobs/provider%2Fjob/transcript");
+  });
+
   it("finds a recent provider job by the stable tracking reference", async () => {
     const client = new SpeechmaticsBatchClient({
       apiKey: "test-key",

@@ -21,7 +21,7 @@ export interface SubmissionJobStore {
 export interface PrivateAudioSource { signedReadURL(key: string): Promise<string>; }
 
 export class TranscriptionSubmitter {
-  constructor(private readonly dependencies: { jobs: SubmissionJobStore; source: PrivateAudioSource; provider: SpeechmaticsClient; claimID?: () => string }) {}
+  constructor(private readonly dependencies: { jobs: SubmissionJobStore; source: PrivateAudioSource; provider: SpeechmaticsClient; notification?: { url: string; bearerToken: string }; claimID?: () => string }) {}
 
   async submit(jobID: string): Promise<void> {
     const claimID = this.dependencies.claimID?.() ?? crypto.randomUUID();
@@ -41,7 +41,8 @@ export class TranscriptionSubmitter {
       submission = {
         sourceURL: await this.dependencies.source.signedReadURL(backup.object_key),
         language: job.transcription_language,
-        reference: job.provider_reference
+        reference: job.provider_reference,
+        notification: this.dependencies.notification
       };
     } catch (error) {
       if (job.submission_claim === claimID) await this.dependencies.jobs.releaseSubmissionClaim(job.id, claimID);

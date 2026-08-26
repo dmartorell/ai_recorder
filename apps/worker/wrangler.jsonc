@@ -3,6 +3,7 @@
   "name": "ai-recorder-backup",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-22",
+  // PUBLIC_WORKER_URL and TRANSCRIPTION_CALLBACK_TOKEN are staging Worker secrets set interactively by an operator.
   "env": {
     "staging": {
       "preview_urls": false,

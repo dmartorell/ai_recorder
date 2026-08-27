@@ -105,5 +105,5 @@ Do not mark these scenarios passed from simulator, mocks, or Worker tests. Delet
 | 2026-08-27 | Physical iPhone staging transcription pipeline | Pass, user-confirmed. A synthetic Audio reached available local audio, verified cloud backup, and complete transcription. |
 | 2026-08-27 | Physical recovery after forced termination | Pass, user-confirmed. A synthetic Capture was recovered and playable after relaunch. |
 | 2026-08-27 | Physical audio-session interruption | Pass, user-confirmed. The interrupted synthetic Capture remained in the library and playable. |
-| 2026-08-27 | Two-hour physical reliability check | Pending. This requires a staging-configured physical iPhone and synthetic Audio. |
+| 2026-08-27 | Two-hour physical reliability check | Pass, user-confirmed. The synthetic two-hour physical Capture completed as expected. |
 | 2026-08-27 | Local pgTAP suite on iMac | Pass. `Files=1, Tests=66`, `Result: PASS`. |

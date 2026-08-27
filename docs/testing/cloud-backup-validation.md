@@ -98,3 +98,12 @@ Do not mark these scenarios passed from simulator, mocks, or Worker tests. Delet
 | 2026-08-25 | `supabase test db --local supabase/tests/audio_backups_rls.test.sql` for Issue #45 on iMac | Pass. `Files=1, Tests=21`, `Result: PASS`. |
 | 2026-08-25 | Staging Worker integration | Pass, user-confirmed. |
 | 2026-08-25 | Physical iPhone flow | Pass, user-confirmed. |
+| 2026-08-27 | Worker lifecycle fakes: `npm run check && npm test` | Pass. TypeScript check passed; 64 tests passed, with one staging-only test skipped. Covers queue submission, callback, ingestion, bounded retry, explicit retry, and cleanup. |
+| 2026-08-27 | iOS suite on iPhone 15 simulator | Pass. 111 unit tests and 12 UI tests passed. |
+| 2026-08-27 | Isolated staging backup integration | Pass, user-executed. The synthetic multipart backup test completed against staging R2, Worker, Supabase, and RLS. |
+| 2026-08-27 | Local pgTAP suite | Blocked. No local Supabase database was running at `127.0.0.1:54322`. |
+| 2026-08-27 | Physical iPhone staging transcription pipeline | Pass, user-confirmed. A synthetic Audio reached available local audio, verified cloud backup, and complete transcription. |
+| 2026-08-27 | Physical recovery after forced termination | Pass, user-confirmed. A synthetic Capture was recovered and playable after relaunch. |
+| 2026-08-27 | Physical audio-session interruption | Pass, user-confirmed. The interrupted synthetic Capture remained in the library and playable. |
+| 2026-08-27 | Two-hour physical reliability check | Pass, user-confirmed. The synthetic two-hour physical Capture completed as expected. |
+| 2026-08-27 | Local pgTAP suite on iMac | Pass. `Files=1, Tests=66`, `Result: PASS`. |

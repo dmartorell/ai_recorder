@@ -56,6 +56,20 @@ final class RecoveryServiceTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.files.url(for: item.id).path))
     }
 
+    func testDoesNotRecoverCaptureCreatedAfterServiceInitialization() async throws {
+        let fixture = try Fixture()
+        let service = RecoveryService(context: fixture.context, files: fixture.files, inspector: FixedInspector())
+        let item = AudioItem(fileName: "source.m4a")
+        item.localState = .capturing
+        fixture.context.insert(item)
+        try fixture.context.save()
+
+        await service.recoverInterruptedItems()
+
+        XCTAssertEqual(try fixture.context.fetch(FetchDescriptor<AudioItem>()).count, 1)
+        XCTAssertEqual(item.localState, .capturing)
+    }
+
     func testMissingOrEmptyAudioRemovesOnlyMetadata() async throws {
         let fixture = try Fixture()
         let item = AudioItem(fileName: "source.m4a")

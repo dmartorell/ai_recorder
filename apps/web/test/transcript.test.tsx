@@ -35,3 +35,19 @@ it("renders corrected editorial text with an Edited indicator while retaining it
   fireEvent.click(screen.getByText("View automatic text"));
   expect(screen.getByText("Synthetic segment")).toBeVisible();
 });
+
+it("uses an editorial Speaker overlay without replacing automatic attribution", () => {
+  renderTranscript({
+    audioID: "audio-1",
+    speakers: [
+      { id: "speaker-1", editorial_id: "editorial-1", automatic_speaker_id: "speaker-1", provider_label: "S1", ordinal: 0, name: "Journalist" },
+      { id: "editorial-2", editorial_id: "editorial-2", automatic_speaker_id: null, provider_label: "Speaker", ordinal: 1, name: "Editor" }
+    ],
+    segments: [{ ...segment, correction: "Corrected segment", speakerCorrectionID: "editorial-2" }],
+    onSelect: vi.fn()
+  });
+
+  expect(screen.getByRole("button", { name: "Editor, 0:10" })).toHaveTextContent("Corrected segment");
+  fireEvent.click(screen.getByText("View automatic Speaker"));
+  expect(screen.getByLabelText("Automatic Speaker")).toHaveTextContent("Journalist");
+});

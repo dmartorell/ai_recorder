@@ -79,6 +79,22 @@ Do not retain provider IDs, provider responses, transcript text, object keys, si
 
 Use two synthetic owners only. After explicit deployment approval, verify magic-link sign-in, owner library visibility, private playback, Transcript Segment seeking, active-segment indication, and foreign-owner denial. Record only pass/fail and HTTP statuses. Do not retain email addresses, tokens, Audio IDs, signed URLs, object keys, or transcript text.
 
+## Editorial corrections staging validation
+
+Use a completed synthetic Audio with an uncorrected Transcript Segment and an existing Editorial Speaker. Run only against isolated staging. The test creates and removes both correction types. It never prints source content or identifiers.
+
+```sh
+export EDITORIAL_TEST_SUPABASE_URL='https://….supabase.co'
+export EDITORIAL_TEST_SUPABASE_PUBLISHABLE_KEY='…'
+export EDITORIAL_TEST_OWNER_TOKEN='…'
+export EDITORIAL_TEST_OTHER_OWNER_TOKEN='…'
+export EDITORIAL_TEST_AUDIO_ID='…'
+export EDITORIAL_TEST_SEGMENT_ID='…'
+cd apps/worker && npm run test:integration -- staging-editorial-corrections
+```
+
+The suite skips if any value is absent. A passing run proves owner text and Speaker corrections are readable to the owner, hidden from the foreign owner, removable independently, and leave the automatic Segment unchanged. It also verifies that the owner cannot mutate automatic Segment content. Record only pass/fail and HTTP status categories in the evidence table.
+
 ## Physical iPhone validation
 
 Use the physical iPhone with the staging configuration and a synthetic spoken test. Record the app commit, device, iOS version, and only the expected/actual outcomes below.

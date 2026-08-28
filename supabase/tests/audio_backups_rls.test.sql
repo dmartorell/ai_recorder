@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(115);
+select plan(123);
 
 insert into auth.users (id, email)
 values
@@ -580,6 +580,46 @@ select results_eq(
   $$ select count(*)::integer from public.transcript_words $$,
   array[2],
   'the owner can read its transcript words'
+);
+select throws_ok(
+  $$ update public.automatic_transcripts set provider_job_id = 'mutated' $$,
+  '42501', null,
+  'an authenticated user cannot update automatic transcripts'
+);
+select throws_ok(
+  $$ delete from public.automatic_transcripts $$,
+  '42501', null,
+  'an authenticated user cannot delete automatic transcripts'
+);
+select throws_ok(
+  $$ update public.automatic_speakers set provider_label = 'mutated' $$,
+  '42501', null,
+  'an authenticated user cannot update automatic speakers'
+);
+select throws_ok(
+  $$ delete from public.automatic_speakers $$,
+  '42501', null,
+  'an authenticated user cannot delete automatic speakers'
+);
+select throws_ok(
+  $$ update public.transcript_segments set content = 'mutated' $$,
+  '42501', null,
+  'an authenticated user cannot update transcript segments'
+);
+select throws_ok(
+  $$ delete from public.transcript_segments $$,
+  '42501', null,
+  'an authenticated user cannot delete transcript segments'
+);
+select throws_ok(
+  $$ update public.transcript_words set content = 'mutated' $$,
+  '42501', null,
+  'an authenticated user cannot update transcript words'
+);
+select throws_ok(
+  $$ delete from public.transcript_words $$,
+  '42501', null,
+  'an authenticated user cannot delete transcript words'
 );
 select throws_ok(
   $$ insert into public.automatic_transcripts (transcription_job_id, owner_id, provider_job_id, provider_reference, source_artifact_key, format_version)

@@ -28,6 +28,9 @@ final class CloudBackupCoordinatorTests: XCTestCase {
         XCTAssertEqual(client.requests.count, 1)
         XCTAssertEqual(client.requests.first?.byteCount, 15)
         XCTAssertEqual(client.requests.first?.sha256, "bf639d89a3de0c2e761d336fc7bf954cd615c5a65aad89915421e9e95179507e")
+        XCTAssertEqual(client.requests.first?.titleSnapshot, item.displayTitle())
+        XCTAssertEqual(client.requests.first?.captureStartedAt, item.startedAt)
+        XCTAssertEqual(client.requests.first?.durationMilliseconds, item.durationMilliseconds)
         XCTAssertEqual(client.confirmedPartNumbers, [1])
         XCTAssertEqual(item.cloudBackupState, .backedUp)
     }

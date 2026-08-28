@@ -8,7 +8,7 @@ const backupPath = "/v1/audio-backups";
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const sha256Pattern = /^[0-9a-f]{64}$/i;
 export interface WorkerAuthenticator { authenticate(request: Request): Promise<{ userID: string }>; }
-export interface BeginBackupRequest { ownerID: string; localAudioID: string; byteCount: number; sha256: string; transcriptionLanguage: "spanish" | "english" | "spanish_english"; }
+export interface BeginBackupRequest { ownerID: string; localAudioID: string; byteCount: number; sha256: string; transcriptionLanguage: "spanish" | "english" | "spanish_english"; titleSnapshot: string; captureStartedAt: string; durationMilliseconds: number; }
 export interface CloudBackup { id: string; state: "uploading"; }
 export interface StoredBackup { id: string; owner_id: string; local_audio_id: string; object_key: string; byte_count: number; sha256: string; state: string; r2_upload_id: string | null; r2_upload_claim: string | null; r2_upload_claimed_at: string | null; }
 export interface StoredPart { part_number: number; etag: string; byte_count: number; }
@@ -53,7 +53,7 @@ export function createWorker({ authentication, backups, transcriptionJobs = new 
     }
   }};
 }
-async function begin(request: Request, ownerID: string, backups: BackupStore): Promise<Response> { const body = await parseJSON(request); if (!isRecord(body) || typeof body.local_audio_id !== "string" || !uuidPattern.test(body.local_audio_id) || !validBytes(body.byte_count) || typeof body.sha256 !== "string" || !sha256Pattern.test(body.sha256) || (body.transcription_language !== undefined && !isTranscriptionLanguage(body.transcription_language))) throw new InvalidRequestError(); const created = await backups.begin({ ownerID, localAudioID: body.local_audio_id, byteCount: body.byte_count, sha256: body.sha256.toLowerCase(), transcriptionLanguage: body.transcription_language ?? "spanish_english" }); return Response.json(created, { status: 201 }); }
+async function begin(request: Request, ownerID: string, backups: BackupStore): Promise<Response> { const body = await parseJSON(request); if (!isRecord(body) || typeof body.local_audio_id !== "string" || !uuidPattern.test(body.local_audio_id) || !validBytes(body.byte_count) || typeof body.sha256 !== "string" || !sha256Pattern.test(body.sha256) || (body.transcription_language !== undefined && !isTranscriptionLanguage(body.transcription_language)) || !validTitleSnapshot(body.title_snapshot) || !validTimestamp(body.capture_started_at) || !validDuration(body.duration_milliseconds)) throw new InvalidRequestError(); const created = await backups.begin({ ownerID, localAudioID: body.local_audio_id, byteCount: body.byte_count, sha256: body.sha256.toLowerCase(), transcriptionLanguage: body.transcription_language ?? "spanish_english", titleSnapshot: body.title_snapshot, captureStartedAt: body.capture_started_at, durationMilliseconds: body.duration_milliseconds }); return Response.json(created, { status: 201 }); }
 async function status(backup: StoredBackup, backups: BackupStore): Promise<Response> { return Response.json({ id: backup.id, state: backup.state, confirmed_parts: (await backups.confirmedParts(backup.id)).map(({ part_number, byte_count }) => ({ part_number, byte_count })), part_size: multipartPartSize }); }
 async function initiate(backup: StoredBackup, backups: BackupStore, multipart: MultipartGateway): Promise<Response> {
   active(backup);
@@ -104,6 +104,9 @@ function uploadIDFor(backup: StoredBackup): string { if (!backup.r2_upload_id) t
 function validatePart(backup: StoredBackup, part: number) { if (!Number.isSafeInteger(part) || part < 1 || part > Math.ceil(backup.byte_count / multipartPartSize)) throw new InvalidRequestError(); }
 function expectedPartBytes(backup: StoredBackup, part: number) { return Math.min(multipartPartSize, backup.byte_count - ((part - 1) * multipartPartSize)); }
 function validBytes(value: unknown): value is number { return typeof value === "number" && Number.isSafeInteger(value) && value > 0; }
+function validDuration(value: unknown): value is number { return typeof value === "number" && Number.isSafeInteger(value) && value >= 0; }
+function validTitleSnapshot(value: unknown): value is string { return typeof value === "string" && value.trim().length > 0 && value.length <= 500; }
+function validTimestamp(value: unknown): value is string { return typeof value === "string" && /^\d{4}-\d{2}-\d{2}T/.test(value) && !Number.isNaN(Date.parse(value)); }
 function isTranscriptionLanguage(value: unknown): value is "spanish" | "english" | "spanish_english" { return value === "spanish" || value === "english" || value === "spanish_english"; }
 async function parseJSON(request: Request): Promise<unknown> { try { return await request.json(); } catch { throw new InvalidRequestError(); } }
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value); }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BackupMetadataConflictError, SupabaseBackupStore, type BackupStoreFetch } from "../src/supabase-backup-store";
 
-const request = { ownerID: "11111111-1111-1111-1111-111111111111", localAudioID: "22222222-2222-2222-2222-222222222222", byteCount: 1024, sha256: "a".repeat(64) };
+const request = { ownerID: "11111111-1111-1111-1111-111111111111", localAudioID: "22222222-2222-2222-2222-222222222222", byteCount: 1024, sha256: "a".repeat(64), transcriptionLanguage: "spanish_english" as const, titleSnapshot: "Audio - Aug 28, 2026, 10:32 AM", captureStartedAt: "2026-08-28T10:32:00Z", durationMilliseconds: 61_000 };
 const storedBackup = { id: "33333333-3333-3333-3333-333333333333", owner_id: request.ownerID, local_audio_id: request.localAudioID, byte_count: request.byteCount, sha256: request.sha256, object_key: "original-audio/opaque-random-key", r2_upload_id: null, r2_upload_claim: null, r2_upload_claimed_at: null, state: "uploading" };
 
 describe("SupabaseBackupStore", () => {
@@ -12,7 +12,7 @@ describe("SupabaseBackupStore", () => {
     await expect(store.begin(request)).resolves.toEqual({ id: storedBackup.id, state: "uploading" });
     expect(fetch.requests).toHaveLength(1);
     expect(fetch.requests[0].url).toBe("https://project.supabase.co/rest/v1/rpc/begin_audio_backup");
-    expect(JSON.parse(String(fetch.requests[0].init?.body))).toEqual({ p_owner_id: request.ownerID, p_local_audio_id: request.localAudioID, p_byte_count: request.byteCount, p_sha256: request.sha256 });
+    expect(JSON.parse(String(fetch.requests[0].init?.body))).toEqual({ p_owner_id: request.ownerID, p_local_audio_id: request.localAudioID, p_byte_count: request.byteCount, p_sha256: request.sha256, p_transcription_language: request.transcriptionLanguage, p_title_snapshot: request.titleSnapshot, p_capture_started_at: request.captureStartedAt, p_duration_milliseconds: request.durationMilliseconds });
   });
 
   it("invokes its fetch dependency without a receiver", async () => {

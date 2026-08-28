@@ -102,8 +102,29 @@ private struct BackupRequestBody: Encodable {
     let byteCount: Int
     let sha256: String
     let transcriptionLanguage: TranscriptionLanguage
-    init(_ request: CloudBackupRequest) { localAudioID = request.localAudioID; byteCount = request.byteCount; sha256 = request.sha256; transcriptionLanguage = request.transcriptionLanguage }
-    enum CodingKeys: String, CodingKey { case localAudioID = "local_audio_id"; case byteCount = "byte_count"; case sha256; case transcriptionLanguage = "transcription_language" }
+    let titleSnapshot: String
+    let captureStartedAt: String
+    let durationMilliseconds: Int
+
+    init(_ request: CloudBackupRequest) {
+        localAudioID = request.localAudioID
+        byteCount = request.byteCount
+        sha256 = request.sha256
+        transcriptionLanguage = request.transcriptionLanguage
+        titleSnapshot = request.titleSnapshot
+        captureStartedAt = ISO8601DateFormatter().string(from: request.captureStartedAt)
+        durationMilliseconds = request.durationMilliseconds
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case localAudioID = "local_audio_id"
+        case byteCount = "byte_count"
+        case sha256
+        case transcriptionLanguage = "transcription_language"
+        case titleSnapshot = "title_snapshot"
+        case captureStartedAt = "capture_started_at"
+        case durationMilliseconds = "duration_milliseconds"
+    }
 }
 private struct EmptyBody: Encodable {}
 private struct PartSHA256Body: Encodable { let sha256: String }

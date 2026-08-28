@@ -22,7 +22,10 @@ describe("POST /v1/audio-backups", () => {
         body: JSON.stringify({
           local_audio_id: "b5f1799a-92ab-43d1-951d-8e1dac1b67d5",
           byte_count: 1024,
-          sha256: "bf639d89a3de0c2e761d336fc7bf954cd615c5a65aad89915421e9e95179507e"
+          sha256: "bf639d89a3de0c2e761d336fc7bf954cd615c5a65aad89915421e9e95179507e",
+          title_snapshot: "Audio - Aug 28, 2026, 10:32 AM",
+          capture_started_at: "2026-08-28T10:32:00Z",
+          duration_milliseconds: 61_000
         })
       }),
       {} as Env,
@@ -36,7 +39,10 @@ describe("POST /v1/audio-backups", () => {
       localAudioID: "b5f1799a-92ab-43d1-951d-8e1dac1b67d5",
       byteCount: 1024,
       sha256: "bf639d89a3de0c2e761d336fc7bf954cd615c5a65aad89915421e9e95179507e",
-      transcriptionLanguage: "spanish_english"
+      transcriptionLanguage: "spanish_english",
+      titleSnapshot: "Audio - Aug 28, 2026, 10:32 AM",
+      captureStartedAt: "2026-08-28T10:32:00Z",
+      durationMilliseconds: 61_000
     });
   });
 
@@ -68,7 +74,10 @@ describe("POST /v1/audio-backups", () => {
         body: JSON.stringify({
           local_audio_id: "b5f1799a-92ab-43d1-951d-8e1dac1b67d5",
           byte_count: 1024,
-          sha256: "bf639d89a3de0c2e761d336fc7bf954cd615c5a65aad89915421e9e95179507e"
+          sha256: "bf639d89a3de0c2e761d336fc7bf954cd615c5a65aad89915421e9e95179507e",
+          title_snapshot: "Audio - Aug 28, 2026, 10:32 AM",
+          capture_started_at: "2026-08-28T10:32:00Z",
+          duration_milliseconds: 61_000
         })
       }),
       {} as Env,
@@ -90,7 +99,7 @@ describe("POST /v1/audio-backups", () => {
       new Request("https://worker.example.test/v1/audio-backups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ local_audio_id: "not-a-uuid", byte_count: 0, sha256: "bad" })
+        body: JSON.stringify({ local_audio_id: "not-a-uuid", byte_count: 0, sha256: "bad", title_snapshot: "", capture_started_at: "invalid", duration_milliseconds: -1 })
       }),
       {} as Env,
       {} as ExecutionContext

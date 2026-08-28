@@ -189,6 +189,27 @@ final class CloudBackupCoordinatorTests: XCTestCase {
         XCTAssertEqual(item.cloudBackupState, .signInToResume)
     }
 
+    func testSuccessfulBackupRetryClearsItsPreviousError() async throws {
+        let item = availableAudio()
+        let backupID = UUID()
+        item.cloudBackupID = backupID
+        item.cloudBackupState = .failed
+        let client = FakeCloudBackupClient()
+        client.statusError = CloudBackupClientError.unsuccessfulResponse(statusCode: 409)
+        let coordinator = CloudBackupCoordinator(client: client, files: files, uploader: FakePartUploader(), persistence: FakeBackupPersistence())
+
+        await coordinator.resumeBackup(for: item)
+        XCTAssertNotNil(coordinator.errorMessage)
+        XCTAssertEqual(coordinator.errorAudioID, item.id)
+
+        client.statusError = nil
+        await coordinator.resumeBackup(for: item)
+
+        XCTAssertEqual(item.cloudBackupState, .backedUp)
+        XCTAssertNil(coordinator.errorMessage)
+        XCTAssertNil(coordinator.errorAudioID)
+    }
+
     func testLostCompletionResponseVerifiesWithoutUploadingPartsAgain() async throws {
         let item = availableAudio()
         let client = FakeCloudBackupClient()

@@ -107,6 +107,7 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
     private var activeBackupIDs = Set<UUID>()
     private(set) var pendingConfirmationAudioID: UUID?
     private(set) var errorMessage: CloudBackupErrorMessage?
+    private(set) var errorAudioID: UUID?
 
     init(client: any CloudBackupClient, files: AudioFileStore, uploader: any CloudBackupPartUploading = BackgroundURLSessionPartUploader.shared, persistence: any CloudBackupPersisting) {
         self.client = client
@@ -118,7 +119,7 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
     func requestBackup(for item: AudioItem) async {
         guard BackupEligibility.forBackup(of: item, files: files) == .eligible else { return }
         pendingConfirmationAudioID = item.id
-        errorMessage = nil
+        clearError(for: item)
     }
 
     func confirmBackup(for item: AudioItem) async {
@@ -133,11 +134,12 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
             uploadStarted = true
             let status = try await client.beginMultipartUpload(id: backup.id)
             try await upload(item: item, fileURL: fileURL, metadata: metadata, backupID: backup.id, status: status)
+            clearError(for: item)
         } catch is CancellationError {
             return
         } catch {
             if uploadStarted { saveFailureState(for: item, error: error) }
-            errorMessage = .init(error)
+            setError(error, for: item)
         }
     }
 
@@ -155,11 +157,12 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
             let metadata = try await Self.fileMetadata(for: fileURL)
             let status = try await client.multipartStatus(id: backupID)
             try await upload(item: item, fileURL: fileURL, metadata: metadata, backupID: backupID, status: status)
+            clearError(for: item)
         } catch is CancellationError {
             return
         } catch {
             saveFailureState(for: item, error: error)
-            errorMessage = .init(error)
+            setError(error, for: item)
         }
     }
 
@@ -170,8 +173,9 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
             try await client.cancelMultipartUpload(id: backupID)
             files.removeCloudBackupParts(for: backupID)
             try persistence.clearBackupAssociation(for: item)
+            clearError(for: item)
         } catch {
-            errorMessage = .init(error)
+            setError(error, for: item)
             throw error
         }
     }
@@ -181,8 +185,9 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
         do {
             let status = try await client.transcriptionStatus(id: backupID)
             try persistence.saveTranscriptionState(for: item, state: status.state)
+            clearError(for: item)
         } catch {
-            errorMessage = .init(error)
+            setError(error, for: item)
         }
     }
 
@@ -192,7 +197,7 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
             try await client.retryTranscription(id: backupID)
             await refreshTranscriptionStatus(for: item)
         } catch {
-            errorMessage = .init(error)
+            setError(error, for: item)
         }
     }
 
@@ -228,6 +233,17 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
         let completed = try await client.completeMultipartUpload(id: backupID)
         try persistence.saveBackupState(for: item, state: completed.state)
         if completed.state == .backedUp { files.removeCloudBackupParts(for: backupID) }
+    }
+
+    private func setError(_ error: Error, for item: AudioItem) {
+        errorMessage = .init(error)
+        errorAudioID = item.id
+    }
+
+    private func clearError(for item: AudioItem) {
+        guard errorAudioID == item.id else { return }
+        errorMessage = nil
+        errorAudioID = nil
     }
 
     private func saveFailureState(for item: AudioItem, error: Error) {

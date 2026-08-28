@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(66);
+select plan(72);
 
 insert into auth.users (id, email)
 values
@@ -49,6 +49,13 @@ select ok(
 )
 from pg_class
 where oid = 'public.audio_backups'::regclass;
+
+select ok(
+  relrowsecurity,
+  'audios has row-level security enabled'
+)
+from pg_class
+where oid = 'public.audios'::regclass;
 
 select ok(
   relrowsecurity,
@@ -101,6 +108,11 @@ select results_eq(
   'the owner reads only their audio backup'
 );
 
+select is_empty(
+  $$ select * from public.audios $$,
+  'the owner cannot read another owner catalog metadata'
+);
+
 select throws_ok(
   $$ insert into public.audio_backups (owner_id, local_audio_id, object_key, byte_count, sha256)
      values (
@@ -147,6 +159,44 @@ select throws_ok(
   'the owner cannot delete another user backup'
 );
 
+reset role;
+
+select results_eq(
+  $$ select count(*)::integer from begin_audio_backup(
+       '11111111-1111-1111-1111-111111111111',
+       'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+       1024,
+       repeat('a', 64),
+       'english',
+       'Backup-time title',
+       '2026-08-28T10:32:00Z'::timestamptz,
+       61000
+     ) $$,
+  array[1],
+  'beginning a backup creates its cloud Audio catalog record'
+);
+
+select results_eq(
+  $$ select title_snapshot || ':' || duration_milliseconds || ':' || transcription_language
+     from public.audios
+     where owner_id = '11111111-1111-1111-1111-111111111111' $$,
+  array['Backup-time title:61000:english'],
+  'the cloud Audio retains its backup-time metadata snapshot'
+);
+
+select results_eq(
+  $$ select audio_id from public.audio_backups
+     where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' $$,
+  array[(select id from public.audios where owner_id = '11111111-1111-1111-1111-111111111111')],
+  'the backup lifecycle links to but does not replace its cloud Audio'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select is_empty(
+  $$ select * from public.audios $$,
+  'another user cannot read the owner cloud Audio metadata'
+);
 reset role;
 
 select results_eq(

@@ -26,7 +26,10 @@ final class WorkerCloudBackupClientTests: XCTestCase {
             .init(
                 localAudioID: UUID(uuidString: "B5F1799A-92AB-43D1-951D-8E1DAC1B67D5")!,
                 byteCount: 1_024,
-                sha256: "aabbcc"
+                sha256: "aabbcc",
+                titleSnapshot: "Audio - Aug 28, 2026, 10:32 AM",
+                captureStartedAt: Date(timeIntervalSince1970: 1_787_913_120),
+                durationMilliseconds: 61_000
             )
         )
 
@@ -40,6 +43,9 @@ final class WorkerCloudBackupClientTests: XCTestCase {
         XCTAssertEqual(payload?["byte_count"] as? Int, 1_024)
         XCTAssertEqual(payload?["sha256"] as? String, "aabbcc")
         XCTAssertEqual(payload?["transcription_language"] as? String, "spanish_english")
+        XCTAssertEqual(payload?["title_snapshot"] as? String, "Audio - Aug 28, 2026, 10:32 AM")
+        XCTAssertEqual(payload?["capture_started_at"] as? String, "2026-08-28T10:32:00Z")
+        XCTAssertEqual(payload?["duration_milliseconds"] as? Int, 61_000)
     }
 
     func testBeginBackupEncodesSelectedTranscriptionLanguage() async throws {
@@ -53,7 +59,7 @@ final class WorkerCloudBackupClientTests: XCTestCase {
             transport: transport
         )
 
-        _ = try await client.beginBackup(.init(localAudioID: UUID(), byteCount: 1, sha256: "abc", transcriptionLanguage: .english))
+        _ = try await client.beginBackup(.init(localAudioID: UUID(), byteCount: 1, sha256: "abc", transcriptionLanguage: .english, titleSnapshot: "Audio", captureStartedAt: .now, durationMilliseconds: 1))
 
         let payload = try JSONSerialization.jsonObject(with: transport.request!.httpBody!) as? [String: Any]
         XCTAssertEqual(payload?["transcription_language"] as? String, "english")
@@ -112,7 +118,7 @@ final class WorkerCloudBackupClientTests: XCTestCase {
         )
 
         do {
-            _ = try await client.beginBackup(.init(localAudioID: UUID(), byteCount: 1, sha256: "abc"))
+            _ = try await client.beginBackup(.init(localAudioID: UUID(), byteCount: 1, sha256: "abc", titleSnapshot: "Audio", captureStartedAt: .now, durationMilliseconds: 1))
             XCTFail("Expected an unsuccessful response error")
         } catch let error as CloudBackupClientError {
             XCTAssertEqual(error, .unsuccessfulResponse(statusCode: 401))

@@ -7,12 +7,18 @@ struct CloudBackupRequest: Equatable, Sendable {
     let byteCount: Int
     let sha256: String
     let transcriptionLanguage: TranscriptionLanguage
+    let titleSnapshot: String
+    let captureStartedAt: Date
+    let durationMilliseconds: Int
 
-    init(localAudioID: UUID, byteCount: Int, sha256: String, transcriptionLanguage: TranscriptionLanguage = .spanishEnglish) {
+    init(localAudioID: UUID, byteCount: Int, sha256: String, transcriptionLanguage: TranscriptionLanguage = .spanishEnglish, titleSnapshot: String, captureStartedAt: Date, durationMilliseconds: Int) {
         self.localAudioID = localAudioID
         self.byteCount = byteCount
         self.sha256 = sha256
         self.transcriptionLanguage = transcriptionLanguage
+        self.titleSnapshot = titleSnapshot
+        self.captureStartedAt = captureStartedAt
+        self.durationMilliseconds = durationMilliseconds
     }
 }
 
@@ -122,7 +128,7 @@ final class CloudBackupCoordinator: CloudBackupSessionManaging {
         do {
             let fileURL = files.url(for: item.id)
             let metadata = try await Self.fileMetadata(for: fileURL)
-            let backup = try await client.beginBackup(.init(localAudioID: item.id, byteCount: metadata.byteCount, sha256: metadata.sha256, transcriptionLanguage: item.transcriptionLanguage))
+            let backup = try await client.beginBackup(.init(localAudioID: item.id, byteCount: metadata.byteCount, sha256: metadata.sha256, transcriptionLanguage: item.transcriptionLanguage, titleSnapshot: item.displayTitle(), captureStartedAt: item.startedAt, durationMilliseconds: item.durationMilliseconds))
             try persistence.saveBackupAssociation(for: item, backupID: backup.id, state: .uploading)
             uploadStarted = true
             let status = try await client.beginMultipartUpload(id: backup.id)

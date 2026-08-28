@@ -55,6 +55,10 @@ export class SupabaseBackupStore implements BackupStore {
     return this.find(new URLSearchParams({ id: `eq.${id}`, owner_id: `eq.${ownerID}` }));
   }
 
+  async findPlayback(ownerID: string, audioID: string): Promise<Pick<StoredBackup, "object_key"> | undefined> {
+    return this.find(new URLSearchParams({ audio_id: `eq.${audioID}`, owner_id: `eq.${ownerID}`, state: "eq.backed_up" }));
+  }
+
   async claimMultipartUpload(backup: StoredBackup): Promise<MultipartUploadClaim> {
     if (backup.r2_upload_id) return { kind: "existing", uploadID: backup.r2_upload_id };
     const claimID = crypto.randomUUID();

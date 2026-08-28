@@ -7,6 +7,31 @@ import {
 } from "../src/cloud-backup";
 import { BackupMetadataConflictError } from "../src/supabase-backup-store";
 
+describe("GET /v1/audios/:audioID/playback", () => {
+  const audioID = "a3f1799a-92ab-43d1-951d-8e1dac1b67d5";
+
+  it("conceals absent, foreign, and non-backed-up Audio", async () => {
+    const worker = createWorker({ authentication: new StubAuthenticator("journalist-id"), backups: new PlaybackStore() });
+    for (const id of [audioID, "b3f1799a-92ab-43d1-951d-8e1dac1b67d5"]) {
+      const response = await worker.fetch(new Request(`https://worker.example.test/v1/audios/${id}/playback`), {} as Env, {} as ExecutionContext);
+      expect(response.status).toBe(404);
+    }
+  });
+
+  it("requires authentication", async () => {
+    const worker = createWorker({ authentication: new RejectingAuthenticator(), backups: new PlaybackStore() });
+    const response = await worker.fetch(new Request(`https://worker.example.test/v1/audios/${audioID}/playback`), {} as Env, {} as ExecutionContext);
+    expect(response.status).toBe(401);
+  });
+
+  it("returns a short-lived URL only for an owned verified backup", async () => {
+    const worker = createWorker({ authentication: new StubAuthenticator("journalist-id"), backups: new PlaybackStore("original-audio/private"), multipart: { signedReadURL: async () => "https://r2.example.test/private" } as never });
+    const response = await worker.fetch(new Request(`https://worker.example.test/v1/audios/${audioID}/playback`), {} as Env, {} as ExecutionContext);
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ url: "https://r2.example.test/private", expires_in: 900 });
+  });
+});
+
 describe("POST /v1/audio-backups", () => {
   it("creates an upload owned by the authenticated user", async () => {
     const store = new StubBackupStore();
@@ -130,6 +155,11 @@ class ConflictingBackupStore implements BackupStore {
   }
 }
 
+class PlaybackStore {
+  constructor(private readonly objectKey?: string) {}
+  async findPlayback(): Promise<{ object_key: string } | undefined> { return this.objectKey ? { object_key: this.objectKey } : undefined; }
+}
+
 class StubBackupStore implements BackupStore {
   readonly backup: CloudBackup = { id: "d4814952-c8e8-4a4d-9a73-9fc0d16c3ba8", state: "uploading" };
   request: Parameters<BackupStore["begin"]>[0] | undefined;
@@ -138,4 +168,6 @@ class StubBackupStore implements BackupStore {
     this.request = request;
     return this.backup;
   }
+
+  async findPlayback(): Promise<undefined> { return undefined; }
 }

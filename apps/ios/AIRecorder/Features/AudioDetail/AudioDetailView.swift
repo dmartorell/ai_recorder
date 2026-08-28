@@ -233,7 +233,7 @@ private struct CloudBackupSection: View {
                     .accessibilityHint("Keeps the local Original Audio and stops this upload.")
                     .accessibilityIdentifier("cloud-backup-cancel")
             }
-            if let errorMessage = coordinator.errorMessage {
+            if coordinator.errorAudioID == item.id, let errorMessage = coordinator.errorMessage {
                 CloudBackupErrorText(message: errorMessage)
                     .foregroundStyle(.red)
             }

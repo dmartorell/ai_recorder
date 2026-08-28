@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(72);
+select plan(84);
 
 insert into auth.users (id, email)
 values
@@ -607,6 +607,88 @@ select is_empty($$ select * from public.automatic_transcripts $$, 'another user 
 select is_empty($$ select * from public.automatic_speakers $$, 'another user cannot read automatic speakers');
 select is_empty($$ select * from public.transcript_segments $$, 'another user cannot read transcript segments');
 select is_empty($$ select * from public.transcript_words $$, 'another user cannot read transcript words');
+
+select ok(
+  relrowsecurity,
+  'speakers has row-level security enabled'
+)
+from pg_class
+where oid = 'public.speakers'::regclass;
+
+select ok(
+  not has_table_privilege('anon', 'public.speakers', 'select,insert,update,delete'),
+  'anon has no speakers privileges'
+);
+
+select ok(
+  has_table_privilege('authenticated', 'public.speakers', 'select')
+  and has_column_privilege('authenticated', 'public.speakers', 'name', 'update')
+  and not has_column_privilege('authenticated', 'public.speakers', 'owner_id', 'update'),
+  'authenticated can read and rename but not reassign speakers'
+);
+
+select results_eq(
+  $$ select count(*)::integer from public.speakers $$,
+  array[2],
+  'ingestion creates one editorial speaker for each automatic speaker'
+);
+
+select results_eq(
+  $$ select automatic.provider_label || ':' || coalesce(speaker.name, '')
+     from public.speakers speaker
+     join public.automatic_speakers automatic on automatic.id = speaker.automatic_speaker_id
+     order by automatic.ordinal $$,
+  array['S1:', 'S2:'],
+  'new editorial speakers preserve automatic labels and start unnamed'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select results_eq(
+  $$ select count(*)::integer from public.speakers $$,
+  array[2],
+  'the owner reads its audio-scoped editorial speakers'
+);
+
+set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select is_empty(
+  $$ select * from public.speakers $$,
+  'another user cannot read editorial speakers'
+);
+select is_empty(
+  $$ update public.speakers set name = 'Intruder' returning name $$,
+  'another user cannot rename editorial speakers'
+);
+
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select results_eq(
+  $$ select name from public.speakers speaker
+     join public.automatic_speakers automatic on automatic.id = speaker.automatic_speaker_id
+     where automatic.provider_label = 'S1' $$,
+  array[null::text],
+  'the denied rename leaves the speaker unnamed'
+);
+select results_eq(
+  $$ update public.speakers set name = 'Journalist'
+     where automatic_speaker_id = (select id from public.automatic_speakers where provider_label = 'S1')
+     returning name $$,
+  array['Journalist'],
+  'the owner can rename its editorial speaker'
+);
+select throws_ok(
+  $$ update public.automatic_speakers set provider_label = 'Changed' $$,
+  '42501',
+  null,
+  'renaming an editorial speaker cannot mutate automatic speaker data'
+);
+select results_eq(
+  $$ select automatic.provider_label || ':' || speaker.name
+     from public.speakers speaker
+     join public.automatic_speakers automatic on automatic.id = speaker.automatic_speaker_id
+     where automatic.provider_label = 'S1' $$,
+  array['S1:Journalist'],
+  'the automatic provider label remains immutable after renaming'
+);
 
 select * from finish();
 rollback;

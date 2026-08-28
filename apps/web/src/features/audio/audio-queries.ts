@@ -13,9 +13,15 @@ export function useAudioDetail(audioID: string | undefined) { return useQuery({ 
   const transcriptionState = (jobs?.[0]?.state ?? "not_started") as TranscriptionState; if (transcriptionState !== "complete") return { audio: audio as Audio, transcriptionState, speakers: [], segments: [] };
   const { data: transcripts, error: transcriptError } = await supabase.from("automatic_transcripts").select("id").eq("transcription_job_id", jobs![0].id).limit(1); await fail(transcriptError); if (!transcripts?.[0]) return { audio: audio as Audio, transcriptionState, speakers: [], segments: [] };
   const transcriptID = transcripts[0].id;
-  const [speakersResult, segmentsResult] = await Promise.all([
+  const [speakersResult, editorialSpeakersResult, segmentsResult] = await Promise.all([
     supabase.from("automatic_speakers").select("id,provider_label,ordinal").eq("automatic_transcript_id", transcriptID).order("ordinal"),
+    supabase.from("speakers").select("id,automatic_speaker_id,name").eq("audio_id", audio.id),
     supabase.from("transcript_segments").select("id,automatic_speaker_id,ordinal,content,start_time_ms,end_time_ms").eq("automatic_transcript_id", transcriptID).order("ordinal")
-  ]); await fail(speakersResult.error); await fail(segmentsResult.error);
-  return { audio: audio as Audio, transcriptionState, speakers: (speakersResult.data ?? []) as Speaker[], segments: (segmentsResult.data ?? []) as Segment[] };
+  ]); await fail(speakersResult.error); await fail(editorialSpeakersResult.error); await fail(segmentsResult.error);
+  const editorialByAutomaticID = new Map((editorialSpeakersResult.data ?? []).map((speaker) => [speaker.automatic_speaker_id, speaker]));
+  const speakers = (speakersResult.data ?? []).map((speaker) => {
+    const editorial = editorialByAutomaticID.get(speaker.id);
+    return { ...speaker, editorial_id: editorial?.id, name: editorial?.name ?? null };
+  }) as Speaker[];
+  return { audio: audio as Audio, transcriptionState, speakers, segments: (segmentsResult.data ?? []) as Segment[] };
 } }); }

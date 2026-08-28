@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(84);
+select plan(96);
 
 insert into auth.users (id, email)
 values
@@ -688,6 +688,93 @@ select results_eq(
      where automatic.provider_label = 'S1' $$,
   array['S1:Journalist'],
   'the automatic provider label remains immutable after renaming'
+);
+
+select ok(
+  relrowsecurity,
+  'transcript_text_corrections has row-level security enabled'
+)
+from pg_class
+where oid = 'public.transcript_text_corrections'::regclass;
+
+select ok(
+  not has_table_privilege('anon', 'public.transcript_text_corrections', 'select,insert,update,delete'),
+  'anon has no transcript_text_corrections privileges'
+);
+
+select ok(
+  has_table_privilege('authenticated', 'public.transcript_text_corrections', 'select,insert,update,delete')
+  and not has_column_privilege('authenticated', 'public.transcript_text_corrections', 'owner_id', 'update'),
+  'authenticated can manage correction text but not reassign its owner'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+
+insert into public.transcript_text_corrections (transcript_segment_id, content)
+values ((select id from public.transcript_segments where ordinal = 0), 'Hola corregido');
+
+select results_eq(
+  $$ insert into public.transcript_text_corrections (transcript_segment_id, content)
+     values ((select id from public.transcript_segments where ordinal = 0), 'Hola revisado')
+     on conflict (transcript_segment_id) do update set content = excluded.content
+     returning content $$,
+  array['Hola revisado'],
+  'the owner can replace one current text correction for its transcript segment'
+);
+
+select results_eq(
+  $$ select count(*)::integer from public.transcript_text_corrections
+     where transcript_segment_id = (select id from public.transcript_segments where ordinal = 0) $$,
+  array[1],
+  'a transcript segment has only one current text correction'
+);
+select throws_ok(
+  $$ update public.transcript_text_corrections
+     set transcript_segment_id = (select id from public.transcript_segments where ordinal = 1) $$,
+  'P0001',
+  'a text correction cannot change transcript segment',
+  'an owner cannot reassign a text correction to another transcript segment'
+);
+select set_config(
+  'test.transcript_segment_id',
+  (select id::text from public.transcript_segments where ordinal = 0),
+  true
+);
+
+set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select is_empty(
+  $$ select * from public.transcript_text_corrections $$,
+  'another user cannot read the owner text correction'
+);
+select is_empty(
+  $$ update public.transcript_text_corrections set content = 'Intruder' returning content $$,
+  'another user cannot replace the owner text correction'
+);
+select is_empty(
+  $$ delete from public.transcript_text_corrections returning content $$,
+  'another user cannot revert the owner text correction'
+);
+select throws_ok(
+  $$ insert into public.transcript_text_corrections (transcript_segment_id, content)
+     values (current_setting('test.transcript_segment_id')::uuid, 'Intruder') $$,
+  '42501', null,
+  'another user cannot create a correction for the owner transcript segment'
+);
+
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select results_eq(
+  $$ delete from public.transcript_text_corrections
+     where transcript_segment_id = (select id from public.transcript_segments where ordinal = 0)
+     returning content $$,
+  array['Hola revisado'],
+  'the owner can revert only its text correction'
+);
+select results_eq(
+  $$ select content || ':' || automatic_speaker_id || ':' || ordinal || ':' || start_time_ms || ':' || end_time_ms
+     from public.transcript_segments where ordinal = 0 $$,
+  array[(select 'Hola,:' || id || ':0:100:400' from public.automatic_speakers where provider_label = 'S1')],
+  'reverting a correction preserves automatic text, speaker, order, and timestamps'
 );
 
 select * from finish();

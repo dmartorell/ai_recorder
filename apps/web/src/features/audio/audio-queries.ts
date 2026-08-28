@@ -23,5 +23,13 @@ export function useAudioDetail(audioID: string | undefined) { return useQuery({ 
     const editorial = editorialByAutomaticID.get(speaker.id);
     return { ...speaker, editorial_id: editorial?.id, name: editorial?.name ?? null };
   }) as Speaker[];
-  return { audio: audio as Audio, transcriptionState, speakers, segments: (segmentsResult.data ?? []) as Segment[] };
+  const segments = (segmentsResult.data ?? []) as Segment[];
+  if (!segments.length) return { audio: audio as Audio, transcriptionState, speakers, segments };
+  const { data: corrections, error: correctionsError } = await supabase
+    .from("transcript_text_corrections")
+    .select("transcript_segment_id,content")
+    .in("transcript_segment_id", segments.map((segment) => segment.id));
+  await fail(correctionsError);
+  const correctionBySegmentID = new Map((corrections ?? []).map((correction) => [correction.transcript_segment_id, correction.content]));
+  return { audio: audio as Audio, transcriptionState, speakers, segments: segments.map((segment) => ({ ...segment, correction: correctionBySegmentID.get(segment.id) ?? null })) };
 } }); }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   type BackupStore,
   type CloudBackup,
@@ -24,11 +24,14 @@ describe("GET /v1/audios/:audioID/playback", () => {
     expect(response.status).toBe(401);
   });
 
-  it("returns a short-lived URL only for an owned verified backup", async () => {
-    const worker = createWorker({ authentication: new StubAuthenticator("journalist-id"), backups: new PlaybackStore("original-audio/private"), multipart: { signedReadURL: async () => "https://r2.example.test/private" } as never });
+  it("returns a 900-second URL only for an owned verified backup", async () => {
+    const signedReadURL = vi.fn().mockResolvedValue("https://r2.example.test/private");
+    const worker = createWorker({ authentication: new StubAuthenticator("journalist-id"), backups: new PlaybackStore("original-audio/private"), multipart: { signedReadURL } as never });
     const response = await worker.fetch(new Request(`https://worker.example.test/v1/audios/${audioID}/playback`), {} as Env, {} as ExecutionContext);
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({ url: "https://r2.example.test/private", expires_in: 900 });
+    expect(signedReadURL).toHaveBeenCalledOnce();
+    expect(signedReadURL).toHaveBeenCalledWith("original-audio/private");
   });
 });
 

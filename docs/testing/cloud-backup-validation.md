@@ -75,6 +75,10 @@ Use synthetic Audio only. Record pass/fail and HTTP status only for each check:
 
 Do not retain provider IDs, provider responses, transcript text, object keys, signed URLs, credentials, callback tokens, or API keys in commands, logs, evidence, or issue comments. A failed synthetic job must be retried only through the Audio detail `Retry transcription` control. Do not create another Audio merely to retry processing.
 
+## Web editorial review staging validation
+
+Use two synthetic owners only. After explicit deployment approval, verify magic-link sign-in, owner library visibility, private playback, Transcript Segment seeking, active-segment indication, and foreign-owner denial. Record only pass/fail and HTTP statuses. Do not retain email addresses, tokens, Audio IDs, signed URLs, object keys, or transcript text.
+
 ## Physical iPhone validation
 
 Use the physical iPhone with the staging configuration and a synthetic spoken test. Record the app commit, device, iOS version, and only the expected/actual outcomes below.
@@ -107,3 +111,4 @@ Do not mark these scenarios passed from simulator, mocks, or Worker tests. Delet
 | 2026-08-27 | Physical audio-session interruption | Pass, user-confirmed. The interrupted synthetic Capture remained in the library and playable. |
 | 2026-08-27 | Two-hour physical reliability check | Pass, user-confirmed. The synthetic two-hour physical Capture completed as expected. |
 | 2026-08-27 | Local pgTAP suite on iMac | Pass. `Files=1, Tests=66`, `Result: PASS`. |
+| 2026-08-28 | Web editorial review synthetic staging E2E | Not run. Deployment and staging credentials require explicit user approval. |

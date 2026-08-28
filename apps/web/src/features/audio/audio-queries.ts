@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabase";
-import type { Audio, AudioDetail, Segment, Speaker, TranscriptionState } from "./audio-types";
+import { audioBackupFor, type Audio, type AudioDetail, type Segment, type Speaker, type TranscriptionState } from "./audio-types";
 
 async function fail(error: { message: string } | null) { if (error) throw new Error(error.message); }
 export function useAudios() { return useQuery({ queryKey: ["audios"], queryFn: async (): Promise<Audio[]> => {
@@ -8,7 +8,7 @@ export function useAudios() { return useQuery({ queryKey: ["audios"], queryFn: a
 } }); }
 export function useAudioDetail(audioID: string | undefined) { return useQuery({ queryKey: ["audio", audioID], enabled: Boolean(audioID), queryFn: async (): Promise<AudioDetail | undefined> => {
   const { data: audio, error: audioError } = await supabase.from("audios").select("id,title_snapshot,capture_started_at,duration_milliseconds,transcription_language,audio_backups(id,state)").eq("id", audioID!).maybeSingle(); await fail(audioError); if (!audio) return undefined;
-  const backup = (audio.audio_backups as { id: string; state: string }[])[0]; if (!backup) return { audio: audio as Audio, transcriptionState: "not_started", speakers: [], segments: [] };
+  const backup = audioBackupFor(audio as Audio) as { id: string; state: string } | null; if (!backup) return { audio: audio as Audio, transcriptionState: "not_started", speakers: [], segments: [] };
   const { data: jobs, error: jobsError } = await supabase.from("transcription_jobs").select("id,state").eq("backup_id", backup.id).limit(1); await fail(jobsError);
   const transcriptionState = (jobs?.[0]?.state ?? "not_started") as TranscriptionState; if (transcriptionState !== "complete") return { audio: audio as Audio, transcriptionState, speakers: [], segments: [] };
   const { data: transcripts, error: transcriptError } = await supabase.from("automatic_transcripts").select("id").eq("transcription_job_id", jobs![0].id).limit(1); await fail(transcriptError); if (!transcripts?.[0]) return { audio: audio as Audio, transcriptionState, speakers: [], segments: [] };

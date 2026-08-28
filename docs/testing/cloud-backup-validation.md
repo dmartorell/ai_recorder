@@ -111,4 +111,4 @@ Do not mark these scenarios passed from simulator, mocks, or Worker tests. Delet
 | 2026-08-27 | Physical audio-session interruption | Pass, user-confirmed. The interrupted synthetic Capture remained in the library and playable. |
 | 2026-08-27 | Two-hour physical reliability check | Pass, user-confirmed. The synthetic two-hour physical Capture completed as expected. |
 | 2026-08-27 | Local pgTAP suite on iMac | Pass. `Files=1, Tests=66`, `Result: PASS`. |
-| 2026-08-28 | Web editorial review synthetic staging E2E | Not run. Deployment and staging credentials require explicit user approval. |
+| 2026-08-28 | Web editorial review synthetic staging E2E | Pass, user-confirmed. Owner magic-link callback, owner-only library/detail, and private playback completed with successful HTTP statuses. Transcript Segment seek and active-segment synchronization passed. A foreign owner received `404` for the Audio detail and playback authorization. |

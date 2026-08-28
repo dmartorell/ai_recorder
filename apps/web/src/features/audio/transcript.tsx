@@ -1,0 +1,5 @@
+import type { Segment, Speaker } from "./audio-types";
+function timestamp(milliseconds: number) { const seconds = Math.floor(milliseconds / 1000); return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`; }
+export function Transcript({ speakers, segments, activeID, onSelect }: { speakers: Speaker[]; segments: Segment[]; activeID?: string; onSelect(segment: Segment): void }) { const labels = new Map(speakers.map((speaker) => [speaker.id, speaker.provider_label]));
+  return <section aria-label="Automatic Transcript"><h2>Automatic Transcript</h2>{segments.length ? <ol className="transcript">{segments.map((segment) => <li key={segment.id} className={segment.id === activeID ? "active" : ""}><button type="button" aria-label={`${labels.get(segment.automatic_speaker_id) ?? "Speaker"}, ${timestamp(segment.start_time_ms)}`} onClick={() => onSelect(segment)}><strong>{labels.get(segment.automatic_speaker_id) ?? "Speaker"}</strong><time>{timestamp(segment.start_time_ms)}</time><span>{segment.content}</span></button></li>)}</ol> : <p>No Automatic Transcript has been preserved yet.</p>}</section>;
+}

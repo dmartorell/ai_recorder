@@ -13,16 +13,20 @@ export interface CloudBackup { id: string; state: "uploading"; }
 export interface StoredBackup { id: string; owner_id: string; local_audio_id: string; object_key: string; byte_count: number; sha256: string; state: string; r2_upload_id: string | null; r2_upload_claim: string | null; r2_upload_claimed_at: string | null; }
 export interface StoredPart { part_number: number; etag: string; byte_count: number; }
 export type MultipartUploadClaim = { kind: "existing"; uploadID: string } | { kind: "claimed"; claimID: string } | { kind: "inProgress" };
-export interface BackupStore { begin(request: BeginBackupRequest): Promise<CloudBackup>; get(ownerID: string, id: string): Promise<StoredBackup | undefined>; claimMultipartUpload(backup: StoredBackup): Promise<MultipartUploadClaim>; assignUploadID(backup: StoredBackup, claimID: string, uploadID: string): Promise<boolean>; releaseMultipartUploadClaim(backup: StoredBackup, claimID: string): Promise<void>; confirmedParts(backupID: string): Promise<StoredPart[]>; confirmPart(backupID: string, part: StoredPart): Promise<void>; cancel(backup: StoredBackup): Promise<void>; markBackedUp(backup: StoredBackup): Promise<void>; }
+export interface BackupStore { begin(request: BeginBackupRequest): Promise<CloudBackup>; get(ownerID: string, id: string): Promise<StoredBackup | undefined>; findPlayback(ownerID: string, audioID: string): Promise<Pick<StoredBackup, "object_key"> | undefined>; claimMultipartUpload(backup: StoredBackup): Promise<MultipartUploadClaim>; assignUploadID(backup: StoredBackup, claimID: string, uploadID: string): Promise<boolean>; releaseMultipartUploadClaim(backup: StoredBackup, claimID: string): Promise<void>; confirmedParts(backupID: string): Promise<StoredPart[]>; confirmPart(backupID: string, part: StoredPart): Promise<void>; cancel(backup: StoredBackup): Promise<void>; markBackedUp(backup: StoredBackup): Promise<void>; }
 export interface TranscriptionJobQueue { send(message: { kind: "submit" | "ingest"; transcription_job_id: string }): Promise<unknown>; }
 interface WorkerDependencies { authentication: WorkerAuthenticator; backups: BackupStore; transcriptionJobs?: TranscriptionJobStore; transcriptionQueue?: TranscriptionJobQueue; multipart?: MultipartGateway; }
 
 export function createWorker({ authentication, backups, transcriptionJobs = new UnconfiguredTranscriptionJobStore(), transcriptionQueue, multipart }: WorkerDependencies): ExportedHandler<Env> {
   return { async fetch(request): Promise<Response> {
     const url = new URL(request.url);
-    if (!url.pathname.startsWith(backupPath)) return Response.json({ error: "not_found" }, { status: 404 });
+    const playbackMatch = url.pathname.match(/^\/v1\/audios\/([0-9a-f-]{36})\/playback$/i);
+    if (!url.pathname.startsWith(backupPath) && !playbackMatch) return Response.json({ error: "not_found" }, { status: 404 });
     let identity: { userID: string };
     try { identity = await authentication.authenticate(request); } catch { return Response.json({ error: "unauthorized" }, { status: 401 }); }
+    if (playbackMatch && uuidPattern.test(playbackMatch[1]) && request.method === "GET") {
+      return playback(identity.userID, playbackMatch[1], backups, multipart);
+    }
     const suffix = url.pathname.slice(backupPath.length);
     try {
       if (suffix === "" && request.method === "POST") return await begin(request, identity.userID, backups);
@@ -52,6 +56,12 @@ export function createWorker({ authentication, backups, transcriptionJobs = new 
       throw error;
     }
   }};
+}
+async function playback(ownerID: string, audioID: string, backups: BackupStore, multipart: MultipartGateway | undefined): Promise<Response> {
+  const backup = await backups.findPlayback(ownerID, audioID);
+  if (!backup) return Response.json({ error: "not_found" }, { status: 404 });
+  if (!multipart) return Response.json({ error: "service_unavailable" }, { status: 503 });
+  return Response.json({ url: await multipart.signedReadURL(backup.object_key), expires_in: 900 });
 }
 async function begin(request: Request, ownerID: string, backups: BackupStore): Promise<Response> { const body = await parseJSON(request); if (!isRecord(body) || typeof body.local_audio_id !== "string" || !uuidPattern.test(body.local_audio_id) || !validBytes(body.byte_count) || typeof body.sha256 !== "string" || !sha256Pattern.test(body.sha256) || (body.transcription_language !== undefined && !isTranscriptionLanguage(body.transcription_language)) || !validTitleSnapshot(body.title_snapshot) || !validTimestamp(body.capture_started_at) || !validDuration(body.duration_milliseconds)) throw new InvalidRequestError(); const created = await backups.begin({ ownerID, localAudioID: body.local_audio_id, byteCount: body.byte_count, sha256: body.sha256.toLowerCase(), transcriptionLanguage: body.transcription_language ?? "spanish_english", titleSnapshot: body.title_snapshot, captureStartedAt: body.capture_started_at, durationMilliseconds: body.duration_milliseconds }); return Response.json(created, { status: 201 }); }
 async function status(backup: StoredBackup, backups: BackupStore): Promise<Response> { return Response.json({ id: backup.id, state: backup.state, confirmed_parts: (await backups.confirmedParts(backup.id)).map(({ part_number, byte_count }) => ({ part_number, byte_count })), part_size: multipartPartSize }); }
@@ -124,5 +134,5 @@ export function createDefaultWorker(supabaseURL: string, serviceRoleKey: string 
     }
   };
 }
-class UnconfiguredBackupStore implements BackupStore { async begin(): Promise<CloudBackup> { throw new Error("service unavailable"); } async get(): Promise<undefined> { return undefined; } async claimMultipartUpload(): Promise<MultipartUploadClaim> { throw new Error("service unavailable"); } async assignUploadID(): Promise<boolean> { throw new Error("service unavailable"); } async releaseMultipartUploadClaim(): Promise<void> { throw new Error("service unavailable"); } async confirmedParts(): Promise<StoredPart[]> { return []; } async confirmPart(): Promise<void> { throw new Error("service unavailable"); } async cancel(): Promise<void> { throw new Error("service unavailable"); } async markBackedUp(): Promise<void> { throw new Error("service unavailable"); } }
+class UnconfiguredBackupStore implements BackupStore { async begin(): Promise<CloudBackup> { throw new Error("service unavailable"); } async get(): Promise<undefined> { return undefined; } async findPlayback(): Promise<undefined> { return undefined; } async claimMultipartUpload(): Promise<MultipartUploadClaim> { throw new Error("service unavailable"); } async assignUploadID(): Promise<boolean> { throw new Error("service unavailable"); } async releaseMultipartUploadClaim(): Promise<void> { throw new Error("service unavailable"); } async confirmedParts(): Promise<StoredPart[]> { return []; } async confirmPart(): Promise<void> { throw new Error("service unavailable"); } async cancel(): Promise<void> { throw new Error("service unavailable"); } async markBackedUp(): Promise<void> { throw new Error("service unavailable"); } }
 class UnconfiguredTranscriptionJobStore implements TranscriptionJobStore { async enqueue(): Promise<never> { throw new Error("service unavailable"); } async get(): Promise<undefined> { return undefined; } async retryFailed(): Promise<undefined> { return undefined; } }

@@ -1,7 +1,7 @@
 begin;
 
 create extension if not exists pgtap with schema extensions;
-select plan(96);
+select plan(115);
 
 insert into auth.users (id, email)
 values
@@ -775,6 +775,179 @@ select results_eq(
      from public.transcript_segments where ordinal = 0 $$,
   array[(select 'Hola,:' || id || ':0:100:400' from public.automatic_speakers where provider_label = 'S1')],
   'reverting a correction preserves automatic text, speaker, order, and timestamps'
+);
+
+select ok(
+  relrowsecurity,
+  'transcript_speaker_corrections has row-level security enabled'
+)
+from pg_class
+where oid = 'public.transcript_speaker_corrections'::regclass;
+
+select ok(
+  not has_table_privilege('anon', 'public.transcript_speaker_corrections', 'select,insert,update,delete'),
+  'anon has no transcript_speaker_corrections privileges'
+);
+
+select ok(
+  has_table_privilege('authenticated', 'public.transcript_speaker_corrections', 'select,insert,update,delete')
+  and not has_column_privilege('authenticated', 'public.transcript_speaker_corrections', 'owner_id', 'update'),
+  'authenticated can manage speaker corrections but not reassign their owner'
+);
+
+select ok(
+  has_column_privilege('authenticated', 'public.speakers', 'audio_id', 'insert')
+  and has_column_privilege('authenticated', 'public.speakers', 'name', 'insert')
+  and not has_column_privilege('authenticated', 'public.speakers', 'owner_id', 'insert'),
+  'authenticated can create named speakers but cannot assign their owner'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+
+with speaker as (
+  insert into public.speakers (audio_id, name)
+  values ((select audio_id from public.audio_backups where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'), 'Editor')
+  returning id
+)
+select set_config('test.manual_speaker_id', (select id::text from speaker), true);
+
+select results_eq(
+  $$ select name from public.speakers where id = current_setting('test.manual_speaker_id')::uuid $$,
+  array['Editor'],
+  'the owner can add a named speaker to its audio'
+);
+
+select results_eq(
+  $$ select count(*)::integer from public.speakers
+     where audio_id = (select audio_id from public.audio_backups where id = 'cccccccc-cccc-cccc-cccc-cccccccccccc') $$,
+  array[3],
+  'adding a speaker retains the automatic speaker projections'
+);
+
+insert into public.transcript_text_corrections (transcript_segment_id, content)
+values ((select id from public.transcript_segments where ordinal = 0), 'Texto corregido');
+
+select results_eq(
+  $$ insert into public.transcript_speaker_corrections (transcript_segment_id, speaker_id)
+     values (
+       (select id from public.transcript_segments where ordinal = 0),
+       current_setting('test.manual_speaker_id')::uuid
+     )
+     returning speaker_id $$,
+  array[current_setting('test.manual_speaker_id')::uuid],
+  'the owner can assign an editorial speaker to its transcript segment'
+);
+
+select results_eq(
+  $$ select count(*)::integer from public.transcript_speaker_corrections
+     where transcript_segment_id = (select id from public.transcript_segments where ordinal = 0) $$,
+  array[1],
+  'a transcript segment has one current speaker correction'
+);
+
+select results_eq(
+  $$ insert into public.transcript_speaker_corrections (transcript_segment_id, speaker_id)
+     values (
+       (select id from public.transcript_segments where ordinal = 0),
+       (select speaker.id from public.speakers speaker
+        join public.automatic_speakers automatic on automatic.id = speaker.automatic_speaker_id
+        where automatic.provider_label = 'S2')
+     )
+     on conflict (transcript_segment_id) do update set speaker_id = excluded.speaker_id
+     returning speaker_id $$,
+  array[(select speaker.id from public.speakers speaker
+         join public.automatic_speakers automatic on automatic.id = speaker.automatic_speaker_id
+         where automatic.provider_label = 'S2')],
+  'the owner can upsert a replacement speaker correction'
+);
+
+select throws_ok(
+  $$ update public.transcript_speaker_corrections
+     set transcript_segment_id = (select id from public.transcript_segments where ordinal = 1) $$,
+  'P0001', 'a speaker correction can only change speaker',
+  'an owner cannot reassign a speaker correction to another transcript segment'
+);
+
+reset role;
+insert into public.audios (
+  id, owner_id, local_audio_id, title_snapshot, capture_started_at, duration_milliseconds, transcription_language
+) values (
+  '99999999-9999-9999-9999-999999999999', '22222222-2222-2222-2222-222222222222',
+  '88888888-8888-8888-8888-888888888888', 'Second Audio', now(), 0, 'english'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+with speaker as (
+  insert into public.speakers (audio_id, name)
+  values ('99999999-9999-9999-9999-999999999999', 'Other Audio Speaker')
+  returning id
+)
+select set_config('test.other_audio_speaker_id', (select id::text from speaker), true);
+
+select throws_ok(
+  $$ update public.transcript_speaker_corrections
+     set speaker_id = current_setting('test.other_audio_speaker_id')::uuid
+     where transcript_segment_id = (select id from public.transcript_segments where ordinal = 0) $$,
+  'P0001', 'speaker correction must belong to the segment audio',
+  'an owner cannot assign a speaker from another audio'
+);
+
+reset role;
+select throws_ok(
+  $$ update public.transcript_speaker_corrections
+     set speaker_id = current_setting('test.other_audio_speaker_id')::uuid
+     where transcript_segment_id = (select id from public.transcript_segments where ordinal = 0) $$,
+  'P0001', 'speaker correction must belong to the segment audio',
+  'database integrity rejects a cross-audio speaker correction'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select is_empty(
+  $$ select * from public.speakers where id = current_setting('test.manual_speaker_id')::uuid $$,
+  'another user cannot read the owner manual speaker'
+);
+select is_empty(
+  $$ select * from public.transcript_speaker_corrections $$,
+  'another user cannot read the owner speaker correction'
+);
+select is_empty(
+  $$ update public.transcript_speaker_corrections set speaker_id = current_setting('test.manual_speaker_id')::uuid returning speaker_id $$,
+  'another user cannot update the owner speaker correction'
+);
+select is_empty(
+  $$ delete from public.transcript_speaker_corrections returning speaker_id $$,
+  'another user cannot delete the owner speaker correction'
+);
+select throws_ok(
+  $$ insert into public.transcript_speaker_corrections (transcript_segment_id, speaker_id)
+     values (
+       (select id from public.transcript_segments where ordinal = 0),
+       current_setting('test.manual_speaker_id')::uuid
+     ) $$,
+  '42501', null,
+  'another user cannot create a speaker correction for the owner segment'
+);
+
+set local request.jwt.claim.sub = '22222222-2222-2222-2222-222222222222';
+select results_eq(
+  $$ delete from public.transcript_speaker_corrections
+     where transcript_segment_id = (select id from public.transcript_segments where ordinal = 0)
+     returning speaker_id $$,
+  array[(select speaker.id from public.speakers speaker
+         join public.automatic_speakers automatic on automatic.id = speaker.automatic_speaker_id
+         where automatic.provider_label = 'S2')],
+  'the owner can revert only its speaker correction'
+);
+select results_eq(
+  $$ select correction.content || ':' || segment.automatic_speaker_id || ':' || segment.ordinal || ':' || segment.start_time_ms || ':' || segment.end_time_ms
+     from public.transcript_segments segment
+     join public.transcript_text_corrections correction on correction.transcript_segment_id = segment.id
+     where segment.ordinal = 0 $$,
+  array[(select 'Texto corregido:' || id || ':0:100:400' from public.automatic_speakers where provider_label = 'S1')],
+  'reverting speaker attribution preserves the text correction and automatic source fields'
 );
 
 select * from finish();

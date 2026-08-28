@@ -15,21 +15,43 @@ export function useAudioDetail(audioID: string | undefined) { return useQuery({ 
   const transcriptID = transcripts[0].id;
   const [speakersResult, editorialSpeakersResult, segmentsResult] = await Promise.all([
     supabase.from("automatic_speakers").select("id,provider_label,ordinal").eq("automatic_transcript_id", transcriptID).order("ordinal"),
-    supabase.from("speakers").select("id,automatic_speaker_id,name").eq("audio_id", audio.id),
+    supabase.from("speakers").select("id,automatic_speaker_id,name,created_at").eq("audio_id", audio.id),
     supabase.from("transcript_segments").select("id,automatic_speaker_id,ordinal,content,start_time_ms,end_time_ms").eq("automatic_transcript_id", transcriptID).order("ordinal")
   ]); await fail(speakersResult.error); await fail(editorialSpeakersResult.error); await fail(segmentsResult.error);
   const editorialByAutomaticID = new Map((editorialSpeakersResult.data ?? []).map((speaker) => [speaker.automatic_speaker_id, speaker]));
-  const speakers = (speakersResult.data ?? []).map((speaker) => {
+  const automaticSpeakers = (speakersResult.data ?? []).map((speaker) => {
     const editorial = editorialByAutomaticID.get(speaker.id);
-    return { ...speaker, editorial_id: editorial?.id, name: editorial?.name ?? null };
-  }) as Speaker[];
+    return { ...speaker, automatic_speaker_id: speaker.id, editorial_id: editorial?.id, name: editorial?.name ?? null };
+  });
+  const manualSpeakers = (editorialSpeakersResult.data ?? [])
+    .filter((speaker) => !speaker.automatic_speaker_id)
+    .map((speaker, index) => ({
+      id: speaker.id,
+      automatic_speaker_id: null,
+      editorial_id: speaker.id,
+      provider_label: "Speaker",
+      ordinal: automaticSpeakers.length + index,
+      name: speaker.name
+    }));
+  const speakers = [...automaticSpeakers, ...manualSpeakers] as Speaker[];
   const segments = (segmentsResult.data ?? []) as Segment[];
   if (!segments.length) return { audio: audio as Audio, transcriptionState, speakers, segments };
-  const { data: corrections, error: correctionsError } = await supabase
-    .from("transcript_text_corrections")
-    .select("transcript_segment_id,content")
-    .in("transcript_segment_id", segments.map((segment) => segment.id));
-  await fail(correctionsError);
-  const correctionBySegmentID = new Map((corrections ?? []).map((correction) => [correction.transcript_segment_id, correction.content]));
-  return { audio: audio as Audio, transcriptionState, speakers, segments: segments.map((segment) => ({ ...segment, correction: correctionBySegmentID.get(segment.id) ?? null })) };
+  const [correctionsResult, speakerCorrectionsResult] = await Promise.all([
+    supabase.from("transcript_text_corrections").select("transcript_segment_id,content").in("transcript_segment_id", segments.map((segment) => segment.id)),
+    supabase.from("transcript_speaker_corrections").select("transcript_segment_id,speaker_id").in("transcript_segment_id", segments.map((segment) => segment.id))
+  ]);
+  await fail(correctionsResult.error);
+  await fail(speakerCorrectionsResult.error);
+  const correctionBySegmentID = new Map((correctionsResult.data ?? []).map((correction) => [correction.transcript_segment_id, correction.content]));
+  const speakerCorrectionBySegmentID = new Map((speakerCorrectionsResult.data ?? []).map((correction) => [correction.transcript_segment_id, correction.speaker_id]));
+  return {
+    audio: audio as Audio,
+    transcriptionState,
+    speakers,
+    segments: segments.map((segment) => ({
+      ...segment,
+      correction: correctionBySegmentID.get(segment.id) ?? null,
+      speakerCorrectionID: speakerCorrectionBySegmentID.get(segment.id) ?? null
+    }))
+  };
 } }); }
